@@ -20,6 +20,12 @@
 ### **"I want to get started now"**
 → **[START_HERE.md](START_HERE.md)** (5 min)
 
+### **"I want videos in multiple languages"**
+→ **[MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)** (12 min)
+
+### **"Can I translate Spanish → English?"**
+→ **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** → Bidirectional section
+
 ### **"What was added to the system?"**
 → **[status/COMPLETE_UPDATE_SUMMARY.md](status/COMPLETE_UPDATE_SUMMARY.md)** (5 min)
 
@@ -42,6 +48,13 @@
 | **[PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md)** | Complete Python API reference | 10 min | Building from scratch |
 | **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** | All 5 content control levels | 8 min | Want to control narration |
 | **[PROGRAMMATIC_COMPLETE.md](PROGRAMMATIC_COMPLETE.md)** | Everything in one place | 8 min | Comprehensive reference |
+
+### **🌍 Multilingual Guides** 🆕
+
+| File | Purpose | Read Time | When to Read |
+|------|---------|-----------|--------------|
+| **[MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)** | Generate in 28+ languages | 12 min | Creating multilingual videos |
+| **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** | Multilingual quick reference | 5 min | Quick multilingual lookup |
 
 ### **🔧 Setup & Reference**
 
@@ -131,6 +144,8 @@
 
 **Examples:**
 - `scripts/examples/example_document_programmatic.py`
+- `scripts/examples/multilingual_examples.py`
+- `scripts/examples/reverse_translation_examples.py`
 
 ### **YAML Examples (.yaml)**
 

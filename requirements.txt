@@ -30,3 +30,12 @@ google-api-python-client>=2.100.0
 #
 # Minimal install (without YouTube features):
 # pip install Pillow edge-tts numpy imageio-ffmpeg PyYAML requests
+
+# AI-powered features (optional but recommended)
+# Claude API for:
+# - Enhanced narration generation
+# - High-quality translation (28+ languages)
+anthropic>=0.34.0
+
+# Alternative translation (free fallback)
+googletrans==4.0.0-rc1

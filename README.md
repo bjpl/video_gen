@@ -53,6 +53,23 @@ Create videos from ANY source:
 3. **🧙 Wizard** - Interactive guided creation (5-15 minutes)
 4. **🐍 Programmatic** - Generate videos with Python code (for automation) 🆕
 
+### **🌍 Multilingual Support** 🆕
+
+Generate videos in **28+ languages** automatically:
+
+- **Bidirectional translation** - ANY language → ANY language (not just EN → others!)
+- **Auto-translate** with Claude API (high quality) or Google Translate (free)
+- **Native TTS voices** for all languages
+- **One command** generates all language versions
+
+```bash
+# English → Spanish + French
+python generate_multilingual_set.py --source README.md --languages en es fr
+
+# Spanish → English (REVERSE!)
+python generate_multilingual_set.py --source README_ES.md --languages es en --source-lang es
+```
+
 ### **🎨 Six Scene Types**
 
 - **title** - Large centered title slides
@@ -110,6 +127,8 @@ YOUR CONTENT                SYSTEM GENERATES             RESULT
 | Guide | Purpose | Read Time |
 |-------|---------|-----------|
 | [**THREE_INPUT_METHODS_GUIDE.md**](docs/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods (START HERE) | 10 min |
+| **[MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)** 🆕 | Generate in 28+ languages | 12 min |
+| **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** 🆕 | Multilingual quick reference | 5 min |
 | **[PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)** 🆕 | Parse markdown/GitHub/YouTube | 5 min |
 | **[PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md)** 🆕 | Complete Python API reference | 10 min |
 | **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** 🆕 | Control content generation | 8 min |
@@ -316,8 +335,12 @@ video_gen/
 ├── 📜 scripts/                    # Python automation scripts
 │   ├── create_video.py            # Master entry point
 │   ├── python_set_builder.py      # 🆕 Programmatic builder
+│   ├── multilingual_builder.py    # 🆕 Multilingual support
+│   ├── translation_service.py     # 🆕 Translation API
+│   ├── language_config.py         # 🆕 28+ language voices
 │   ├── document_to_programmatic.py # 🆕 Parse markdown/GitHub
 │   ├── youtube_to_programmatic.py  # 🆕 Parse YouTube transcripts
+│   ├── generate_multilingual_set.py # 🆕 Multilingual generator
 │   ├── generate_video_set.py      # 🆕 Set generator
 │   ├── generate_all_sets.py       # 🆕 Batch set generator
 │   ├── generate_script_from_*.py  # Input processors (4 methods)
@@ -353,6 +376,8 @@ video_gen/
 ├── 📄 PROGRAMMATIC_GUIDE.md       # 🆕 Python API guide
 ├── 📄 PARSE_RAW_CONTENT.md        # 🆕 Parse markdown/GitHub/YouTube
 ├── 📄 CONTENT_CONTROL_GUIDE.md    # 🆕 Content control options
+├── 📄 MULTILINGUAL_GUIDE.md       # 🆕 28+ language support
+├── 📄 MULTILINGUAL_QUICKREF.md    # 🆕 Multilingual quick reference
 ├── 📄 requirements.txt            # All dependencies
 └── 📄 README.md                   # This file
 ```

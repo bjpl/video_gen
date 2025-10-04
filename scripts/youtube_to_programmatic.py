@@ -25,10 +25,44 @@ Usage:
 import sys
 sys.path.append('.')
 
-from generate_script_from_youtube import fetch_transcript, extract_video_id
 from python_set_builder import VideoSetBuilder
 from typing import Optional, List
 import re
+from urllib.parse import urlparse, parse_qs
+
+# Try importing YouTube transcript API
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi
+    HAS_YOUTUBE = True
+except ImportError:
+    HAS_YOUTUBE = False
+    print("⚠️  YouTube transcript support requires: pip install youtube-transcript-api")
+
+
+def extract_video_id(url_or_id):
+    """Extract video ID from YouTube URL or return as-is if already an ID"""
+    if 'youtube.com' in url_or_id or 'youtu.be' in url_or_id:
+        parsed = urlparse(url_or_id)
+        if 'youtube.com' in url_or_id:
+            query = parse_qs(parsed.query)
+            return query.get('v', [None])[0]
+        elif 'youtu.be' in url_or_id:
+            return parsed.path.strip('/')
+    return url_or_id
+
+
+def fetch_transcript(video_id):
+    """Fetch transcript for YouTube video"""
+    if not HAS_YOUTUBE:
+        return None
+
+    try:
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+        full_text = ' '.join([entry['text'] for entry in transcript_list])
+        return {'transcript': full_text, 'entries': transcript_list}
+    except Exception as e:
+        print(f"⚠️  Could not fetch transcript: {e}")
+        return None
 
 
 def parse_youtube_to_builder(
