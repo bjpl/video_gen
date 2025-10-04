@@ -1,0 +1,103 @@
+# Example: Using New Scene Types
+# ================================
+# Demonstrates code_comparison and quote scene types
+
+video:
+  id: "refactoring_guide"
+  title: "Code Refactoring Guide"
+  description: "Learn to improve your code with practical examples"
+  accent_color: purple
+  voice: male
+  version: "v2.0"
+
+scenes:
+  # Scene 1: Title
+  - type: title
+    title: "Code Refactoring"
+    subtitle: "Write Better Code"
+    key_message: "Transform messy code into elegant solutions"
+
+  # Scene 2: Code Comparison - Before/After
+  - type: code_comparison
+    id: scene_02_comparison
+    header: "Improving Function Design"
+    before_label: "Original"
+    after_label: "Refactored"
+    before_code: |
+      def process(data):
+        result = []
+        for item in data:
+          if item > 0:
+            result.append(item * 2)
+        return result
+    after_code: |
+      def process(data):
+        return [
+          item * 2
+          for item in data
+          if item > 0
+        ]
+    improvement: "The refactored version is cleaner and more Pythonic"
+    key_points:
+      - More readable
+      - Less code
+      - Same functionality
+    min_duration: 8.0
+    max_duration: 12.0
+
+  # Scene 3: Quote - Important Principle
+  - type: quote
+    id: scene_03_quote
+    quote_text: "Any fool can write code that a computer can understand. Good programmers write code that humans can understand"
+    attribution: "Martin Fowler"
+    context: "The principle of clean code"
+    min_duration: 6.0
+    max_duration: 10.0
+
+  # Scene 4: Another Code Comparison
+  - type: code_comparison
+    header: "Error Handling Pattern"
+    before_code: |
+      try:
+        data = fetch_data()
+        process(data)
+        save(data)
+      except:
+        print("Error")
+    after_code: |
+      try:
+        data = fetch_data()
+        process(data)
+        save(data)
+      except ValueError as e:
+        logger.error(f"Invalid data: {e}")
+      except IOError as e:
+        logger.error(f"Save failed: {e}")
+    improvement: "Specific exception handling provides better error messages and debugging"
+    key_points:
+      - Specific exceptions
+      - Meaningful error messages
+    min_duration: 8.0
+    max_duration: 12.0
+
+  # Scene 5: Key Principles (List)
+  - type: list
+    header: "Refactoring Principles"
+    description: "Essential Guidelines"
+    items:
+      - title: "Keep it Simple"
+        description: "Avoid complexity"
+      - title: "DRY Principle"
+        description: "Don't Repeat Yourself"
+      - title: "Single Responsibility"
+        description: "One function, one job"
+      - title: "Readable Names"
+        description: "Self-documenting code"
+    min_duration: 8.0
+    max_duration: 12.0
+
+  # Scene 6: Outro
+  - type: outro
+    main_text: "Refactor with Confidence"
+    sub_text: "See REFACTORING_GUIDE.md"
+    key_message: "Clean code is maintainable code"

@@ -1,0 +1,32 @@
+# Video/Audio Production System - Complete Dependencies
+# ======================================================
+
+# Core image processing
+Pillow>=10.0.0
+
+# Text-to-speech (neural voices)
+edge-tts>=7.2.3
+
+# Numerical operations (fast blending)
+numpy>=1.24.0
+
+# FFmpeg binaries (video encoding)
+imageio-ffmpeg>=0.4.9
+
+# YAML parsing (input files)
+PyYAML>=6.0
+
+# HTTP requests (document fetching)
+requests>=2.31.0
+
+# YouTube transcript fetching
+youtube-transcript-api>=0.6.0
+
+# YouTube API (for search - optional, requires API key)
+google-api-python-client>=2.100.0
+
+# Installation:
+# pip install -r requirements.txt
+#
+# Minimal install (without YouTube features):
+# pip install Pillow edge-tts numpy imageio-ffmpeg PyYAML requests

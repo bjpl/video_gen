@@ -1,0 +1,52 @@
+# Example Input: Simple Feature Video
+# =====================================
+# This shows the EASIEST way to create a video
+# Just provide topics and key points - system generates narration!
+
+video:
+  id: "feature_demo"
+  title: "Feature Demo"
+  description: "Quick demonstration of key features"
+  accent_color: blue  # orange, blue, purple, green, pink, cyan
+  voice: male         # male or female
+  version: "v2.0"
+
+scenes:
+  # Scene 1: Title screen
+  - type: title
+    title: "Feature Demo"
+    subtitle: "Quick Overview"
+    key_message: "Learn the essential features in 60 seconds"
+
+  # Scene 2: Commands
+  - type: command
+    header: "Quick Start"
+    description: "Get Started in 3 Commands"
+    topic: "Getting up and running quickly"
+    commands:
+      - "$ tool install feature"
+      - "$ tool init"
+      - "$ tool run"
+    key_points:
+      - Easy installation
+      - Simple setup
+      - Ready to use
+
+  # Scene 3: Features list
+  - type: list
+    header: "Key Features"
+    description: "What Makes This Special"
+    topic: "The main capabilities you need to know"
+    items:
+      - title: "Fast Performance"
+        description: "Optimized for speed"
+      - title: "Easy to Use"
+        description: "Intuitive interface"
+      - title: "Well Documented"
+        description: "Complete guides"
+
+  # Scene 4: Outro
+  - type: outro
+    main_text: "Ready to Get Started?"
+    sub_text: "See README.md"
+    key_message: "Everything you need is in the documentation"
