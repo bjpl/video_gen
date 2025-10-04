@@ -1,0 +1,85 @@
+# Video 2: Three Input Methods
+# =============================
+# Explains the three ways to provide content
+
+video:
+  id: "02_input_methods"
+  title: "Three Input Methods"
+  description: "Create videos from any source"
+  accent_color: blue
+  voice: female
+  version: "v2.0"
+
+scenes:
+  - type: title
+    title: "Three Input Methods"
+    subtitle: "Choose Your Content Source"
+    key_message: "Documents, YouTube, or guided wizard - you choose"
+    voice: female
+
+  - type: command
+    header: "Method 1: Document Parser"
+    description: "From README to Video in 30 Seconds"
+    topic: "Parse existing documentation into professional videos"
+    commands:
+      - "$ python create_video.py --document README.md"
+      - "# Parses structure automatically"
+      - "# Extracts headings, code, lists"
+      - "# Generates YAML and narration"
+      - "→ Ready to generate in 30 seconds"
+    key_points:
+      - Fastest method
+      - Works with GitHub URLs
+      - Perfect for existing docs
+    voice: male
+
+  - type: command
+    header: "Method 2: YouTube Transcription"
+    description: "Condense Long Tutorials to Summaries"
+    topic: "Extract key points from YouTube videos"
+    commands:
+      - "$ python create_video.py --youtube-url 'VIDEO_URL'"
+      - "# Fetches video transcript"
+      - "# Analyzes segments"
+      - "# Extracts key points"
+      - "→ 60-second summary from 15-minute video"
+    key_points:
+      - Leverage existing content
+      - Create reference videos
+      - Summarize long tutorials
+    voice: female
+
+  - type: command
+    header: "Method 3: Interactive Wizard"
+    description: "Guided Step-by-Step Creation"
+    topic: "Build videos from scratch with guided questions"
+    commands:
+      - "$ python create_video.py --wizard"
+      - "# What's your video about?"
+      - "# What topics to cover?"
+      - "# What commands to show?"
+      - "→ Professional script generated from your answers"
+    key_points:
+      - Perfect for beginners
+      - Full control over content
+      - Guided Q and A interface
+    voice: male_warm
+
+  - type: list
+    header: "Choose the Right Method"
+    description: "Decision Guide"
+    topic: "Select the best input method for your content"
+    items:
+      - title: "Have Documentation?"
+        description: "Use document parser (fastest)"
+      - title: "Found YouTube Video?"
+        description: "Use transcription fetcher"
+      - title: "Starting from Scratch?"
+        description: "Use interactive wizard"
+    voice: female_friendly
+
+  - type: outro
+    main_text: "Three Paths, One Result"
+    sub_text: "THREE_INPUT_METHODS_GUIDE.md"
+    key_message: "Choose the method that fits your content source"
+    voice: female

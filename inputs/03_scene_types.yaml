@@ -1,0 +1,85 @@
+# Video 3: Six Scene Types
+# =========================
+# Showcases all available scene types
+
+video:
+  id: "03_scene_types"
+  title: "Six Scene Types Explained"
+  description: "Visual building blocks for your videos"
+  accent_color: purple
+  voice: male
+  version: "v2.0"
+
+scenes:
+  - type: title
+    title: "Six Scene Types"
+    subtitle: "Visual Building Blocks"
+    key_message: "Mix and match to create any video structure"
+    voice: male
+
+  - type: list
+    header: "The Six Scene Types"
+    description: "Complete Visual Arsenal"
+    topic: "Every visual layout you need for technical content"
+    items:
+      - title: "Title"
+        description: "Large centered titles for openings and chapters"
+      - title: "Command"
+        description: "Terminal cards with syntax-highlighted code"
+      - title: "List"
+        description: "Numbered items with titles and descriptions"
+      - title: "Outro"
+        description: "Closing screens with call-to-action"
+      - title: "Code Comparison"
+        description: "Side-by-side before and after code"
+      - title: "Quote"
+        description: "Centered quotes with attribution"
+    voice: female
+
+  - type: code_comparison
+    header: "Code Comparison Scene"
+    before_label: "Original Code"
+    after_label: "Refactored"
+    before_code: |
+      result = []
+      for x in data:
+        if x > 0:
+          result.append(x)
+    after_code: |
+      result = [x for x in data if x > 0]
+    improvement: "List comprehension is more concise and Pythonic"
+    key_points:
+      - One line instead of four
+      - More readable
+      - Same functionality
+    voice: male_warm
+
+  - type: quote
+    quote_text: "The right scene type makes complex topics clear and engaging"
+    attribution: "Video Gen Design Principle"
+    context: "Choosing the appropriate visual layout"
+    voice: female_friendly
+
+  - type: command
+    header: "Using Scene Types in YAML"
+    description: "Simple Configuration"
+    topic: "Define scene types in your YAML input files"
+    commands:
+      - "scenes:"
+      - "  - type: title"
+      - "  - type: command"
+      - "  - type: code_comparison"
+      - "  - type: quote"
+      - "  - type: list"
+      - "  - type: outro"
+    key_points:
+      - Mix any combination
+      - Each type has specific fields
+      - Auto-generated narration
+    voice: male
+
+  - type: outro
+    main_text: "Build Any Video Structure"
+    sub_text: "NEW_SCENE_TYPES_GUIDE.md"
+    key_message: "Six scene types cover ninety nine percent of technical content"
+    voice: male
