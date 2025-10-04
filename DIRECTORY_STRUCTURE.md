@@ -22,7 +22,11 @@ video_gen/
 │   ├── PROGRAMMATIC_GUIDE.md          # Complete Python API reference
 │   ├── PROGRAMMATIC_COMPLETE.md       # All-in-one programmatic guide
 │   ├── PARSE_RAW_CONTENT.md           # Parse markdown/GitHub/YouTube
-│   └── CONTENT_CONTROL_GUIDE.md       # 5 levels of content control
+│   ├── CONTENT_CONTROL_GUIDE.md       # 5 levels of content control
+│   ├── MULTILINGUAL_GUIDE.md          # 🆕 28+ language support
+│   ├── MULTILINGUAL_QUICKREF.md       # 🆕 Multilingual quick reference
+│   ├── EDUCATIONAL_SCENES_GUIDE.md    # 🆕 Educational scene types
+│   └── EDUCATIONAL_SCENES_QUICKREF.md # 🆕 Educational quick reference
 │
 ├── 📋 status/                         # Setup & Status Documentation
 │   ├── INTEGRATION_COMPLETE.md        # Integration summary
@@ -48,7 +52,7 @@ video_gen/
 │   ├── Core Scripts:
 │   │   ├── create_video.py            # Master entry point
 │   │   ├── unified_video_system.py    # Core classes
-│   │   ├── generate_documentation_videos.py  # Visual rendering
+│   │   ├── generate_documentation_videos.py  # Visual rendering (12 scene types)
 │   │   ├── generate_all_videos_unified_v2.py # Audio generation
 │   │   └── generate_videos_from_timings_v3_*.py  # Video generation
 │   │
@@ -58,8 +62,8 @@ video_gen/
 │   │   ├── generate_script_from_yaml.py       # YAML parser
 │   │   └── generate_script_wizard.py          # Interactive wizard
 │   │
-│   ├── Programmatic (NEW):
-│   │   ├── python_set_builder.py      # Programmatic builder
+│   ├── Programmatic:
+│   │   ├── python_set_builder.py      # Programmatic builder (12 scene helpers)
 │   │   ├── document_to_programmatic.py # Parse markdown/GitHub
 │   │   ├── youtube_to_programmatic.py  # Parse YouTube
 │   │   ├── generate_video_set.py      # Set generator
@@ -67,12 +71,21 @@ video_gen/
 │   │   ├── generate_videos_from_set.py # Video renderer
 │   │   └── generate_script_wizard_set_aware.py  # Set-aware wizard
 │   │
+│   ├── Multilingual (NEW):
+│   │   ├── language_config.py         # 29 language voice mapping
+│   │   ├── translation_service.py     # Translation API (Claude + Google)
+│   │   ├── multilingual_builder.py    # Multilingual video sets
+│   │   └── generate_multilingual_set.py # Multilingual CLI tool
+│   │
 │   ├── Utilities:
 │   │   ├── generate_aggregate_report.py  # Reports
 │   │   └── ... (other utility scripts)
 │   │
 │   ├── examples/                      # Example Scripts
-│   │   └── example_document_programmatic.py  # Parsing examples
+│   │   ├── example_document_programmatic.py  # Parsing examples
+│   │   ├── multilingual_examples.py    # Multilingual workflows
+│   │   ├── reverse_translation_examples.py  # Bidirectional translation
+│   │   └── educational_course_example.py    # Educational scenes
 │   │
 │   └── drafts/                        # Generated drafts (auto-created)
 │
@@ -147,11 +160,23 @@ video_gen/
 - PARSE_RAW_CONTENT.md
 - CONTENT_CONTROL_GUIDE.md
 
+**Multilingual Docs (4 files):** 🆕
+- MULTILINGUAL_GUIDE.md
+- MULTILINGUAL_QUICKREF.md
+- MULTILINGUAL_IMPLEMENTATION_COMPLETE.md
+- MULTILINGUAL_FINAL_SUMMARY.md
+
+**Educational Docs (4 files):** 🆕
+- EDUCATIONAL_SCENES_GUIDE.md
+- EDUCATIONAL_SCENES_QUICKREF.md
+- EDUCATIONAL_CONTENT_ANALYSIS.md
+- EDUCATIONAL_IMPLEMENTATION_COMPLETE.md
+
 **Config (2 files):**
 - requirements.txt
 - .gitignore
 
-**Total Root Files: 12 markdown + 2 config = 14 files** (clean!)
+**Total Root Files: 20 markdown + 2 config = 22 files**
 
 ---
 
@@ -161,8 +186,8 @@ video_gen/
 |-----------|---------|-------|
 | `status/` | Setup & status documentation | 5 docs |
 | `docs/` | Comprehensive guides | 11 docs |
-| `scripts/` | Python scripts | 26 scripts |
-| `scripts/examples/` | Example scripts | 1+ examples |
+| `scripts/` | Python scripts | 30+ scripts |
+| `scripts/examples/` | Example scripts | 4 examples |
 | `sets/` | Video set definitions | 2 example sets |
 | `output/` | Generated content (new) | Auto-created |
 | `inputs/` | Example inputs | 4 YAML examples |

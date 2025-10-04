@@ -125,15 +125,19 @@ ls ../output/my_first_video/videos/
 | Doc | Purpose | Time |
 |-----|---------|------|
 | **[PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)** 🆕 | Parse markdown/GitHub/YouTube | 5 min |
+| **[EDUCATIONAL_SCENES_QUICKREF.md](EDUCATIONAL_SCENES_QUICKREF.md)** 🆕 | Educational scene types | 5 min |
+| **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** 🆕 | Multilingual generation | 5 min |
 | **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** 🆕 | Content control options | 8 min |
 | **[PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md)** | Complete Python API | 10 min |
 | **[status/INTEGRATION_COMPLETE.md](status/INTEGRATION_COMPLETE.md)** | What was added | 5 min |
 | **[README.md](README.md)** | Project overview | 10 min |
 
-### **Existing Docs:**
+### **Complete Guides:**
 
 | Doc | Purpose |
 |-----|---------|
+| [EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md) | Complete educational reference |
+| [MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md) | Complete multilingual reference |
 | [docs/THREE_INPUT_METHODS_GUIDE.md](docs/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods |
 | [AI_NARRATION_QUICKSTART.md](AI_NARRATION_QUICKSTART.md) | AI narration setup |
 | [GETTING_STARTED.md](GETTING_STARTED.md) | Original getting started |
