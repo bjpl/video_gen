@@ -1,0 +1,37 @@
+video:
+  id: "advanced_capabilities"
+  title: "Advanced Capabilities"
+  description: "Powerful features for power users"
+
+scenes:
+  - type: title
+    title: "Advanced Capabilities"
+    subtitle: "For Power Users"
+
+  - type: list
+    header: "Advanced Features"
+    description: "Take Full Control"
+    items:
+      - title: "Custom Plugins"
+        description: "Extend core functionality"
+      - title: "Webhooks"
+        description: "Real-time integrations"
+      - title: "GraphQL API"
+        description: "Flexible data access"
+      - title: "SSO Integration"
+        description: "Enterprise security"
+
+  - type: command
+    header: "Plugin Example"
+    description: "Build Custom Extensions"
+    commands:
+      - "# Create plugin"
+      - "$ awesome-product plugin create my-plugin"
+      - ""
+      - "# Install and activate"
+      - "$ awesome-product plugin install ./my-plugin"
+      - "→ Plugin active!"
+
+  - type: outro
+    main_text: "Unlock Full Potential"
+    sub_text: "Enterprise plans available"

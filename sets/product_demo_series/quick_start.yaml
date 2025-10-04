@@ -1,0 +1,23 @@
+video:
+  id: "quick_start"
+  title: "Quick Start"
+  description: "Get started in 60 seconds"
+
+scenes:
+  - type: title
+    title: "Quick Start"
+    subtitle: "Up and Running in 60 Seconds"
+
+  - type: command
+    header: "Three Simple Steps"
+    description: "That's All It Takes"
+    commands:
+      - "$ npm install awesome-product"
+      - "$ awesome-product init"
+      - "$ awesome-product start"
+      - "→ You're live!"
+    narration: "Three simple steps and you're live. Install with npm, initialize your project, and start building. It's that easy."
+
+  - type: outro
+    main_text: "Start Building Now"
+    sub_text: "See docs.example.com"

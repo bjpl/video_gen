@@ -44,13 +44,14 @@ python generate_videos_from_timings_v3_simple.py
 
 ## ✨ Features
 
-### **🎯 Three Input Methods**
+### **🎯 Four Input Methods**
 
 Create videos from ANY source:
 
 1. **📄 Documents** - Parse README, guides, markdown (30 seconds)
 2. **📺 YouTube** - Fetch transcripts, create summaries (1-2 minutes)
 3. **🧙 Wizard** - Interactive guided creation (5-15 minutes)
+4. **🐍 Programmatic** - Generate videos with Python code (for automation) 🆕
 
 ### **🎨 Six Scene Types**
 
@@ -108,7 +109,10 @@ YOUR CONTENT                SYSTEM GENERATES             RESULT
 
 | Guide | Purpose | Read Time |
 |-------|---------|-----------|
-| [**THREE_INPUT_METHODS_GUIDE.md**](docs/THREE_INPUT_METHODS_GUIDE.md) | How to provide content (START HERE) | 10 min |
+| [**THREE_INPUT_METHODS_GUIDE.md**](docs/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods (START HERE) | 10 min |
+| **[PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)** 🆕 | Parse markdown/GitHub/YouTube | 5 min |
+| **[PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md)** 🆕 | Complete Python API reference | 10 min |
+| **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** 🆕 | Control content generation | 8 min |
 | [**AI_NARRATION_QUICKSTART.md**](AI_NARRATION_QUICKSTART.md) | Setup AI narration in 2 minutes | 3 min |
 | [**COMPLETE_USER_WORKFLOW.md**](docs/COMPLETE_USER_WORKFLOW.md) | Step-by-step workflow | 15 min |
 | [**NEW_SCENE_TYPES_GUIDE.md**](docs/NEW_SCENE_TYPES_GUIDE.md) | Code comparison & quote scenes | 8 min |
@@ -220,6 +224,68 @@ python scripts/create_video.py --wizard
 
 ---
 
+### **Programmatic Generation:** 🆕
+
+**Two approaches available:**
+
+#### **A) Parse Existing Content (Fastest!)**
+
+```python
+# From local markdown
+from scripts.document_to_programmatic import parse_document_to_set
+parse_document_to_set('README.md')  # ONE line - done!
+
+# From GitHub README
+from scripts.document_to_programmatic import github_readme_to_video
+github_readme_to_video('https://github.com/fastapi/fastapi').export_to_yaml('sets/fastapi')
+
+# From YouTube video
+from scripts.youtube_to_programmatic import parse_youtube_to_set
+parse_youtube_to_set('https://youtube.com/watch?v=VIDEO_ID', target_duration=60)
+
+# Then generate
+cd scripts
+python generate_video_set.py ../sets/{name}
+python generate_videos_from_set.py ../output/{name}
+```
+
+#### **B) Build from Scratch (Full Control)**
+
+```python
+# Generate videos with Python code
+from scripts.python_set_builder import VideoSetBuilder
+
+builder = VideoSetBuilder("tutorial_series", "Python Tutorial")
+
+for topic in ["Variables", "Functions", "Classes"]:
+    builder.add_video(
+        video_id=topic.lower(),
+        title=topic,
+        scenes=[
+            builder.create_title_scene(topic, f"Learn {topic}"),
+            builder.create_command_scene("Example", "Code", ["# ..."]),
+            builder.create_outro_scene("Great!", "Next lesson")
+        ]
+    )
+
+builder.export_to_yaml("sets/tutorial_series")
+
+# Then generate with standard pipeline
+cd scripts
+python generate_video_set.py ../sets/tutorial_series
+python generate_videos_from_set.py ../output/tutorial_series
+```
+
+**Perfect for:**
+- Parse markdown/GitHub/YouTube (zero manual work!)
+- Generate 10+ videos from databases/APIs
+- CI/CD integration
+- Batch automation
+
+**See:** [PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md) | [PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)
+
+---
+
 ## 🏗️ Architecture
 
 ### **Five-Phase Workflow:**
@@ -249,7 +315,12 @@ This System: Create audio → Measure → Build video to match ✅
 video_gen/
 ├── 📜 scripts/                    # Python automation scripts
 │   ├── create_video.py            # Master entry point
-│   ├── generate_script_from_*.py  # Input processors (3 methods)
+│   ├── python_set_builder.py      # 🆕 Programmatic builder
+│   ├── document_to_programmatic.py # 🆕 Parse markdown/GitHub
+│   ├── youtube_to_programmatic.py  # 🆕 Parse YouTube transcripts
+│   ├── generate_video_set.py      # 🆕 Set generator
+│   ├── generate_all_sets.py       # 🆕 Batch set generator
+│   ├── generate_script_from_*.py  # Input processors (4 methods)
 │   ├── generate_documentation_videos.py  # Visual rendering (6 scene types)
 │   ├── unified_video_system.py    # Core classes
 │   ├── generate_all_videos_unified_v2.py  # Audio generation
@@ -259,8 +330,18 @@ video_gen/
 │   ├── example_simple.yaml
 │   ├── example_advanced.yaml
 │   ├── example_new_scene_types.yaml
-│   ├── example_four_voices.yaml
-│   └── README_INPUTS.md
+│   └── example_four_voices.yaml
+│
+├── 📁 sets/                       # 🆕 Video set definitions
+│   ├── tutorial_series_example/   # Example tutorial series
+│   └── product_demo_series/       # Example marketing series
+│
+├── 📁 output/                     # 🆕 Generated videos & audio
+│   └── {set_name}/
+│       ├── audio/
+│       ├── videos/
+│       ├── scripts/
+│       └── reports/
 │
 ├── 📚 docs/                       # Comprehensive documentation
 │   ├── THREE_INPUT_METHODS_GUIDE.md       # Start here!
@@ -269,6 +350,9 @@ video_gen/
 │   ├── VOICE_GUIDE_COMPLETE.md
 │   └── ... (10+ comprehensive guides)
 │
+├── 📄 PROGRAMMATIC_GUIDE.md       # 🆕 Python API guide
+├── 📄 PARSE_RAW_CONTENT.md        # 🆕 Parse markdown/GitHub/YouTube
+├── 📄 CONTENT_CONTROL_GUIDE.md    # 🆕 Content control options
 ├── 📄 requirements.txt            # All dependencies
 └── 📄 README.md                   # This file
 ```
@@ -428,12 +512,21 @@ python scripts/create_video.py --yaml inputs/example_simple.yaml
 # 4. Try with AI narration (if API key set)
 python scripts/create_video.py --yaml inputs/example_simple.yaml --use-ai
 
-# 5. Read the guides
-cat docs/THREE_INPUT_METHODS_GUIDE.md   # Input methods
+# 5. Try programmatic example (NEW!)
+cd scripts
+python generate_video_set.py ../sets/tutorial_series_example
+python generate_videos_from_set.py ../output/tutorial_series_example
+
+# 6. Read the guides
+cat docs/THREE_INPUT_METHODS_GUIDE.md   # All 4 input methods
+cat PARSE_RAW_CONTENT.md                 # Parse markdown/GitHub/YouTube (NEW!)
+cat PROGRAMMATIC_GUIDE.md                # Python API (NEW!)
 cat AI_NARRATION_QUICKSTART.md          # AI setup
 
-# 6. Create your first video!
+# 7. Create your first video!
 python scripts/create_video.py --wizard
+# Or parse existing content:
+python scripts/document_to_programmatic.py README.md
 ```
 
 ---

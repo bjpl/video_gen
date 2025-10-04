@@ -1,0 +1,35 @@
+video:
+  id: "conclusion"
+  title: "Conclusion"
+  description: "Series wrap-up and next steps"
+
+scenes:
+  - type: title
+    title: "Conclusion"
+    subtitle: "You Did It!"
+
+  - type: list
+    header: "What You Learned"
+    description: "Skills Mastered"
+    items:
+      - title: "Environment Setup"
+        description: "Development tools"
+      - title: "First Program"
+        description: "Hello World"
+      - title: "Core Concepts"
+        description: "Programming basics"
+
+  - type: list
+    header: "Next Steps"
+    description: "Continue Your Journey"
+    items:
+      - title: "Practice"
+        description: "Build small projects"
+      - title: "Read Docs"
+        description: "Deepen knowledge"
+      - title: "Join Community"
+        description: "Connect with others"
+
+  - type: outro
+    main_text: "Keep Coding!"
+    sub_text: "See advanced_tutorials/"

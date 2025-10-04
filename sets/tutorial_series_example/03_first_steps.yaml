@@ -1,0 +1,36 @@
+video:
+  id: "first_steps"
+  title: "First Steps"
+  description: "Your first program"
+
+scenes:
+  - type: title
+    title: "First Steps"
+    subtitle: "Hello World"
+
+  - type: command
+    header: "Hello World"
+    description: "Your First Program"
+    commands:
+      - "$ echo 'print(\"Hello, World!\")' > hello.py"
+      - "$ python hello.py"
+      - "→ Hello, World!"
+    key_points:
+      - Create source file
+      - Run the program
+      - See the output
+
+  - type: list
+    header: "Key Concepts"
+    description: "What You Just Learned"
+    items:
+      - title: "Source Files"
+        description: "Where code lives"
+      - title: "Execution"
+        description: "Running programs"
+      - title: "Output"
+        description: "Seeing results"
+
+  - type: outro
+    main_text: "You're a Programmer!"
+    sub_text: "Keep Learning"

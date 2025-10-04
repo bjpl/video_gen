@@ -1,55 +1,48 @@
-# 🎬 Complete Input System - Three Methods to Create Videos
+# 🎬 Complete Input System - Four Methods to Create Videos
 
 **From Any Source to Professional Video in Minutes**
 
 ---
 
-## 🎯 Overview - Three Ways to Create Videos
+## 🎯 Overview - Four Ways to Create Videos
 
 ```
-┌────────────────────────────────────────────────────────────────────┐
-│                        CHOOSE YOUR INPUT METHOD                    │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│  METHOD 1: DOCUMENTS          METHOD 2: YOUTUBE      METHOD 3: WIZARD│
-│  ┌─────────────────┐         ┌─────────────────┐   ┌───────────────┐│
-│  │ Have README or  │         │ Found good      │   │ Starting from ││
-│  │ documentation?  │         │ YouTube video?  │   │ just ideas?   ││
-│  │                 │         │                 │   │               ││
-│  │ • README.md     │         │ • Tutorial      │   │ • Topics      ││
-│  │ • Guide.md      │         │ • Explanation   │   │ • Concepts    ││
-│  │ • Blog post     │         │ • Demo          │   │ • Outline     ││
-│  └────────┬────────┘         └────────┬────────┘   └───────┬───────┘│
-│           │                           │                    │         │
-│           └───────────────┬───────────┴────────────────────┘         │
-│                           ▼                                          │
-│                  ┌─────────────────┐                                 │
-│                  │ YAML Generated  │                                 │
-│                  └────────┬────────┘                                 │
-│                           │                                          │
-│                           ▼                                          │
-│                  ┌─────────────────┐                                 │
-│                  │ Script Generator│                                 │
-│                  └────────┬────────┘                                 │
-│                           │                                          │
-│                           ▼                                          │
-│                  ┌─────────────────┐                                 │
-│                  │ Review & Edit   │                                 │
-│                  └────────┬────────┘                                 │
-│                           │                                          │
-│                           ▼                                          │
-│                  ┌─────────────────┐                                 │
-│                  │ Audio Generation│                                 │
-│                  └────────┬────────┘                                 │
-│                           │                                          │
-│                           ▼                                          │
-│                  ┌─────────────────┐                                 │
-│                  │ Video Generation│                                 │
-│                  └────────┬────────┘                                 │
-│                           │                                          │
-│                           ▼                                          │
-│                    FINAL VIDEO! 🎉                                   │
-└────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                           CHOOSE YOUR INPUT METHOD                             │
+├────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                │
+│  METHOD 1:        METHOD 2:         METHOD 3:        METHOD 4:                 │
+│  DOCUMENTS        YOUTUBE           WIZARD           PROGRAMMATIC 🆕           │
+│  ┌──────────┐    ┌──────────┐     ┌──────────┐     ┌──────────┐              │
+│  │ README   │    │ Tutorial │     │ Ideas &  │     │ Python   │              │
+│  │ Guide.md │    │ Demo vid │     │ Topics   │     │ Code     │              │
+│  │ Docs     │    │ Explain  │     │ Outline  │     │ Database │              │
+│  └─────┬────┘    └─────┬────┘     └─────┬────┘     └─────┬────┘              │
+│        │               │                │                │                    │
+│        └───────────────┴────────────────┴────────────────┘                    │
+│                                 ▼                                              │
+│                        ┌─────────────────┐                                    │
+│                        │ YAML Generated  │                                    │
+│                        └────────┬────────┘                                    │
+│                                 ▼                                              │
+│                        ┌─────────────────┐                                    │
+│                        │ Script Generator│                                    │
+│                        └────────┬────────┘                                    │
+│                                 ▼                                              │
+│                        ┌─────────────────┐                                    │
+│                        │ Review & Edit   │                                    │
+│                        └────────┬────────┘                                    │
+│                                 ▼                                              │
+│                        ┌─────────────────┐                                    │
+│                        │ Audio Generation│                                    │
+│                        └────────┬────────┘                                    │
+│                                 ▼                                              │
+│                        ┌─────────────────┐                                    │
+│                        │ Video Generation│                                    │
+│                        └────────┬────────┘                                    │
+│                                 ▼                                              │
+│                          FINAL VIDEO! 🎉                                       │
+└────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -529,17 +522,151 @@ Next steps:
 
 ---
 
+## 🐍 Method 4: Programmatic (Python Code) 🆕
+
+### **Best For:**
+- Generating 10+ videos programmatically
+- Dynamic content from databases or APIs
+- CI/CD pipelines and automation
+- Complex logic and conditional content
+- Batch processing workflows
+
+### **What You Need:**
+- Python programming knowledge
+- Data source (database, API, files, etc.)
+
+### **Usage:**
+
+```python
+from scripts.python_set_builder import VideoSetBuilder
+
+# Create builder
+builder = VideoSetBuilder(
+    set_id="tutorial_series",
+    set_name="Python Tutorial Series",
+    defaults={
+        'accent_color': 'blue',
+        'voice': 'male',
+        'target_duration': 60
+    }
+)
+
+# Add videos programmatically (e.g., from a loop)
+topics = ["Variables", "Functions", "Classes", "Modules"]
+
+for i, topic in enumerate(topics, 1):
+    builder.add_video(
+        video_id=f"lesson_{i:02d}",
+        title=f"Lesson {i}: {topic}",
+        description=f"Learn about {topic}",
+        scenes=[
+            builder.create_title_scene(
+                f"Lesson {i}",
+                topic
+            ),
+            builder.create_command_scene(
+                f"{topic} Example",
+                "Basic Usage",
+                [
+                    f"# {topic} in Python",
+                    "# Example code here"
+                ]
+            ),
+            builder.create_outro_scene(
+                f"You learned {topic}!",
+                f"Next: Lesson {i+1}"
+            )
+        ]
+    )
+
+# Export to YAML
+builder.export_to_yaml("sets/tutorial_series")
+
+# Then generate with standard pipeline
+# cd scripts
+# python generate_video_set.py ../sets/tutorial_series
+# python generate_videos_from_set.py ../output/tutorial_series
+```
+
+### **What Happens:**
+
+```
+YOU WRITE:                     SYSTEM GENERATES:
+─────────────────              ─────────────────
+Python code with:              sets/tutorial_series/
+├─ VideoSetBuilder             ├─ set_config.yaml
+├─ for loop over topics        ├─ lesson_01.yaml
+├─ add_video() calls           ├─ lesson_02.yaml
+└─ export_to_yaml()            ├─ lesson_03.yaml
+                               └─ lesson_04.yaml
+
+                               Then standard pipeline:
+                               → Audio generation
+                               → Video rendering
+                               → Final MP4s
+```
+
+### **Advanced: Generate from Database**
+
+```python
+import sqlite3
+from scripts.python_set_builder import VideoSetBuilder
+
+# Connect to database
+conn = sqlite3.connect('products.db')
+cursor = conn.execute('SELECT id, name, description FROM products')
+
+builder = VideoSetBuilder("product_catalog", "Product Catalog")
+
+# Generate video for each database row
+for product_id, name, description in cursor:
+    builder.add_video(
+        video_id=f"product_{product_id}",
+        title=name,
+        scenes=[
+            builder.create_title_scene(name, description),
+            builder.create_list_scene(
+                "Features",
+                "What You Get",
+                [...]  # Load from database
+            ),
+            builder.create_outro_scene("Try It Free", f"product/{product_id}")
+        ]
+    )
+
+builder.export_to_yaml("sets/product_catalog")
+```
+
+### **Pre-configured Builders**
+
+```python
+# Tutorial series (blue, male, numbered)
+from scripts.python_set_builder import TutorialSeriesBuilder
+builder = TutorialSeriesBuilder("course", "My Course")
+
+# Marketing videos (purple, friendly, unnumbered)
+from scripts.python_set_builder import MarketingSeriesBuilder
+builder = MarketingSeriesBuilder("demos", "Product Demos")
+```
+
+**Time:** Seconds to minutes (depending on data volume)
+
+**See:** [../PROGRAMMATIC_GUIDE.md](../PROGRAMMATIC_GUIDE.md) for complete API reference
+
+---
+
 ## 🔄 Complete Workflow Comparison
 
-| Step | Method 1: Document | Method 2: YouTube | Method 3: Wizard |
-|------|-------------------|-------------------|------------------|
-| **Input** | README.md file | YouTube URL | Answer questions |
-| **Time** | 30 seconds | 1-2 minutes | 5-15 minutes |
-| **Effort** | Very low | Very low | Medium |
-| **Control** | Medium | Low | High |
-| **Best For** | Existing docs | Summarizing content | Custom content |
+| Step | Method 1: Document | Method 2: YouTube | Method 3: Wizard | Method 4: Programmatic 🆕 |
+|------|-------------------|-------------------|------------------|---------------------------|
+| **Input** | README.md file | YouTube URL | Answer questions | Python code |
+| **Time** | 30 seconds | 1-2 minutes | 5-15 minutes | Seconds (automated) |
+| **Effort** | Very low | Very low | Medium | Low (code once) |
+| **Control** | Medium | Low | High | Very High |
+| **Scalability** | Low | Low | Low | Very High |
+| **Best For** | Existing docs | Summarizing | Custom content | Automation, 10+ videos |
 
-**All three methods produce:**
+**All four methods produce:**
 - ✅ YAML file (structured input)
 - ✅ Markdown script (review/edit)
 - ✅ Python code (ready to use)
@@ -627,13 +754,20 @@ DECISION TREE:
 │  │
 │  └─ NO → Continue
 │
+├─ Need to generate 10+ videos or automate?
+│  │
+│  ├─ YES → Use METHOD 4 (Programmatic) 🆕
+│  │        ├─ From database
+│  │        ├─ From API
+│  │        ├─ Dynamic content
+│  │        └─ CI/CD integration
+│  │
+│  └─ NO → Continue
+│
 ├─ Starting from just ideas/topics?
 │  │
 │  ├─ Want FULL CONTROL → Use METHOD 3 (Wizard)
 │  │                       └─ Guided Q&A, high customization
-│  │
-│  ├─ Know YAML → Use METHOD 4 (Direct YAML)
-│  │               └─ Maximum control and speed
 │  │
 │  └─ UNSURE → Use METHOD 3 (Wizard)
 │              └─ Easiest for beginners
@@ -641,14 +775,17 @@ DECISION TREE:
 
 ### **Feature Comparison:**
 
-| Feature | Document | YouTube | Wizard | Direct YAML |
-|---------|----------|---------|--------|-------------|
+| Feature | Document | YouTube | Wizard | Programmatic 🆕 |
+|---------|----------|---------|--------|-----------------|
 | **Ease of use** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
 | **Control** | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Speed** | ⚡⚡⚡⚡⚡ | ⚡⚡⚡⚡ | ⚡⚡ | ⚡⚡⚡⚡⚡ |
 | **Learning curve** | None | None | Low | Medium |
 | **Narration quality** | Auto | Auto | Auto | Custom |
 | **Batch processing** | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes |
+| **Scalability** | ⭐⭐ | ⭐⭐ | ⭐ | ⭐⭐⭐⭐⭐ |
+| **Automation** | ⭐⭐ | ⭐⭐ | ❌ No | ⭐⭐⭐⭐⭐ |
+| **Dynamic Content** | ❌ No | ❌ No | ❌ No | ✅ Yes |
 
 ---
 
@@ -819,29 +956,37 @@ python create_video.py --youtube-url "https://youtube.com/watch?v=TUTORIAL2"
 1. ✅ **Existing documentation** (README, guides) - 30 seconds
 2. ✅ **YouTube videos** (transcripts) - 1-2 minutes
 3. ✅ **Your ideas** (interactive wizard) - 5-15 minutes
-4. ✅ **Direct YAML** (full control) - Varies
+4. ✅ **Python code** (programmatic automation) - Seconds 🆕
 
 ### **All Methods Generate:**
 
 - Professional narration (auto-generated or custom)
-- Proper scene structure (title, command, list, outro)
+- Proper scene structure (title, command, list, outro, etc.)
 - Editable scripts (review before committing)
 - Ready-to-use code (copy & paste)
 
 ### **Then Standard Workflow:**
 
 ```bash
+# For Methods 1-3:
 # Audio generation
 python generate_all_videos_unified_v2.py
 
 # Video generation
 python generate_videos_from_timings_v3_simple.py
 
+# For Method 4 (Programmatic):
+# Audio generation for sets
+python generate_video_set.py ../sets/my_set
+
+# Video generation for sets
+python generate_videos_from_set.py ../output/my_set
+
 # Result: Professional videos! 🎉
 ```
 
 ---
 
-*Complete Input System - Three Methods, One Workflow*
-*Created: 2025-10-03*
+*Complete Input System - Four Methods, One Workflow*
+*Updated: 2025-10-04 - Added Programmatic Method*
 *Status: ✅ READY TO USE*

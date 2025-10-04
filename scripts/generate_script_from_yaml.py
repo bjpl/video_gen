@@ -234,28 +234,32 @@ class NarrationGenerator:
         # Build context based on scene type
         if scene_type == 'title':
             context = f"""
-            Create professional video narration for a title scene.
+            Create technical video narration for a title scene.
 
             Title: {scene_data.get('title', '')}
             Subtitle: {scene_data.get('subtitle', '')}
             Key message: {scene_data.get('key_message', '')}
 
-            Create a brief, engaging introduction (1-2 sentences, ~10 words).
-            Style: Professional, welcoming, clear.
+            Create a brief, direct introduction (1-2 sentences, ~10 words).
+            Style: Technical, factual, educational - NOT marketing/sales language.
+            Avoid: "powerful", "amazing", "transform", "instantly", "revolutionary"
+            Use: Direct statements about what it is and does.
             """
 
         elif scene_type == 'command':
             context = f"""
-            Create professional video narration for a command/tutorial scene.
+            Create technical tutorial narration for a command/code scene.
 
             Topic: {scene_data.get('topic', '')}
             Header: {scene_data.get('header', '')}
             Commands shown: {len(scene_data.get('commands', []))} commands
             Key points: {', '.join(scene_data.get('key_points', []))}
 
-            Create engaging narration (2-3 sentences, 15-20 words).
-            Style: Educational, clear, encouraging.
-            Mention running the commands and the benefits.
+            Create clear, instructional narration (2-3 sentences, 15-20 words).
+            Style: Technical documentation, straightforward, educational.
+            Avoid: Marketing language, hype, superlatives.
+            Focus: What the commands do and why you'd use them.
+            Tone: Like explaining to a developer colleague, not selling a product.
             """
 
         elif scene_type == 'list':
@@ -268,52 +272,62 @@ class NarrationGenerator:
                     item_titles.append(str(item))
 
             context = f"""
-            Create professional video narration for a list scene.
+            Create technical documentation narration for a list scene.
 
             Topic: {scene_data.get('topic', '')}
             Header: {scene_data.get('header', '')}
             Items to mention: {', '.join(item_titles)}
 
             Create narration that introduces the list (2 sentences, 15-20 words).
-            Style: Clear, organized, professional.
-            Mention the key items naturally.
+            Style: Technical documentation, factual, clear.
+            Avoid: Promotional language, excitement, hype.
+            Focus: Factual description of what each item is/does.
+            Tone: Educational reference material, not sales copy.
             """
 
         elif scene_type == 'code_comparison':
             context = f"""
-            Create professional video narration for a code refactoring/comparison scene.
+            Create technical narration for a code comparison scene.
 
             Header: {scene_data.get('header', '')}
             Improvement: {scene_data.get('improvement', '')}
             Key points: {', '.join(scene_data.get('key_points', []))}
 
-            Create narration explaining the improvement (2 sentences, 12-18 words).
-            Style: Technical but accessible, focus on benefits.
+            Create narration explaining the code difference (2 sentences, 12-18 words).
+            Style: Technical explanation, factual comparison.
+            Avoid: Subjective language like "better", "cleaner" unless technically justified.
+            Focus: What changed and the technical reason why.
+            Tone: Code review, not product pitch.
             """
 
         elif scene_type == 'quote':
             context = f"""
-            Create professional video narration for a quote scene.
+            Create technical narration for a quote scene.
 
             Quote: "{scene_data.get('quote_text', '')}"
             Attribution: {scene_data.get('attribution', '')}
             Context: {scene_data.get('context', '')}
 
             Create narration that introduces and reads the quote (15-25 words).
-            Style: Thoughtful, emphasize the wisdom.
-            Include attribution naturally.
+            Style: Straightforward, factual introduction to the quote.
+            Avoid: Flowery language, excessive buildup.
+            Focus: Brief context, then the quote itself, then attribution.
+            Tone: Academic reference, not inspirational speech.
             """
 
         elif scene_type == 'outro':
             context = f"""
-            Create professional video narration for an outro/closing scene.
+            Create technical documentation outro narration.
 
             Main message: {scene_data.get('main_text', '')}
             Documentation link: {scene_data.get('sub_text', '')}
             Key message: {scene_data.get('key_message', '')}
 
-            Create a brief, encouraging closing (1-2 sentences, 10-15 words).
-            Style: Encouraging, professional, call-to-action.
+            Create a brief, factual closing (1-2 sentences, 10-15 words).
+            Style: Direct, helpful, informative - NOT motivational/sales language.
+            Avoid: "journey", "transform", "unleash", "empower"
+            Focus: Point to documentation/resources factually.
+            Tone: End of technical documentation, not marketing pitch.
             """
 
         else:
@@ -321,21 +335,34 @@ class NarrationGenerator:
             return ""
 
         try:
-            # Call Claude API
+            # Call Claude API with latest Sonnet 4.5
             response = self.ai_client.messages.create(
-                model="claude-3-5-sonnet-20241022",
+                model="claude-sonnet-4-20250514",
                 max_tokens=150,
-                temperature=0.7,
+                temperature=0.5,  # Lower temperature for more consistent, less creative output
                 messages=[{
                     "role": "user",
                     "content": f"""{context}
 
 Requirements:
-- Conversational but professional tone
+- Technical documentation tone (NOT marketing/promotional)
 - Target pace: {self.target_wpm} words per minute
-- Natural, engaging language
-- No filler words or unnecessary complexity
-- Appropriate for technical/educational content
+- Clear, direct language (avoid hype and superlatives)
+- No filler words or marketing buzzwords
+- Factual, educational content
+- Like explaining to a developer colleague
+
+Avoid these marketing words:
+- "powerful", "amazing", "revolutionary", "game-changing"
+- "transform", "unleash", "empower", "elevate"
+- "journey", "explore", "discover" (unless literally exploring)
+- Excessive adjectives and adverbs
+
+Use instead:
+- Direct descriptions of functionality
+- Technical accuracy
+- Factual benefits
+- Straightforward explanations
 
 Generate ONLY the narration text, nothing else."""
                 }]

@@ -1,0 +1,28 @@
+video:
+  id: "feature_highlights"
+  title: "Feature Highlights"
+  description: "Top features that make our product amazing"
+
+scenes:
+  - type: title
+    title: "Amazing Features"
+    subtitle: "See What's Possible"
+    narration: "Amazing features. See what's possible with our powerful product."
+
+  - type: list
+    header: "Top Features"
+    description: "What Makes Us Special"
+    items:
+      - title: "Lightning Fast"
+        description: "10x faster than competitors"
+      - title: "Easy to Use"
+        description: "Intuitive interface"
+      - title: "Powerful API"
+        description: "Extend functionality"
+      - title: "24/7 Support"
+        description: "We're here to help"
+
+  - type: outro
+    main_text: "Try It Free Today"
+    sub_text: "No credit card required"
+    narration: "Try it free today. No credit card required. Start in seconds."
