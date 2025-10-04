@@ -415,6 +415,487 @@ def create_quote_keyframes(quote_text, attribution, accent_color):
 
     return start_frame.convert('RGB'), end_frame.convert('RGB')
 
+
+def create_problem_keyframes(problem_number, title, problem_text, difficulty, accent_color):
+    """Create problem presentation scene (for coding challenges)"""
+    base = create_base_frame(accent_color)
+    start_frame = base.copy()
+    end_frame = base.copy()
+    draw = ImageDraw.Draw(end_frame, 'RGBA')
+
+    # Difficulty badge
+    difficulty_colors = {
+        'easy': ACCENT_GREEN,
+        'medium': ACCENT_ORANGE,
+        'hard': ACCENT_PINK
+    }
+    diff_color = difficulty_colors.get(difficulty.lower(), ACCENT_BLUE)
+
+    badge_w, badge_h = 180, 50
+    badge_x, badge_y = (WIDTH - badge_w) // 2, 200
+    draw.rounded_rectangle([badge_x, badge_y, badge_x + badge_w, badge_y + badge_h],
+                          radius=25, fill=diff_color + (40,), outline=diff_color + (200,), width=2)
+
+    diff_text = f"{difficulty.upper()}"
+    bbox = draw.textbbox((0, 0), diff_text, font=font_desc)
+    w = bbox[2] - bbox[0]
+    draw.text(((WIDTH - w) // 2, badge_y + 10), diff_text,
+              font=font_desc, fill=diff_color + (255,))
+
+    # Problem number
+    prob_num = f"Problem #{problem_number}"
+    bbox_num = draw.textbbox((0, 0), prob_num, font=font_small)
+    w_num = bbox_num[2] - bbox_num[0]
+    draw.text(((WIDTH - w_num) // 2, 280), prob_num,
+              font=font_small, fill=TEXT_LIGHT + (200,))
+
+    # Title
+    bbox_title = draw.textbbox((0, 0), title, font=font_header)
+    w_title = bbox_title[2] - bbox_title[0]
+    draw.text(((WIDTH - w_title) // 2, 320), title,
+              font=font_header, fill=TEXT_DARK + (255,))
+
+    # Problem card
+    card_w = 1400
+    card_h = 400
+    card_x = (WIDTH - card_w) // 2
+    card_y = 440
+
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=20, fill=CARD_BG + (255,))
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=20, outline=CARD_SHADOW + (120,), width=2)
+
+    # Problem text (wrap if needed)
+    problem_lines = []
+    words = problem_text.split()
+    current_line = []
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        bbox = draw.textbbox((0, 0), test_line, font=font_desc)
+        if bbox[2] - bbox[0] > card_w - 100:
+            problem_lines.append(' '.join(current_line))
+            current_line = [word]
+        else:
+            current_line.append(word)
+    if current_line:
+        problem_lines.append(' '.join(current_line))
+
+    # Draw problem text
+    text_y = card_y + 60
+    for line in problem_lines[:8]:  # Max 8 lines
+        draw.text((card_x + 50, text_y), line, font=font_desc, fill=TEXT_DARK + (255,))
+        text_y += 48
+
+    # Icon
+    icon_size = 80
+    icon_x, icon_y = card_x + card_w - icon_size - 40, card_y + 40
+    draw.ellipse([icon_x, icon_y, icon_x + icon_size, icon_y + icon_size],
+                 fill=accent_color + (30,))
+    draw.text((icon_x + 20, icon_y + 10), "?", font=font_title, fill=accent_color + (200,))
+
+    return start_frame.convert('RGB'), end_frame.convert('RGB')
+
+
+def create_solution_keyframes(title, solution_code, explanation, accent_color):
+    """Create solution presentation scene"""
+    base = create_base_frame(accent_color)
+    start_frame = base.copy()
+    end_frame = base.copy()
+    draw = ImageDraw.Draw(end_frame, 'RGBA')
+
+    # "Solution" badge
+    badge_w, badge_h = 200, 50
+    badge_x, badge_y = (WIDTH - badge_w) // 2, 180
+    draw.rounded_rectangle([badge_x, badge_y, badge_x + badge_w, badge_y + badge_h],
+                          radius=25, fill=ACCENT_GREEN + (40,), outline=ACCENT_GREEN + (200,), width=2)
+
+    badge_text = "SOLUTION"
+    bbox = draw.textbbox((0, 0), badge_text, font=font_desc)
+    w = bbox[2] - bbox[0]
+    draw.text(((WIDTH - w) // 2, badge_y + 8), badge_text,
+              font=font_desc, fill=ACCENT_GREEN + (255,))
+
+    # Title
+    bbox_title = draw.textbbox((0, 0), title, font=font_header)
+    w_title = bbox_title[2] - bbox_title[0]
+    draw.text(((WIDTH - w_title) // 2, 260), title,
+              font=font_header, fill=TEXT_DARK + (255,))
+
+    # Code card
+    code_w = 1400
+    code_h = 450
+    code_x = (WIDTH - code_w) // 2
+    code_y = 360
+
+    draw.rounded_rectangle([code_x, code_y, code_x + code_w, code_y + code_h],
+                          radius=20, fill=(30, 41, 59) + (255,))  # Dark code bg
+
+    # Solution code
+    code_y_text = code_y + 40
+    for i, line in enumerate(solution_code[:12]):  # Max 12 lines
+        draw.text((code_x + 50, code_y_text + i * 36), line,
+                  font=font_code, fill=(226, 232, 240) + (255,))  # Light code text
+
+    # Explanation at bottom
+    if explanation:
+        exp_y = code_y + code_h + 30
+        # Wrap explanation
+        exp_words = explanation.split()
+        exp_line = []
+        for word in exp_words:
+            test = ' '.join(exp_line + [word])
+            bbox = draw.textbbox((0, 0), test, font=font_small)
+            if bbox[2] - bbox[0] > 1200:
+                text = ' '.join(exp_line)
+                bbox_exp = draw.textbbox((0, 0), text, font=font_small)
+                w_exp = bbox_exp[2] - bbox_exp[0]
+                draw.text(((WIDTH - w_exp) // 2, exp_y), text,
+                          font=font_small, fill=TEXT_GRAY + (255,))
+                exp_y += 32
+                exp_line = [word]
+            else:
+                exp_line.append(word)
+
+        if exp_line:
+            text = ' '.join(exp_line)
+            bbox_exp = draw.textbbox((0, 0), text, font=font_small)
+            w_exp = bbox_exp[2] - bbox_exp[0]
+            draw.text(((WIDTH - w_exp) // 2, exp_y), text,
+                      font=font_small, fill=TEXT_GRAY + (255,))
+
+    return start_frame.convert('RGB'), end_frame.convert('RGB')
+
+
+def create_checkpoint_keyframes(checkpoint_num, completed_topics, review_questions, next_topics, accent_color):
+    """Create learning checkpoint/progress scene"""
+    base = create_base_frame(accent_color)
+    start_frame = base.copy()
+    end_frame = base.copy()
+    draw = ImageDraw.Draw(end_frame, 'RGBA')
+
+    # Checkpoint badge
+    badge_w, badge_h = 300, 60
+    badge_x, badge_y = (WIDTH - badge_w) // 2, 180
+    draw.rounded_rectangle([badge_x, badge_y, badge_x + badge_w, badge_y + badge_h],
+                          radius=30, fill=accent_color + (40,), outline=accent_color + (200,), width=3)
+
+    badge_text = f"✓ CHECKPOINT {checkpoint_num}"
+    bbox = draw.textbbox((0, 0), badge_text, font=font_subtitle)
+    w = bbox[2] - bbox[0]
+    draw.text(((WIDTH - w) // 2, badge_y + 12), badge_text,
+              font=font_subtitle, fill=accent_color + (255,))
+
+    # Three columns: Completed, Review, Next
+    col_width = 450
+    col_spacing = 50
+    total_width = col_width * 3 + col_spacing * 2
+    start_x = (WIDTH - total_width) // 2
+    start_y = 300
+
+    columns = [
+        ("Completed", completed_topics, ACCENT_GREEN),
+        ("Review", review_questions, ACCENT_ORANGE),
+        ("Next", next_topics, accent_color)
+    ]
+
+    for col_idx, (col_title, items, col_color) in enumerate(columns):
+        col_x = start_x + col_idx * (col_width + col_spacing)
+
+        # Column card
+        card_h = 450
+        draw.rounded_rectangle([col_x, start_y, col_x + col_width, start_y + card_h],
+                              radius=15, fill=CARD_BG + (255,))
+        draw.rounded_rectangle([col_x, start_y, col_x + col_width, start_y + card_h],
+                              radius=15, outline=col_color + (120,), width=2)
+
+        # Column header
+        header_h = 60
+        draw.rounded_rectangle([col_x, start_y, col_x + col_width, start_y + header_h],
+                              radius=15, fill=col_color + (30,))
+
+        bbox_header = draw.textbbox((0, 0), col_title, font=font_desc)
+        w_header = bbox_header[2] - bbox_header[0]
+        draw.text((col_x + (col_width - w_header) // 2, start_y + 18), col_title,
+                  font=font_desc, fill=col_color + (255,))
+
+        # Items
+        item_y = start_y + header_h + 30
+        for i, item in enumerate(items[:6]):  # Max 6 items per column
+            # Checkmark or bullet
+            if col_idx == 0:  # Completed
+                draw.text((col_x + 20, item_y), "✓", font=font_small, fill=ACCENT_GREEN + (255,))
+            else:
+                draw.ellipse([col_x + 25, item_y + 8, col_x + 35, item_y + 18],
+                            fill=col_color + (200,))
+
+            # Item text (truncate if too long)
+            item_text = item[:40] + "..." if len(item) > 40 else item
+            draw.text((col_x + 50, item_y), item_text,
+                      font=font_small, fill=TEXT_DARK + (255,))
+
+            item_y += 50
+
+    return start_frame.convert('RGB'), end_frame.convert('RGB')
+
+
+def create_quiz_keyframes(question, options, correct_answer, show_answer, accent_color):
+    """Create quiz question scene"""
+    base = create_base_frame(accent_color)
+    start_frame = base.copy()
+    end_frame = base.copy()
+    draw = ImageDraw.Draw(end_frame, 'RGBA')
+
+    # "Quiz" badge
+    badge_w, badge_h = 160, 50
+    badge_x, badge_y = (WIDTH - badge_w) // 2, 180
+    draw.rounded_rectangle([badge_x, badge_y, badge_x + badge_w, badge_y + badge_h],
+                          radius=25, fill=ACCENT_PURPLE + (40,), outline=ACCENT_PURPLE + (200,), width=2)
+
+    badge_text = "QUIZ"
+    bbox = draw.textbbox((0, 0), badge_text, font=font_desc)
+    w = bbox[2] - bbox[0]
+    draw.text(((WIDTH - w) // 2, badge_y + 8), badge_text,
+              font=font_desc, fill=ACCENT_PURPLE + (255,))
+
+    # Question card
+    card_w = 1400
+    card_h = 140
+    card_x = (WIDTH - card_w) // 2
+    card_y = 270
+
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=15, fill=accent_color + (20,))
+
+    # Question text
+    q_lines = []
+    words = question.split()
+    current_line = []
+    for word in words:
+        test_line = ' '.join(current_line + [word])
+        bbox = draw.textbbox((0, 0), test_line, font=font_desc)
+        if bbox[2] - bbox[0] > card_w - 100:
+            q_lines.append(' '.join(current_line))
+            current_line = [word]
+        else:
+            current_line.append(word)
+    if current_line:
+        q_lines.append(' '.join(current_line))
+
+    q_y = card_y + 30
+    for line in q_lines[:3]:  # Max 3 lines for question
+        bbox_q = draw.textbbox((0, 0), line, font=font_desc)
+        w_q = bbox_q[2] - bbox_q[0]
+        draw.text(((WIDTH - w_q) // 2, q_y), line,
+                  font=font_desc, fill=TEXT_DARK + (255,))
+        q_y += 42
+
+    # Options (4 boxes in 2x2 grid)
+    opt_w, opt_h = 650, 100
+    opt_spacing = 50
+    opt_start_x = (WIDTH - (opt_w * 2 + opt_spacing)) // 2
+    opt_start_y = 460
+
+    for i, option in enumerate(options[:4]):  # Max 4 options
+        row = i // 2
+        col = i % 2
+        opt_x = opt_start_x + col * (opt_w + opt_spacing)
+        opt_y = opt_start_y + row * (opt_h + opt_spacing)
+
+        # Highlight correct answer if showing
+        if show_answer and option == correct_answer:
+            opt_color = ACCENT_GREEN
+            opt_bg = ACCENT_GREEN + (30,)
+        else:
+            opt_color = accent_color
+            opt_bg = CARD_BG + (255,)
+
+        draw.rounded_rectangle([opt_x, opt_y, opt_x + opt_w, opt_y + opt_h],
+                              radius=12, fill=opt_bg)
+        draw.rounded_rectangle([opt_x, opt_y, opt_x + opt_w, opt_y + opt_h],
+                              radius=12, outline=opt_color + (150,), width=2)
+
+        # Option text (truncate if needed)
+        opt_text = option[:50] + "..." if len(option) > 50 else option
+        draw.text((opt_x + 20, opt_y + 30), opt_text,
+                  font=font_desc, fill=TEXT_DARK + (255,))
+
+        # Checkmark for correct answer
+        if show_answer and option == correct_answer:
+            draw.text((opt_x + opt_w - 60, opt_y + 20), "✓",
+                      font=font_header, fill=ACCENT_GREEN + (255,))
+
+    return start_frame.convert('RGB'), end_frame.convert('RGB')
+
+
+def create_learning_objectives_keyframes(lesson_title, objectives, lesson_info, accent_color):
+    """Create learning objectives scene"""
+    base = create_base_frame(accent_color)
+    start_frame = base.copy()
+    end_frame = base.copy()
+    draw = ImageDraw.Draw(end_frame, 'RGBA')
+
+    # "Learning Objectives" header
+    header_text = "Learning Objectives"
+    bbox_header = draw.textbbox((0, 0), header_text, font=font_header)
+    w_header = bbox_header[2] - bbox_header[0]
+    draw.text(((WIDTH - w_header) // 2, 180), header_text,
+              font=font_header, fill=accent_color + (255,))
+
+    # Lesson title
+    bbox_lesson = draw.textbbox((0, 0), lesson_title, font=font_subtitle)
+    w_lesson = bbox_lesson[2] - bbox_lesson[0]
+    draw.text(((WIDTH - w_lesson) // 2, 260), lesson_title,
+              font=font_subtitle, fill=TEXT_GRAY + (255,))
+
+    # Lesson info bar (duration, difficulty, etc.)
+    if lesson_info:
+        info_y = 320
+        info_parts = []
+        if 'duration' in lesson_info:
+            info_parts.append(f"⏱ {lesson_info['duration']} min")
+        if 'difficulty' in lesson_info:
+            info_parts.append(f"📊 {lesson_info['difficulty'].title()}")
+        if 'prerequisites' in lesson_info and lesson_info['prerequisites']:
+            prereq_count = len(lesson_info['prerequisites'])
+            info_parts.append(f"📚 {prereq_count} prerequisite(s)")
+
+        info_text = "  •  ".join(info_parts)
+        bbox_info = draw.textbbox((0, 0), info_text, font=font_small)
+        w_info = bbox_info[2] - bbox_info[0]
+        draw.text(((WIDTH - w_info) // 2, info_y), info_text,
+                  font=font_small, fill=TEXT_LIGHT + (200,))
+
+    # Objectives card
+    card_w = 1200
+    card_h = 450
+    card_x = (WIDTH - card_w) // 2
+    card_y = 380
+
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=20, fill=CARD_BG + (255,))
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=20, outline=accent_color + (120,), width=2)
+
+    # Objectives list
+    obj_y = card_y + 50
+    for i, objective in enumerate(objectives[:8]):  # Max 8 objectives
+        # Numbered circle
+        circle_size = 40
+        circle_x = card_x + 50
+        circle_y = obj_y + 5
+
+        draw.ellipse([circle_x, circle_y, circle_x + circle_size, circle_y + circle_size],
+                     fill=accent_color + (40,))
+
+        num_text = str(i + 1)
+        bbox_num = draw.textbbox((0, 0), num_text, font=font_small)
+        w_num = bbox_num[2] - bbox_num[0]
+        draw.text((circle_x + (circle_size - w_num) // 2, circle_y + 8), num_text,
+                  font=font_small, fill=accent_color + (255,))
+
+        # Objective text
+        if isinstance(objective, dict):
+            obj_text = objective.get('objective', str(objective))
+        else:
+            obj_text = str(objective)
+
+        # Truncate if too long
+        obj_text = obj_text[:70] + "..." if len(obj_text) > 70 else obj_text
+
+        draw.text((card_x + 110, obj_y + 8), obj_text,
+                  font=font_desc, fill=TEXT_DARK + (255,))
+
+        obj_y += 52
+
+    return start_frame.convert('RGB'), end_frame.convert('RGB')
+
+
+def create_exercise_keyframes(title, instructions, difficulty, estimated_time, accent_color):
+    """Create exercise instructions scene"""
+    base = create_base_frame(accent_color)
+    start_frame = base.copy()
+    end_frame = base.copy()
+    draw = ImageDraw.Draw(end_frame, 'RGBA')
+
+    # "Practice Exercise" header
+    header_text = "Practice Exercise"
+    bbox_header = draw.textbbox((0, 0), header_text, font=font_header)
+    w_header = bbox_header[2] - bbox_header[0]
+    draw.text(((WIDTH - w_header) // 2, 160), header_text,
+              font=font_header, fill=accent_color + (255,))
+
+    # Title
+    bbox_title = draw.textbbox((0, 0), title, font=font_subtitle)
+    w_title = bbox_title[2] - bbox_title[0]
+    draw.text(((WIDTH - w_title) // 2, 240), title,
+              font=font_subtitle, fill=TEXT_GRAY + (255,))
+
+    # Difficulty + Time badges
+    info_y = 300
+    badges = []
+    if difficulty:
+        badges.append((difficulty.upper(), difficulty))
+    if estimated_time:
+        badges.append((f"⏱ {estimated_time}", 'time'))
+
+    badge_spacing = 20
+    total_badge_w = sum([150 for _ in badges]) + badge_spacing * (len(badges) - 1)
+    badge_x = (WIDTH - total_badge_w) // 2
+
+    for badge_text, badge_type in badges:
+        badge_w, badge_h = 150, 40
+
+        if badge_type in ['easy', 'medium', 'hard']:
+            colors = {'easy': ACCENT_GREEN, 'medium': ACCENT_ORANGE, 'hard': ACCENT_PINK}
+            badge_color = colors.get(badge_type, accent_color)
+        else:
+            badge_color = accent_color
+
+        draw.rounded_rectangle([badge_x, info_y, badge_x + badge_w, info_y + badge_h],
+                              radius=20, fill=badge_color + (30,))
+
+        bbox_b = draw.textbbox((0, 0), badge_text, font=font_tiny)
+        w_b = bbox_b[2] - bbox_b[0]
+        draw.text((badge_x + (badge_w - w_b) // 2, info_y + 10), badge_text,
+                  font=font_tiny, fill=badge_color + (255,))
+
+        badge_x += badge_w + badge_spacing
+
+    # Instructions card
+    card_w = 1300
+    card_h = 500
+    card_x = (WIDTH - card_w) // 2
+    card_y = 380
+
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=20, fill=CARD_BG + (255,))
+    draw.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
+                          radius=20, outline=accent_color + (120,), width=2)
+
+    # Instructions header
+    inst_header = "Instructions:"
+    draw.text((card_x + 40, card_y + 30), inst_header,
+              font=font_desc, fill=accent_color + (255,))
+
+    # Instruction steps
+    inst_y = card_y + 90
+    for i, instruction in enumerate(instructions[:8]):  # Max 8 instructions
+        # Step number
+        step_num = f"{i + 1}."
+        draw.text((card_x + 50, inst_y), step_num,
+                  font=font_desc, fill=accent_color + (255,))
+
+        # Instruction text (truncate if needed)
+        inst_text = instruction[:80] + "..." if len(instruction) > 80 else instruction
+        draw.text((card_x + 100, inst_y), inst_text,
+                  font=font_desc, fill=TEXT_DARK + (255,))
+
+        inst_y += 52
+
+    return start_frame.convert('RGB'), end_frame.convert('RGB')
+
+
 VIDEO_DEFINITIONS = {
     "quick_reference": {
         "filename": "doc_video_01_quick_reference.mp4",

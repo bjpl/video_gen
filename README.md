@@ -70,14 +70,23 @@ python generate_multilingual_set.py --source README.md --languages en es fr
 python generate_multilingual_set.py --source README_ES.md --languages es en --source-lang es
 ```
 
-### **🎨 Six Scene Types**
+### **🎨 Twelve Scene Types**
 
+**General (6 types):**
 - **title** - Large centered title slides
 - **command** - Terminal cards with syntax-highlighted code
 - **list** - Numbered items with descriptions
 - **outro** - Checkmark with call-to-action
-- **code_comparison** 🆕 - Side-by-side before/after code
-- **quote** 🆕 - Centered quotes with attribution
+- **code_comparison** - Side-by-side before/after code
+- **quote** - Centered quotes with attribution
+
+**Educational (6 types):** 🆕
+- **learning_objectives** - Lesson goals and expectations
+- **problem** - Coding challenge presentation
+- **solution** - Problem solution with explanation
+- **checkpoint** - Learning progress review
+- **quiz** - Multiple choice questions with answers
+- **exercise** - Practice instructions
 
 ### **🤖 Two Narration Modes**
 
@@ -127,6 +136,8 @@ YOUR CONTENT                SYSTEM GENERATES             RESULT
 | Guide | Purpose | Read Time |
 |-------|---------|-----------|
 | [**THREE_INPUT_METHODS_GUIDE.md**](docs/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods (START HERE) | 10 min |
+| **[EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md)** 🆕 | 6 educational scene types | 10 min |
+| **[EDUCATIONAL_SCENES_QUICKREF.md](EDUCATIONAL_SCENES_QUICKREF.md)** 🆕 | Educational quick reference | 5 min |
 | **[MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)** 🆕 | Generate in 28+ languages | 12 min |
 | **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** 🆕 | Multilingual quick reference | 5 min |
 | **[PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)** 🆕 | Parse markdown/GitHub/YouTube | 5 min |

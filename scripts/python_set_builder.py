@@ -291,6 +291,134 @@ class VideoSetBuilder:
             **kwargs
         )
 
+    def create_problem_scene(
+        self,
+        problem_number: int,
+        title: str,
+        problem_text: str,
+        difficulty: str = 'medium',
+        narration: Optional[str] = None,
+        **kwargs
+    ) -> SceneConfig:
+        """Helper: Create a coding problem scene"""
+        return SceneConfig(
+            scene_type='problem',
+            visual_content={
+                'problem_number': problem_number,
+                'title': title,
+                'problem_text': problem_text,
+                'difficulty': difficulty
+            },
+            narration=narration,
+            **kwargs
+        )
+
+    def create_solution_scene(
+        self,
+        title: str,
+        solution_code: List[str],
+        explanation: str = "",
+        narration: Optional[str] = None,
+        **kwargs
+    ) -> SceneConfig:
+        """Helper: Create a solution scene"""
+        return SceneConfig(
+            scene_type='solution',
+            visual_content={
+                'title': title,
+                'solution_code': solution_code,
+                'explanation': explanation
+            },
+            narration=narration,
+            **kwargs
+        )
+
+    def create_checkpoint_scene(
+        self,
+        checkpoint_number: int,
+        completed_topics: List[str],
+        review_questions: List[str],
+        next_topics: List[str],
+        narration: Optional[str] = None,
+        **kwargs
+    ) -> SceneConfig:
+        """Helper: Create a learning checkpoint scene"""
+        return SceneConfig(
+            scene_type='checkpoint',
+            visual_content={
+                'checkpoint_number': checkpoint_number,
+                'completed_topics': completed_topics,
+                'review_questions': review_questions,
+                'next_topics': next_topics
+            },
+            narration=narration,
+            **kwargs
+        )
+
+    def create_quiz_scene(
+        self,
+        question: str,
+        options: List[str],
+        correct_answer: str,
+        show_answer: bool = True,
+        narration: Optional[str] = None,
+        **kwargs
+    ) -> SceneConfig:
+        """Helper: Create a quiz question scene"""
+        return SceneConfig(
+            scene_type='quiz',
+            visual_content={
+                'question': question,
+                'options': options,
+                'correct_answer': correct_answer,
+                'show_answer': show_answer
+            },
+            narration=narration,
+            **kwargs
+        )
+
+    def create_learning_objectives_scene(
+        self,
+        lesson_title: str,
+        objectives: List[Any],
+        lesson_info: Optional[Dict[str, Any]] = None,
+        narration: Optional[str] = None,
+        **kwargs
+    ) -> SceneConfig:
+        """Helper: Create a learning objectives scene"""
+        return SceneConfig(
+            scene_type='learning_objectives',
+            visual_content={
+                'lesson_title': lesson_title,
+                'objectives': objectives,
+                'lesson_info': lesson_info or {}
+            },
+            narration=narration,
+            **kwargs
+        )
+
+    def create_exercise_scene(
+        self,
+        title: str,
+        instructions: List[str],
+        difficulty: str = 'medium',
+        estimated_time: str = None,
+        narration: Optional[str] = None,
+        **kwargs
+    ) -> SceneConfig:
+        """Helper: Create an exercise instructions scene"""
+        return SceneConfig(
+            scene_type='exercise',
+            visual_content={
+                'title': title,
+                'instructions': instructions,
+                'difficulty': difficulty,
+                'estimated_time': estimated_time
+            },
+            narration=narration,
+            **kwargs
+        )
+
     def export_to_yaml(self, output_dir: str):
         """
         Export set to YAML files for standard pipeline.

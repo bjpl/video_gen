@@ -26,6 +26,12 @@
 ### **"Can I translate Spanish → English?"**
 → **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** → Bidirectional section
 
+### **"How do I create lessons with quizzes?"**
+→ **[EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md)** (10 min)
+
+### **"What educational content works?"**
+→ **[EDUCATIONAL_CONTENT_ANALYSIS.md](EDUCATIONAL_CONTENT_ANALYSIS.md)** (8 min)
+
 ### **"What was added to the system?"**
 → **[status/COMPLETE_UPDATE_SUMMARY.md](status/COMPLETE_UPDATE_SUMMARY.md)** (5 min)
 
@@ -48,6 +54,14 @@
 | **[PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md)** | Complete Python API reference | 10 min | Building from scratch |
 | **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** | All 5 content control levels | 8 min | Want to control narration |
 | **[PROGRAMMATIC_COMPLETE.md](PROGRAMMATIC_COMPLETE.md)** | Everything in one place | 8 min | Comprehensive reference |
+
+### **🎓 Educational Guides** 🆕
+
+| File | Purpose | Read Time | When to Read |
+|------|---------|-----------|--------------|
+| **[EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md)** | 6 educational scene types | 10 min | Creating courses/lessons |
+| **[EDUCATIONAL_SCENES_QUICKREF.md](EDUCATIONAL_SCENES_QUICKREF.md)** | Educational quick reference | 5 min | Quick educational lookup |
+| **[EDUCATIONAL_CONTENT_ANALYSIS.md](EDUCATIONAL_CONTENT_ANALYSIS.md)** | Content support analysis | 8 min | Understanding capabilities |
 
 ### **🌍 Multilingual Guides** 🆕
 

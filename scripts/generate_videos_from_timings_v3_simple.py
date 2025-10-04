@@ -22,6 +22,9 @@ from generate_documentation_videos import (
     create_title_keyframes, create_command_keyframes,
     create_list_keyframes, create_outro_keyframes,
     create_code_comparison_keyframes, create_quote_keyframes,
+    create_problem_keyframes, create_solution_keyframes,
+    create_checkpoint_keyframes, create_quiz_keyframes,
+    create_learning_objectives_keyframes, create_exercise_keyframes,
     ease_out_cubic, FPS, WIDTH, HEIGHT
 )
 from generate_all_videos_unified_v2 import ALL_VIDEOS
@@ -108,6 +111,52 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
                 scene.visual_content['attribution'],
                 video.accent_color
             )
+        elif scene.scene_type == 'problem':
+            start_frame, end_frame = create_problem_keyframes(
+                scene.visual_content['problem_number'],
+                scene.visual_content['title'],
+                scene.visual_content['problem_text'],
+                scene.visual_content.get('difficulty', 'medium'),
+                video.accent_color
+            )
+        elif scene.scene_type == 'solution':
+            start_frame, end_frame = create_solution_keyframes(
+                scene.visual_content['title'],
+                scene.visual_content['solution_code'],
+                scene.visual_content.get('explanation', ''),
+                video.accent_color
+            )
+        elif scene.scene_type == 'checkpoint':
+            start_frame, end_frame = create_checkpoint_keyframes(
+                scene.visual_content['checkpoint_number'],
+                scene.visual_content['completed_topics'],
+                scene.visual_content['review_questions'],
+                scene.visual_content['next_topics'],
+                video.accent_color
+            )
+        elif scene.scene_type == 'quiz':
+            start_frame, end_frame = create_quiz_keyframes(
+                scene.visual_content['question'],
+                scene.visual_content['options'],
+                scene.visual_content['correct_answer'],
+                scene.visual_content.get('show_answer', True),
+                video.accent_color
+            )
+        elif scene.scene_type == 'learning_objectives':
+            start_frame, end_frame = create_learning_objectives_keyframes(
+                scene.visual_content['lesson_title'],
+                scene.visual_content['objectives'],
+                scene.visual_content.get('lesson_info', {}),
+                video.accent_color
+            )
+        elif scene.scene_type == 'exercise':
+            start_frame, end_frame = create_exercise_keyframes(
+                scene.visual_content['title'],
+                scene.visual_content['instructions'],
+                scene.visual_content.get('difficulty', 'medium'),
+                scene.visual_content.get('estimated_time'),
+                video.accent_color
+            )
 
         for i in range(anim_frames):
             progress = ease_out_cubic(i / anim_frames)
@@ -168,6 +217,52 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
                 next_start, _ = create_quote_keyframes(
                     next_scene.visual_content['quote_text'],
                     next_scene.visual_content['attribution'],
+                    video.accent_color
+                )
+            elif next_scene.scene_type == 'problem':
+                next_start, _ = create_problem_keyframes(
+                    next_scene.visual_content['problem_number'],
+                    next_scene.visual_content['title'],
+                    next_scene.visual_content['problem_text'],
+                    next_scene.visual_content.get('difficulty', 'medium'),
+                    video.accent_color
+                )
+            elif next_scene.scene_type == 'solution':
+                next_start, _ = create_solution_keyframes(
+                    next_scene.visual_content['title'],
+                    next_scene.visual_content['solution_code'],
+                    next_scene.visual_content.get('explanation', ''),
+                    video.accent_color
+                )
+            elif next_scene.scene_type == 'checkpoint':
+                next_start, _ = create_checkpoint_keyframes(
+                    next_scene.visual_content['checkpoint_number'],
+                    next_scene.visual_content['completed_topics'],
+                    next_scene.visual_content['review_questions'],
+                    next_scene.visual_content['next_topics'],
+                    video.accent_color
+                )
+            elif next_scene.scene_type == 'quiz':
+                next_start, _ = create_quiz_keyframes(
+                    next_scene.visual_content['question'],
+                    next_scene.visual_content['options'],
+                    next_scene.visual_content['correct_answer'],
+                    next_scene.visual_content.get('show_answer', True),
+                    video.accent_color
+                )
+            elif next_scene.scene_type == 'learning_objectives':
+                next_start, _ = create_learning_objectives_keyframes(
+                    next_scene.visual_content['lesson_title'],
+                    next_scene.visual_content['objectives'],
+                    next_scene.visual_content.get('lesson_info', {}),
+                    video.accent_color
+                )
+            elif next_scene.scene_type == 'exercise':
+                next_start, _ = create_exercise_keyframes(
+                    next_scene.visual_content['title'],
+                    next_scene.visual_content['instructions'],
+                    next_scene.visual_content.get('difficulty', 'medium'),
+                    next_scene.visual_content.get('estimated_time'),
                     video.accent_color
                 )
 
