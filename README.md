@@ -14,11 +14,17 @@
 # Install dependencies
 pip install -r requirements.txt
 
+# Optional: Set API key for AI narration (recommended for best quality)
+export ANTHROPIC_API_KEY="sk-ant-api03-..."  # Optional
+
 # Create video from your README
 python scripts/create_video.py --document README.md
 
 # Or use interactive wizard
 python scripts/create_video.py --wizard
+
+# Add --use-ai for enhanced narration (optional)
+python scripts/create_video.py --wizard --use-ai
 
 # Generate audio + video
 cd scripts
@@ -29,6 +35,10 @@ python generate_videos_from_timings_v3_simple.py
 ```
 
 **Result:** Professional Full HD video with neural TTS narration and perfect audio/visual sync.
+
+**Narration Quality:**
+- Default (template): Professional, functional (free)
+- With `--use-ai`: Natural, engaging (~$0.05 per video)
 
 ---
 
@@ -51,6 +61,13 @@ Create videos from ANY source:
 - **code_comparison** 🆕 - Side-by-side before/after code
 - **quote** 🆕 - Centered quotes with attribution
 
+### **🤖 Two Narration Modes**
+
+- **Template-Based** (default) - Fast, free, predictable
+- **AI-Enhanced** (optional) - Natural, engaging, uses Claude 3.5 Sonnet
+
+Add `--use-ai` flag for Claude API-powered narration!
+
 ### **🎙️ Four Professional Voices**
 
 - **Andrew** (male) - Professional, confident
@@ -64,6 +81,7 @@ Mix voices per scene for maximum engagement!
 
 - **GPU Accelerated** - NVIDIA NVENC hardware encoding
 - **NumPy Optimized** - 8x faster frame blending
+- **AI-Powered Narration** - Optional Claude API integration
 - **Batch Processing** - 15 videos in ~30 minutes
 - **Parallel Generation** - Multi-core support
 
@@ -91,6 +109,7 @@ YOUR CONTENT                SYSTEM GENERATES             RESULT
 | Guide | Purpose | Read Time |
 |-------|---------|-----------|
 | [**THREE_INPUT_METHODS_GUIDE.md**](docs/THREE_INPUT_METHODS_GUIDE.md) | How to provide content (START HERE) | 10 min |
+| [**AI_NARRATION_QUICKSTART.md**](AI_NARRATION_QUICKSTART.md) | Setup AI narration in 2 minutes | 3 min |
 | [**COMPLETE_USER_WORKFLOW.md**](docs/COMPLETE_USER_WORKFLOW.md) | Step-by-step workflow | 15 min |
 | [**NEW_SCENE_TYPES_GUIDE.md**](docs/NEW_SCENE_TYPES_GUIDE.md) | Code comparison & quote scenes | 8 min |
 | [**VOICE_GUIDE_COMPLETE.md**](docs/VOICE_GUIDE_COMPLETE.md) | Using all 4 voices | 8 min |
@@ -99,7 +118,8 @@ YOUR CONTENT                SYSTEM GENERATES             RESULT
 
 | Guide | Purpose |
 |-------|---------|
-| [**PACKAGE_DOCUMENTATION.md**](docs/PACKAGE_DOCUMENTATION.md) | All 19 dependencies explained |
+| [**AI_NARRATION_GUIDE.md**](docs/AI_NARRATION_GUIDE.md) | AI vs template narration (detailed) |
+| [**PACKAGE_DOCUMENTATION.md**](docs/PACKAGE_DOCUMENTATION.md) | All dependencies explained |
 | [**WORKFLOW_VISUAL_OUTLINE.md**](docs/WORKFLOW_VISUAL_OUTLINE.md) | Visual workflow diagrams |
 | [**SYSTEM_OVERVIEW_VISUAL.md**](docs/SYSTEM_OVERVIEW_VISUAL.md) | Architecture overview |
 | [**TEMPLATE_SYSTEM_EXPLAINED.md**](docs/TEMPLATE_SYSTEM_EXPLAINED.md) | Template systems |
@@ -120,6 +140,7 @@ YOUR CONTENT                SYSTEM GENERATES             RESULT
 - Python 3.10+
 - FFmpeg with NVENC support (GPU encoding)
 - Internet connection (for Edge-TTS)
+- Optional: Anthropic API key (for AI-enhanced narration)
 
 ### **Install:**
 
@@ -130,6 +151,13 @@ cd video_gen
 
 # Install Python dependencies
 pip install -r requirements.txt
+
+# Optional: Set API key for AI narration (recommended for best quality)
+export ANTHROPIC_API_KEY="sk-ant-api03-..."  # Linux/Mac
+# OR
+set ANTHROPIC_API_KEY=sk-ant-api03-...       # Windows CMD
+# OR
+$env:ANTHROPIC_API_KEY="sk-ant-api03-..."    # Windows PowerShell
 
 # Verify setup
 python scripts/create_video.py --help
@@ -391,13 +419,20 @@ MIT License - Use freely for any purpose
 # 1. Install
 pip install -r requirements.txt
 
-# 2. Try an example
+# 2. Optional: Set API key for AI narration
+export ANTHROPIC_API_KEY="your_key_here"  # Optional but recommended
+
+# 3. Try an example
 python scripts/create_video.py --yaml inputs/example_simple.yaml
 
-# 3. Read the guide
-cat docs/THREE_INPUT_METHODS_GUIDE.md
+# 4. Try with AI narration (if API key set)
+python scripts/create_video.py --yaml inputs/example_simple.yaml --use-ai
 
-# 4. Create your first video!
+# 5. Read the guides
+cat docs/THREE_INPUT_METHODS_GUIDE.md   # Input methods
+cat AI_NARRATION_QUICKSTART.md          # AI setup
+
+# 6. Create your first video!
 python scripts/create_video.py --wizard
 ```
 
