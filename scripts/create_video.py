@@ -91,6 +91,8 @@ Examples:
                        help='Target duration in seconds')
     parser.add_argument('--auto', action='store_true',
                        help='Auto-proceed through all steps (no review)')
+    parser.add_argument('--use-ai', action='store_true',
+                       help='Use Claude AI for enhanced narration (requires ANTHROPIC_API_KEY)')
 
     args = parser.parse_args()
 
@@ -152,7 +154,8 @@ Examples:
 
             # Generate script
             print(f"\n{Colors.BOLD}Generating script from YAML...{Colors.END}\n")
-            os.system(f"python generate_script_from_yaml.py {yaml_file}")
+            ai_flag = '--use-ai' if args.use_ai else ''
+            os.system(f"python generate_script_from_yaml.py {yaml_file} {ai_flag}")
 
     except Exception as e:
         print(f"\n{Colors.RED}❌ Error: {e}{Colors.END}\n")

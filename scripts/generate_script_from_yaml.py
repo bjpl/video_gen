@@ -42,17 +42,39 @@ COLOR_MAP = {
 class NarrationGenerator:
     """Generate professional narration from structured input"""
 
-    def __init__(self, target_wpm=135):
+    def __init__(self, target_wpm=135, use_ai=False):
         self.target_wpm = target_wpm  # Words per minute
         self.words_per_second = target_wpm / 60.0  # ~2.25 WPS
+        self.use_ai = use_ai
+        self.ai_client = None
+
+        # Initialize AI client if requested
+        if use_ai:
+            try:
+                import anthropic
+                import os
+                api_key = os.environ.get('ANTHROPIC_API_KEY')
+                if api_key:
+                    self.ai_client = anthropic.Anthropic(api_key=api_key)
+                    print("✅ AI narration enabled (Claude API)")
+                else:
+                    print("⚠️  ANTHROPIC_API_KEY not found, falling back to template-based")
+                    self.use_ai = False
+            except ImportError:
+                print("⚠️  anthropic package not installed, falling back to template-based")
+                print("   Install: pip install anthropic")
+                self.use_ai = False
 
     def generate_title_narration(self, scene_data):
         """Generate narration for title scenes"""
+        if self.use_ai and self.ai_client:
+            return self._generate_ai_narration(scene_data, 'title')
+
+        # Template-based generation
         title = scene_data.get('title', '')
         subtitle = scene_data.get('subtitle', '')
         message = scene_data.get('key_message', '')
 
-        # Template-based generation
         if message:
             narration = f"{title}. {message}"
         else:
@@ -62,6 +84,9 @@ class NarrationGenerator:
 
     def generate_command_narration(self, scene_data):
         """Generate narration for command scenes"""
+        if self.use_ai and self.ai_client:
+            return self._generate_ai_narration(scene_data, 'command')
+
         header = scene_data.get('header', '')
         topic = scene_data.get('topic', '')
         key_points = scene_data.get('key_points', [])
@@ -96,6 +121,9 @@ class NarrationGenerator:
 
     def generate_list_narration(self, scene_data):
         """Generate narration for list scenes"""
+        if self.use_ai and self.ai_client:
+            return self._generate_ai_narration(scene_data, 'list')
+
         header = scene_data.get('header', '')
         topic = scene_data.get('topic', '')
         items = scene_data.get('items', [])
@@ -132,6 +160,9 @@ class NarrationGenerator:
 
     def generate_outro_narration(self, scene_data):
         """Generate narration for outro scenes"""
+        if self.use_ai and self.ai_client:
+            return self._generate_ai_narration(scene_data, 'outro')
+
         main_text = scene_data.get('main_text', '')
         sub_text = scene_data.get('sub_text', '')
         message = scene_data.get('key_message', '')
@@ -145,6 +176,9 @@ class NarrationGenerator:
 
     def generate_code_comparison_narration(self, scene_data):
         """Generate narration for code comparison scenes"""
+        if self.use_ai and self.ai_client:
+            return self._generate_ai_narration(scene_data, 'code_comparison')
+
         header = scene_data.get('header', '')
         key_points = scene_data.get('key_points', [])
         improvement = scene_data.get('improvement', '')
@@ -165,6 +199,9 @@ class NarrationGenerator:
 
     def generate_quote_narration(self, scene_data):
         """Generate narration for quote scenes"""
+        if self.use_ai and self.ai_client:
+            return self._generate_ai_narration(scene_data, 'quote')
+
         quote_text = scene_data.get('quote_text', '')
         attribution = scene_data.get('attribution', '')
         context = scene_data.get('context', '')
@@ -191,12 +228,153 @@ class NarrationGenerator:
         duration = word_count / self.words_per_second
         return duration, word_count
 
+    def _generate_ai_narration(self, scene_data, scene_type):
+        """Generate narration using Claude AI"""
+
+        # Build context based on scene type
+        if scene_type == 'title':
+            context = f"""
+            Create professional video narration for a title scene.
+
+            Title: {scene_data.get('title', '')}
+            Subtitle: {scene_data.get('subtitle', '')}
+            Key message: {scene_data.get('key_message', '')}
+
+            Create a brief, engaging introduction (1-2 sentences, ~10 words).
+            Style: Professional, welcoming, clear.
+            """
+
+        elif scene_type == 'command':
+            context = f"""
+            Create professional video narration for a command/tutorial scene.
+
+            Topic: {scene_data.get('topic', '')}
+            Header: {scene_data.get('header', '')}
+            Commands shown: {len(scene_data.get('commands', []))} commands
+            Key points: {', '.join(scene_data.get('key_points', []))}
+
+            Create engaging narration (2-3 sentences, 15-20 words).
+            Style: Educational, clear, encouraging.
+            Mention running the commands and the benefits.
+            """
+
+        elif scene_type == 'list':
+            items = scene_data.get('items', [])
+            item_titles = []
+            for item in items[:5]:
+                if isinstance(item, dict):
+                    item_titles.append(item.get('title', ''))
+                else:
+                    item_titles.append(str(item))
+
+            context = f"""
+            Create professional video narration for a list scene.
+
+            Topic: {scene_data.get('topic', '')}
+            Header: {scene_data.get('header', '')}
+            Items to mention: {', '.join(item_titles)}
+
+            Create narration that introduces the list (2 sentences, 15-20 words).
+            Style: Clear, organized, professional.
+            Mention the key items naturally.
+            """
+
+        elif scene_type == 'code_comparison':
+            context = f"""
+            Create professional video narration for a code refactoring/comparison scene.
+
+            Header: {scene_data.get('header', '')}
+            Improvement: {scene_data.get('improvement', '')}
+            Key points: {', '.join(scene_data.get('key_points', []))}
+
+            Create narration explaining the improvement (2 sentences, 12-18 words).
+            Style: Technical but accessible, focus on benefits.
+            """
+
+        elif scene_type == 'quote':
+            context = f"""
+            Create professional video narration for a quote scene.
+
+            Quote: "{scene_data.get('quote_text', '')}"
+            Attribution: {scene_data.get('attribution', '')}
+            Context: {scene_data.get('context', '')}
+
+            Create narration that introduces and reads the quote (15-25 words).
+            Style: Thoughtful, emphasize the wisdom.
+            Include attribution naturally.
+            """
+
+        elif scene_type == 'outro':
+            context = f"""
+            Create professional video narration for an outro/closing scene.
+
+            Main message: {scene_data.get('main_text', '')}
+            Documentation link: {scene_data.get('sub_text', '')}
+            Key message: {scene_data.get('key_message', '')}
+
+            Create a brief, encouraging closing (1-2 sentences, 10-15 words).
+            Style: Encouraging, professional, call-to-action.
+            """
+
+        else:
+            # Fallback to template
+            return ""
+
+        try:
+            # Call Claude API
+            response = self.ai_client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=150,
+                temperature=0.7,
+                messages=[{
+                    "role": "user",
+                    "content": f"""{context}
+
+Requirements:
+- Conversational but professional tone
+- Target pace: {self.target_wpm} words per minute
+- Natural, engaging language
+- No filler words or unnecessary complexity
+- Appropriate for technical/educational content
+
+Generate ONLY the narration text, nothing else."""
+                }]
+            )
+
+            narration = response.content[0].text.strip()
+
+            # Remove quotes if AI added them
+            narration = narration.strip('"\'')
+
+            return narration
+
+        except Exception as e:
+            print(f"⚠️  AI generation failed for {scene_type}: {e}")
+            print("   Falling back to template-based narration")
+
+            # Fallback to template-based
+            self.use_ai = False
+            if scene_type == 'title':
+                return self.generate_title_narration(scene_data)
+            elif scene_type == 'command':
+                return self.generate_command_narration(scene_data)
+            elif scene_type == 'list':
+                return self.generate_list_narration(scene_data)
+            elif scene_type == 'outro':
+                return self.generate_outro_narration(scene_data)
+            elif scene_type == 'code_comparison':
+                return self.generate_code_comparison_narration(scene_data)
+            elif scene_type == 'quote':
+                return self.generate_quote_narration(scene_data)
+
+            return ""
+
 
 class ScriptGenerator:
     """Main script generator from YAML input"""
 
-    def __init__(self):
-        self.narration_gen = NarrationGenerator()
+    def __init__(self, use_ai=False):
+        self.narration_gen = NarrationGenerator(use_ai=use_ai)
 
     def load_yaml(self, yaml_file):
         """Load and parse YAML input"""
@@ -491,18 +669,20 @@ class ScriptGenerator:
 
 if __name__ == "__main__":
     import sys
+    import argparse
 
-    if len(sys.argv) < 2:
-        print("Usage: python generate_script_from_yaml.py <input.yaml>")
-        print("\nExample:")
-        print("  python generate_script_from_yaml.py inputs/my_video.yaml")
+    parser = argparse.ArgumentParser(description='Generate video script from YAML input')
+    parser.add_argument('yaml_file', help='Path to YAML input file')
+    parser.add_argument('--use-ai', action='store_true',
+                       help='Use Claude AI for enhanced narration generation (requires ANTHROPIC_API_KEY)')
+    parser.add_argument('--output-dir', default='drafts',
+                       help='Output directory for generated scripts (default: drafts)')
+
+    args = parser.parse_args()
+
+    if not os.path.exists(args.yaml_file):
+        print(f"❌ File not found: {args.yaml_file}")
         sys.exit(1)
 
-    yaml_file = sys.argv[1]
-
-    if not os.path.exists(yaml_file):
-        print(f"❌ File not found: {yaml_file}")
-        sys.exit(1)
-
-    generator = ScriptGenerator()
-    generator.generate(yaml_file)
+    generator = ScriptGenerator(use_ai=args.use_ai)
+    generator.generate(args.yaml_file, output_dir=args.output_dir)
