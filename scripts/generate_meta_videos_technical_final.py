@@ -10,6 +10,11 @@ import subprocess
 import shutil
 import numpy as np
 from PIL import Image
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 from generate_documentation_videos import (
     create_title_keyframes, create_command_keyframes,
@@ -41,9 +46,9 @@ def load_timing_report(video):
 
 def generate_video(video, timing_data, output_dir):
     """Generate single video with all scene types"""
-    print(f"\n{'='*80}")
-    print(f"GENERATING: {video.title}")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING: {video.title}")
+    logger.info(f"{'='*80}\n")
 
     temp_dir = f"temp_meta_tech_{video.video_id}"
     os.makedirs(temp_dir, exist_ok=True)
@@ -54,7 +59,7 @@ def generate_video(video, timing_data, output_dir):
     anim_frames = int(ANIM_DURATION * FPS)
 
     for scene_num, (scene, scene_timing) in enumerate(zip(video.scenes, timing_data['scenes'])):
-        print(f"  [{scene_num + 1}/{len(video.scenes)}] {scene.scene_type} - {scene_timing['duration']:.2f}s")
+        logger.info(f"  [{scene_num + 1}/{len(video.scenes)}] {scene.scene_type} - {scene_timing['duration']:.2f}s")
 
         # Generate keyframes
         if scene.scene_type == 'title':
@@ -122,7 +127,7 @@ def generate_video(video, timing_data, output_dir):
                 frame_paths.append(filename)
                 frame_idx += 1
 
-    print(f"  Frames: {len(frame_paths)}")
+    logger.info(f"  Frames: {len(frame_paths)}")
 
     # Concat file
     concat_file = f"{temp_dir}/concat.txt"
@@ -137,7 +142,7 @@ def generate_video(video, timing_data, output_dir):
     silent_video = f"../videos/unified_v3_fast/{video.video_id}_technical_silent.mp4"
     os.makedirs("../videos/unified_v3_fast", exist_ok=True)
 
-    print(f"  GPU encoding...")
+    logger.info(f"  GPU encoding...")
     subprocess.run([
         FFMPEG_PATH, "-y", "-f", "concat", "-safe", "0", "-i", concat_file,
         "-c:v", "h264_nvenc", "-preset", "p4", "-tune", "hq",
@@ -154,7 +159,7 @@ def generate_video(video, timing_data, output_dir):
 
     final_video = f"../videos/unified_v3_fast/{video.video_id}_technical_with_audio.mp4"
 
-    print(f"  Processing audio...")
+    logger.info(f"  Processing audio...")
     subprocess.run([
         FFMPEG_PATH, "-y",
         "-i", silent_video,
@@ -166,15 +171,15 @@ def generate_video(video, timing_data, output_dir):
     ], capture_output=True)
 
     file_size = os.path.getsize(final_video) / (1024 * 1024)
-    print(f"  ✅ Complete: {file_size:.1f} MB\n")
+    logger.info(f"  ✅ Complete: {file_size:.1f} MB\n")
 
     shutil.rmtree(temp_dir)
     return final_video
 
 def main():
-    print("\n" + "="*80)
-    print("FINAL VIDEO GENERATION - TECHNICAL NARRATION")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("FINAL VIDEO GENERATION - TECHNICAL NARRATION")
+    logger.info("="*80 + "\n")
 
     audio_base = "../audio/unified_system_v2"
     output_dir = "../videos/unified_v3_fast"
@@ -186,7 +191,7 @@ def main():
                      if d.startswith(sanitized_id) and os.path.isdir(os.path.join(audio_base, d))]
 
         if not audio_dirs:
-            print(f"❌ No audio for {video.video_id}")
+            logger.error(f"❌ No audio for {video.video_id}")
             continue
 
         video.audio_dir = os.path.join(audio_base, audio_dirs[0])
@@ -194,11 +199,11 @@ def main():
         timing_data = load_timing_report(video)
         final_path = generate_video(video, timing_data, output_dir)
 
-        print(f"✅ {os.path.basename(final_path)}")
+        logger.info(f"✅ {os.path.basename(final_path)}")
 
-    print("\n" + "="*80)
-    print("✓ ALL 3 VIDEOS COMPLETE WITH TECHNICAL NARRATION")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ ALL 3 VIDEOS COMPLETE WITH TECHNICAL NARRATION")
+    logger.info("="*80 + "\n")
 
 if __name__ == "__main__":
     main()

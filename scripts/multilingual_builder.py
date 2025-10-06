@@ -37,6 +37,11 @@ import sys
 import asyncio
 from typing import List, Dict, Optional, Any
 from pathlib import Path
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 sys.path.append('.')
 
@@ -172,23 +177,23 @@ class MultilingualVideoSet:
         Returns:
             Dictionary mapping language codes to export paths
         """
-        print(f"\n{'='*80}")
-        print(f"MULTILINGUAL VIDEO GENERATION")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"MULTILINGUAL VIDEO GENERATION")
+        logger.info(f"{'='*80}\n")
 
-        print(f"Base Set: {self.base_name}")
-        print(f"Languages: {', '.join([get_language_name(l) for l in self.languages])}")
-        print(f"Source Videos: {len(self.source_videos)}")
-        print(f"Translation Method: {self.translator.preferred_method}")
-        print()
+        logger.info(f"Base Set: {self.base_name}")
+        logger.info(f"Languages: {', '.join([get_language_name(l) for l in self.languages])}")
+        logger.info(f"Source Videos: {len(self.source_videos)}")
+        logger.info(f"Translation Method: {self.translator.preferred_method}")
+        logger.info()
 
         exported_paths = {}
 
         # Process each language
         for lang in self.languages:
-            print(f"{'─'*80}")
-            print(f"Generating: {get_language_name(lang)} ({lang.upper()})")
-            print(f"{'─'*80}\n")
+            logger.info(f"{'─'*80}")
+            logger.info(f"Generating: {get_language_name(lang)} ({lang.upper()})")
+            logger.info(f"{'─'*80}\n")
 
             # Process each source video
             for source_video in self.source_videos:
@@ -198,7 +203,7 @@ class MultilingualVideoSet:
                 scenes = source_video['scenes']
                 source_lang = source_video['source_lang']
 
-                print(f"  [{lang.upper()}] Translating: {title}")
+                logger.info(f"  [{lang.upper()}] Translating: {title}")
 
                 # If this is the source language, use as-is
                 if lang == source_lang:
@@ -208,7 +213,7 @@ class MultilingualVideoSet:
                         description=description,
                         scenes=self._dicts_to_scene_configs(self.builders[lang], scenes)
                     )
-                    print(f"    ✓ Source language (no translation needed)")
+                    logger.info(f"    ✓ Source language (no translation needed)")
                     continue
 
                 # Translate title and description
@@ -219,19 +224,19 @@ class MultilingualVideoSet:
                     description, lang, source_lang, context_type='technical'
                 )
 
-                print(f"    → Title: {title_trans}")
+                logger.info(f"    → Title: {title_trans}")
 
                 # Translate scenes
                 translated_scenes = []
                 for i, scene_data in enumerate(scenes):
-                    print(f"    Translating scene {i+1}/{len(scenes)}...", end=' ')
+                    logger.info(f"    Translating scene {i+1}/{len(scenes)}...", end=' ')
 
                     translated_scene = await self._translate_scene(
                         scene_data, lang, source_lang
                     )
 
                     translated_scenes.append(translated_scene)
-                    print("✓")
+                    logger.info("✓")
 
                 # Add to language-specific builder
                 self.builders[lang].add_video(
@@ -241,7 +246,7 @@ class MultilingualVideoSet:
                     scenes=self._dicts_to_scene_configs(self.builders[lang], translated_scenes)
                 )
 
-                print(f"    ✓ Video translated and added\n")
+                logger.info(f"    ✓ Video translated and added\n")
 
             # Export this language
             export_path = Path(output_dir) / f"{self.base_id}_{lang}"
@@ -249,21 +254,21 @@ class MultilingualVideoSet:
 
             exported_paths[lang] = str(export_path)
 
-            print(f"  ✓ {get_language_name(lang)} set exported to: {export_path}\n")
+            logger.info(f"  ✓ {get_language_name(lang)} set exported to: {export_path}\n")
 
-        print(f"{'='*80}")
-        print(f"✓ MULTILINGUAL GENERATION COMPLETE")
-        print(f"{'='*80}\n")
+        logger.info(f"{'='*80}")
+        logger.info(f"✓ MULTILINGUAL GENERATION COMPLETE")
+        logger.info(f"{'='*80}\n")
 
-        print(f"Generated {len(self.languages)} language versions:")
+        logger.info(f"Generated {len(self.languages)} language versions:")
         for lang in self.languages:
-            print(f"  • {get_language_name(lang):<15} ({lang.upper()}) → {exported_paths[lang]}")
+            logger.info(f"  • {get_language_name(lang):<15} ({lang.upper()}) → {exported_paths[lang]}")
 
-        print(f"\nNext steps:")
-        print(f"  Generate all languages:")
-        print(f"    python generate_all_sets.py")
-        print(f"  Or generate specific language:")
-        print(f"    python generate_video_set.py {exported_paths[self.languages[0]]}")
+        logger.info(f"\nNext steps:")
+        logger.info(f"  Generate all languages:")
+        logger.info(f"    python generate_all_sets.py")
+        logger.info(f"  Or generate specific language:")
+        logger.info(f"    python generate_video_set.py {exported_paths[self.languages[0]]}")
 
         return exported_paths
 
@@ -524,22 +529,22 @@ Examples:
     if args.list_languages:
         from language_config import list_available_languages
 
-        print("\nSupported Languages:")
-        print("=" * 80)
+        logger.info("\nSupported Languages:")
+        logger.info("=" * 80)
 
         for lang in list_available_languages():
             name = get_language_name(lang)
             name_local = get_language_name(lang, local=True)
-            print(f"  {lang.upper():<5} {name:<20} {name_local}")
+            logger.info(f"  {lang.upper():<5} {name:<20} {name_local}")
 
-        print("=" * 80)
-        print(f"Total: {len(list_available_languages())} languages\n")
+        logger.info("=" * 80)
+        logger.info(f"Total: {len(list_available_languages())} languages\n")
 
     elif args.test_translation:
         async def test():
             translator = TranslationService()
 
-            print(f"\nSource (EN): {args.test_translation}\n")
+            logger.info(f"\nSource (EN): {args.test_translation}\n")
 
             for lang in args.target:
                 translation = await translator.translate(
@@ -548,7 +553,7 @@ Examples:
                     'en',
                     context_type='narration'
                 )
-                print(f"{lang.upper()}: {translation}")
+                logger.info(f"{lang.upper()}: {translation}")
 
         asyncio.run(test())
 

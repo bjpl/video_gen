@@ -24,20 +24,25 @@ import os
 import sys
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 try:
     from youtube_transcript_api import YouTubeTranscriptApi
     HAS_TRANSCRIPT_API = True
 except ImportError:
     HAS_TRANSCRIPT_API = False
-    print("⚠️  Install youtube-transcript-api: pip install youtube-transcript-api")
+    logger.warning("⚠️  Install youtube-transcript-api: pip install youtube-transcript-api")
 
 try:
     from googleapiclient.discovery import build
     HAS_YOUTUBE_API = True
 except ImportError:
     HAS_YOUTUBE_API = False
-    print("⚠️  Install google-api-python-client for search: pip install google-api-python-client")
+    logger.warning("⚠️  Install google-api-python-client for search: pip install google-api-python-client")
 
 
 class YouTubeSearcher:
@@ -54,14 +59,14 @@ class YouTubeSearcher:
         For demo purposes, returns mock results
         """
         if not self.api_key:
-            print("⚠️  No YouTube API key found")
-            print("   Set YOUTUBE_API_KEY environment variable")
-            print("   Get key: https://console.cloud.google.com/apis/credentials")
-            print("\n   For now, use --video-id or --url with known video\n")
+            logger.warning("⚠️  No YouTube API key found")
+            logger.info("   Set YOUTUBE_API_KEY environment variable")
+            logger.info("   Get key: https://console.cloud.google.com/apis/credentials")
+            logger.info("\n   For now, use --video-id or --url with known video\n")
             return []
 
         if not HAS_YOUTUBE_API:
-            print("❌ google-api-python-client not installed")
+            logger.error("❌ google-api-python-client not installed")
             return []
 
         youtube = build('youtube', 'v3', developerKey=self.api_key)
@@ -100,18 +105,18 @@ class TranscriptProcessor:
         if not HAS_TRANSCRIPT_API:
             raise ImportError("youtube-transcript-api required")
 
-        print(f"Fetching transcript for video: {video_id}")
+        logger.info(f"Fetching transcript for video: {video_id}")
 
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
-            print(f"✓ Retrieved {len(transcript)} transcript segments\n")
+            logger.info(f"✓ Retrieved {len(transcript)} transcript segments\n")
             return transcript
         except Exception as e:
-            print(f"❌ Could not fetch transcript: {e}")
-            print("\n   Possible reasons:")
-            print("   - Video has no captions")
-            print("   - Captions are disabled")
-            print("   - Invalid video ID")
+            logger.error(f"❌ Could not fetch transcript: {e}")
+            logger.info("\n   Possible reasons:")
+            logger.info("   - Video has no captions")
+            logger.info("   - Captions are disabled")
+            logger.info("   - Invalid video ID")
             return None
 
     def analyze_transcript(self, transcript):
@@ -323,8 +328,8 @@ def main():
     args = parser.parse_args()
 
     if not HAS_TRANSCRIPT_API:
-        print("❌ youtube-transcript-api not installed")
-        print("   Install: pip install youtube-transcript-api")
+        logger.error("❌ youtube-transcript-api not installed")
+        logger.info("   Install: pip install youtube-transcript-api")
         sys.exit(1)
 
     # Determine video ID
@@ -335,28 +340,28 @@ def main():
     elif args.url:
         video_id = extract_video_id(args.url)
     elif args.search:
-        print(f"\n{'='*80}")
-        print("YOUTUBE SEARCH")
-        print(f"{'='*80}\n")
-        print(f"Searching for: {args.search}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info("YOUTUBE SEARCH")
+        logger.info(f"{'='*80}\n")
+        logger.info(f"Searching for: {args.search}\n")
 
         # For now, ask user for video ID since API key might not be available
-        print("⚠️  YouTube search requires API key")
-        print("   Please provide video ID or URL directly using:")
-        print(f"     --video-id VIDEO_ID")
-        print(f"     --url https://youtube.com/watch?v=VIDEO_ID\n")
+        logger.warning("⚠️  YouTube search requires API key")
+        logger.info("   Please provide video ID or URL directly using:")
+        logger.info(f"     --video-id VIDEO_ID")
+        logger.info(f"     --url https://youtube.com/watch?v=VIDEO_ID\n")
         sys.exit(1)
     else:
-        print("❌ Must provide --search, --video-id, or --url")
+        logger.error("❌ Must provide --search, --video-id, or --url")
         sys.exit(1)
 
     if not video_id:
-        print("❌ Could not extract video ID")
+        logger.error("❌ Could not extract video ID")
         sys.exit(1)
 
-    print(f"\n{'='*80}")
-    print("YOUTUBE TRANSCRIPT TO VIDEO")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info("YOUTUBE TRANSCRIPT TO VIDEO")
+    logger.info(f"{'='*80}\n")
 
     # Fetch transcript
     processor = TranscriptProcessor(target_duration=args.duration)
@@ -366,24 +371,24 @@ def main():
         sys.exit(1)
 
     # Analyze
-    print("Analyzing transcript...")
+    logger.info("Analyzing transcript...")
     analysis = processor.analyze_transcript(transcript)
-    print(f"✓ Total duration: {analysis['total_duration']:.0f}s")
-    print(f"✓ Paragraphs: {len(analysis['paragraphs'])}\n")
+    logger.info(f"✓ Total duration: {analysis['total_duration']:.0f}s")
+    logger.info(f"✓ Paragraphs: {len(analysis['paragraphs'])}\n")
 
     # Extract key segments
-    print(f"Extracting key segments for {args.duration}s video...")
+    logger.info(f"Extracting key segments for {args.duration}s video...")
     num_content_scenes = min(4, args.duration // 15)  # ~15s per scene
     key_segments = processor.extract_key_segments(transcript, num_content_scenes)
-    print(f"✓ Identified {len(key_segments)} key segments\n")
+    logger.info(f"✓ Identified {len(key_segments)} key segments\n")
 
     # Get video title (would come from API, but using placeholder)
     video_title = f"YouTube Content Summary"
 
     # Convert to scenes
-    print("Converting to video scenes...")
+    logger.info("Converting to video scenes...")
     scenes = processor.convert_to_scenes(video_title, key_segments)
-    print(f"✓ Created {len(scenes)} scenes\n")
+    logger.info(f"✓ Created {len(scenes)} scenes\n")
 
     # Create YAML
     video_id_slug = f"youtube_{video_id[:8]}"
@@ -410,15 +415,15 @@ def main():
     with open(yaml_file, 'w') as f:
         yaml.dump(yaml_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-    print(f"{'='*80}")
-    print("YAML GENERATED")
-    print(f"{'='*80}\n")
-    print(f"Output: {yaml_file}\n")
-    print(f"Original video: https://youtube.com/watch?v={video_id}\n")
-    print("Next steps:")
-    print(f"  1. Review YAML: cat {yaml_file}")
-    print(f"  2. Generate script: python generate_script_from_yaml.py {yaml_file}")
-    print(f"\n{'='*80}\n")
+    logger.info(f"{'='*80}")
+    logger.info("YAML GENERATED")
+    logger.info(f"{'='*80}\n")
+    logger.info(f"Output: {yaml_file}\n")
+    logger.info(f"Original video: https://youtube.com/watch?v={video_id}\n")
+    logger.info("Next steps:")
+    logger.info(f"  1. Review YAML: cat {yaml_file}")
+    logger.info(f"  2. Generate script: python generate_script_from_yaml.py {yaml_file}")
+    logger.info(f"\n{'='*80}\n")
 
 
 if __name__ == "__main__":

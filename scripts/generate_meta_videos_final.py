@@ -11,6 +11,11 @@ import shutil
 import numpy as np
 from PIL import Image
 from datetime import datetime
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 from generate_documentation_videos import (
     create_title_keyframes, create_command_keyframes,
@@ -43,9 +48,9 @@ def load_timing_report(video):
 
 def generate_video(video, timing_data, output_dir):
     """Generate single video"""
-    print(f"\n{'='*80}")
-    print(f"GENERATING: {video.title}")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING: {video.title}")
+    logger.info(f"{'='*80}\n")
 
     temp_dir = f"temp_meta_{video.video_id}"
     os.makedirs(temp_dir, exist_ok=True)
@@ -56,7 +61,7 @@ def generate_video(video, timing_data, output_dir):
     anim_frames = int(ANIM_DURATION * FPS)
 
     for scene_num, (scene, scene_timing) in enumerate(zip(video.scenes, timing_data['scenes'])):
-        print(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id} ({scene_timing['duration']:.2f}s)")
+        logger.info(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id} ({scene_timing['duration']:.2f}s)")
 
         # Generate keyframes based on scene type
         if scene.scene_type == 'title':
@@ -173,7 +178,7 @@ def generate_video(video, timing_data, output_dir):
                 frame_paths.append(filename)
                 frame_idx += 1
 
-    print(f"\n  Total frames: {len(frame_paths)} ({len(frame_paths)/FPS:.1f}s)")
+    logger.info(f"\n  Total frames: {len(frame_paths)} ({len(frame_paths)/FPS:.1f}s)")
 
     # Create concat file
     concat_file = f"{temp_dir}/concat.txt"
@@ -188,7 +193,7 @@ def generate_video(video, timing_data, output_dir):
     silent_video = f"../videos/unified_v3_fast/{video.video_id}_silent.mp4"
     os.makedirs("../videos/unified_v3_fast", exist_ok=True)
 
-    print(f"  Encoding with GPU...")
+    logger.info(f"  Encoding with GPU...")
 
     subprocess.run([
         FFMPEG_PATH,
@@ -214,7 +219,7 @@ def generate_video(video, timing_data, output_dir):
     # Final video
     final_video = f"../videos/unified_v3_fast/{video.video_id}_with_audio.mp4"
 
-    print(f"  Processing audio...")
+    logger.info(f"  Processing audio...")
 
     subprocess.run([
         FFMPEG_PATH,
@@ -229,7 +234,7 @@ def generate_video(video, timing_data, output_dir):
     ], capture_output=True)
 
     file_size = os.path.getsize(final_video) / (1024 * 1024)
-    print(f"  ✓ Complete: {file_size:.1f} MB\n")
+    logger.info(f"  ✓ Complete: {file_size:.1f} MB\n")
 
     # Cleanup
     shutil.rmtree(temp_dir)
@@ -237,9 +242,9 @@ def generate_video(video, timing_data, output_dir):
     return final_video
 
 def main():
-    print("\n" + "="*80)
-    print("GENERATING META-DOCUMENTATION VIDEOS")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("GENERATING META-DOCUMENTATION VIDEOS")
+    logger.info("="*80 + "\n")
 
     output_dir = "../videos/unified_v3_fast"
     audio_base = "../audio/unified_system_v2"
@@ -252,21 +257,21 @@ def main():
                          if d.startswith(sanitized_id) and os.path.isdir(os.path.join(audio_base, d))]
 
             if not audio_dirs:
-                print(f"❌ No audio directory found for {video.video_id}")
+                logger.error(f"❌ No audio directory found for {video.video_id}")
                 continue
 
             video.audio_dir = os.path.join(audio_base, audio_dirs[0])
-            print(f"Found audio: {os.path.basename(video.audio_dir)}")
+            logger.info(f"Found audio: {os.path.basename(video.audio_dir)}")
 
             timing_data = load_timing_report(video)
             final_path = generate_video(video, timing_data, output_dir)
-            print(f"✅ Video created: {os.path.basename(final_path)}")
+            logger.info(f"✅ Video created: {os.path.basename(final_path)}")
         except Exception as e:
-            print(f"❌ Error: {e}")
+            logger.error(f"❌ Error: {e}")
 
-    print("\n" + "="*80)
-    print("✓ ALL VIDEOS COMPLETE")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ ALL VIDEOS COMPLETE")
+    logger.info("="*80 + "\n")
 
 if __name__ == "__main__":
     main()

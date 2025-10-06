@@ -39,6 +39,11 @@ import asyncio
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field, asdict
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 import sys
 sys.path.append('.')
@@ -478,7 +483,7 @@ class VideoSetBuilder:
         with open(config_file, 'w') as f:
             yaml.dump(set_config, f, default_flow_style=False, sort_keys=False)
 
-        print(f"✓ Created: {config_file}")
+        logger.info(f"✓ Created: {config_file}")
 
         # Save individual video YAML files
         for video in self.videos:
@@ -487,12 +492,12 @@ class VideoSetBuilder:
             with open(video_file, 'w') as f:
                 yaml.dump(video.to_dict(), f, default_flow_style=False, sort_keys=False)
 
-            print(f"✓ Created: {video_file}")
+            logger.info(f"✓ Created: {video_file}")
 
-        print(f"\n✓ Set exported to: {output_path}")
-        print(f"  Videos: {len(self.videos)}")
-        print(f"\nNext steps:")
-        print(f"  python generate_video_set.py {output_path}")
+        logger.info(f"\n✓ Set exported to: {output_path}")
+        logger.info(f"  Videos: {len(self.videos)}")
+        logger.info(f"\nNext steps:")
+        logger.info(f"  python generate_video_set.py {output_path}")
 
         return output_path
 
@@ -515,7 +520,7 @@ class VideoSetBuilder:
         video_set = VideoSet(temp_dir)
         videos, output_dirs = await video_set.generate_set()
 
-        print(f"\n✓ Set generation complete: {self.set_name}")
+        logger.info(f"\n✓ Set generation complete: {self.set_name}")
 
         return videos, output_dirs
 
@@ -622,7 +627,7 @@ async def example_tutorial_series():
                     "# Create variables",
                     "name = 'Alice'",
                     "age = 30",
-                    "print(f'{name} is {age}')"
+                    "logger.info(f'{name} is {age}')"
                 ],
                 narration="Create variables with simple assignment. Use print to display values."
             ),
@@ -690,13 +695,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.example in ['tutorial', 'both']:
-        print("Creating tutorial series example...")
+        logger.info("Creating tutorial series example...")
         asyncio.run(example_tutorial_series())
 
     if args.example in ['marketing', 'both']:
-        print("\nCreating marketing campaign example...")
+        logger.info("\nCreating marketing campaign example...")
         asyncio.run(example_marketing_campaign())
 
-    print("\n✓ Examples created!")
-    print("\nGenerate them with:")
-    print("  python generate_all_sets.py")
+    logger.info("\n✓ Examples created!")
+    logger.info("\nGenerate them with:")
+    logger.info("  python generate_all_sets.py")

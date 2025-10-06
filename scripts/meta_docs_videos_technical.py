@@ -7,6 +7,11 @@ Updated with improved prompts for factual, educational tone
 
 import sys
 import asyncio
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 sys.path.append('.')
 
 from unified_video_system import (
@@ -269,9 +274,9 @@ VIDEO_03 = UnifiedVideo(
 ALL_VIDEOS = [VIDEO_01, VIDEO_02, VIDEO_03]
 
 async def main():
-    print("\n" + "="*80)
-    print("META-DOCUMENTATION VIDEOS - TECHNICAL NARRATION")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("META-DOCUMENTATION VIDEOS - TECHNICAL NARRATION")
+    logger.info("="*80 + "\n")
 
     import os
     output_dir = "../audio/unified_system_v2"
@@ -284,12 +289,12 @@ async def main():
     for d in os.listdir(output_dir):
         if d.startswith(('01-', '02-', '03-')) and os.path.isdir(os.path.join(output_dir, d)):
             shutil.rmtree(os.path.join(output_dir, d))
-            print(f"Cleaned old audio: {d}")
+            logger.info(f"Cleaned old audio: {d}")
 
     for i, video in enumerate(ALL_VIDEOS, 1):
-        print(f"\n{'#'*80}")
-        print(f"# VIDEO {i}/{len(ALL_VIDEOS)}: {video.title}")
-        print(f"{'#'*80}\n")
+        logger.info(f"\n{'#'*80}")
+        logger.info(f"# VIDEO {i}/{len(ALL_VIDEOS)}: {video.title}")
+        logger.info(f"{'#'*80}\n")
 
         video.validate()
         video.save_validation_report(reports_dir)
@@ -298,13 +303,13 @@ async def main():
         video.generate_timing_report()
         video.save_metadata_manifest(reports_dir)
 
-    print("\n" + "="*80)
-    print("✓ AUDIO COMPLETE - TECHNICAL NARRATION")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ AUDIO COMPLETE - TECHNICAL NARRATION")
+    logger.info("="*80 + "\n")
 
     total = sum(v.total_duration for v in ALL_VIDEOS)
-    print(f"Total duration: {total:.1f}s ({total/60:.1f} minutes)")
-    print("\nNext: python generate_videos_from_timings_v3_simple.py\n")
+    logger.info(f"Total duration: {total:.1f}s ({total/60:.1f} minutes)")
+    logger.info("\nNext: python generate_videos_from_timings_v3_simple.py\n")
 
 if __name__ == "__main__":
     asyncio.run(main())

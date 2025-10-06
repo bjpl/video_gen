@@ -14,6 +14,11 @@ from PIL import Image
 from datetime import datetime
 from multiprocessing import Pool, cpu_count
 import io
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 sys.path.append('.')
 from generate_documentation_videos import (
@@ -134,25 +139,25 @@ def load_timing_report(video):
         raise FileNotFoundError(f"No timing report found in {video.audio_dir}")
 
     timing_file = os.path.join(video.audio_dir, timing_files[0])
-    print(f"  Loading timing report: {os.path.basename(timing_file)}")
+    logger.info(f"  Loading timing report: {os.path.basename(timing_file)}")
     with open(timing_file, 'r') as f:
         return json.load(f)
 
 def generate_video_from_timing_optimized(video, timing_data, output_dir):
-    print(f"\n{'='*80}")
-    print(f"GENERATING VIDEO (OPTIMIZED): {video.title}")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING VIDEO (OPTIMIZED): {video.title}")
+    logger.info(f"{'='*80}\n")
 
-    print(f"[PHASE 1] Parallel frame generation")
-    print(f"  CPU cores: {cpu_count()}")
-    print(f"  Scenes: {len(video.scenes)}\n")
+    logger.info(f"[PHASE 1] Parallel frame generation")
+    logger.info(f"  CPU cores: {cpu_count()}")
+    logger.info(f"  Scenes: {len(video.scenes)}\n")
 
     scene_tasks = []
     for scene_num, (scene, scene_timing) in enumerate(zip(video.scenes, timing_data['scenes'])):
         next_scene = video.scenes[scene_num + 1] if scene_num < len(video.scenes) - 1 else None
         is_last = scene_num == len(video.scenes) - 1
         scene_tasks.append((scene_num, scene, scene_timing, next_scene, video.accent_color, is_last))
-        print(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id}: {scene_timing['duration']:.2f}s")
+        logger.info(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id}: {scene_timing['duration']:.2f}s")
 
     with Pool(min(cpu_count(), len(video.scenes))) as pool:
         all_scene_frames = pool.map(generate_scene_frames_batch, scene_tasks)
@@ -161,11 +166,11 @@ def generate_video_from_timing_optimized(video, timing_data, output_dir):
     for scene_frames in all_scene_frames:
         all_frames.extend(scene_frames)
 
-    print(f"\n  Total frames: {len(all_frames)}")
-    print(f"  Video duration: {len(all_frames) / FPS:.2f}s")
-    print(f"  Expected: {timing_data['total_duration']:.2f}s\n")
+    logger.info(f"\n  Total frames: {len(all_frames)}")
+    logger.info(f"  Video duration: {len(all_frames) / FPS:.2f}s")
+    logger.info(f"  Expected: {timing_data['total_duration']:.2f}s\n")
 
-    print(f"[PHASE 2] GPU-accelerated encoding (streaming pipeline)")
+    logger.info(f"[PHASE 2] GPU-accelerated encoding (streaming pipeline)")
 
     final_video = video.generate_smart_filename(file_type="video", include_audio=True)
     final_video_path = os.path.join(output_dir, final_video)
@@ -208,7 +213,7 @@ def generate_video_from_timing_optimized(video, timing_data, output_dir):
 
     audio_concat_content = "\n".join([f"file '{os.path.abspath(af)}'" for af in audio_files])
 
-    print(f"  Streaming {len(all_frames)} frames to GPU encoder...")
+    logger.info(f"  Streaming {len(all_frames)} frames to GPU encoder...")
 
     process = subprocess.Popen(
         ffmpeg_cmd,
@@ -225,7 +230,7 @@ def generate_video_from_timing_optimized(video, timing_data, output_dir):
 
     for i, frame_np in enumerate(all_frames):
         if i % 100 == 0:
-            print(f"  Progress: {i}/{len(all_frames)} frames ({i/len(all_frames)*100:.1f}%)")
+            logger.info(f"  Progress: {i}/{len(all_frames)} frames ({i/len(all_frames)*100:.1f}%)")
 
         process.stdin.write(frame_np.tobytes())
 
@@ -233,14 +238,14 @@ def generate_video_from_timing_optimized(video, timing_data, output_dir):
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        print(f"  ❌ Video encoding failed:")
-        print(stderr.decode('utf-8', errors='ignore')[-500:])
+        logger.error(f"  ❌ Video encoding failed:")
+        logger.error(stderr.decode('utf-8', errors='ignore')[-500:])
         return None
 
     file_size = os.path.getsize(final_video_path) / (1024 * 1024)
-    print(f"\n  ✓ Final video created: {final_video}")
-    print(f"  📦 Size: {file_size:.1f} MB")
-    print(f"  ⏱️  Duration: {timing_data['total_duration']:.1f}s\n")
+    logger.info(f"\n  ✓ Final video created: {final_video}")
+    logger.info(f"  📦 Size: {file_size:.1f} MB")
+    logger.info(f"  ⏱️  Duration: {timing_data['total_duration']:.1f}s\n")
 
     return final_video_path
 
@@ -248,26 +253,26 @@ def generate_video_from_timing_optimized_fallback(video, timing_data, output_dir
     """
     Fallback optimized version using temporary directory but with numpy acceleration
     """
-    print(f"\n{'='*80}")
-    print(f"GENERATING VIDEO (OPTIMIZED - FALLBACK MODE): {video.title}")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING VIDEO (OPTIMIZED - FALLBACK MODE): {video.title}")
+    logger.info(f"{'='*80}\n")
 
     temp_dir = f"temp_unified_v3_{video.video_id}"
     os.makedirs(temp_dir, exist_ok=True)
 
-    print(f"[PHASE 1] Parallel frame generation with NumPy acceleration")
+    logger.info(f"[PHASE 1] Parallel frame generation with NumPy acceleration")
 
     scene_tasks = []
     for scene_num, (scene, scene_timing) in enumerate(zip(video.scenes, timing_data['scenes'])):
         next_scene = video.scenes[scene_num + 1] if scene_num < len(video.scenes) - 1 else None
         is_last = scene_num == len(video.scenes) - 1
         scene_tasks.append((scene_num, scene, scene_timing, next_scene, video.accent_color, is_last))
-        print(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id}: {scene_timing['duration']:.2f}s")
+        logger.info(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id}: {scene_timing['duration']:.2f}s")
 
     with Pool(min(cpu_count(), len(video.scenes))) as pool:
         all_scene_frames = pool.map(generate_scene_frames_batch, scene_tasks)
 
-    print(f"\n[PHASE 2] Writing frames to disk")
+    logger.info(f"\n[PHASE 2] Writing frames to disk")
 
     frame_idx = 0
     frame_files = []
@@ -281,12 +286,12 @@ def generate_video_from_timing_optimized_fallback(video, timing_data, output_dir
             frame_idx += 1
 
             if frame_idx % 100 == 0:
-                print(f"  Saved {frame_idx}/{len([f for sf in all_scene_frames for f in sf])} frames")
+                logger.info(f"  Saved {frame_idx}/{len([f for sf in all_scene_frames for f in sf])} frames")
 
-    print(f"\n  Total frames: {len(frame_files)}")
-    print(f"  Video duration: {len(frame_files) / FPS:.2f}s\n")
+    logger.info(f"\n  Total frames: {len(frame_files)}")
+    logger.info(f"  Video duration: {len(frame_files) / FPS:.2f}s\n")
 
-    print(f"[PHASE 3] GPU-accelerated video encoding")
+    logger.info(f"[PHASE 3] GPU-accelerated video encoding")
 
     concat_file = f"{temp_dir}/concat.txt"
     with open(concat_file, 'w') as f:
@@ -319,13 +324,13 @@ def generate_video_from_timing_optimized_fallback(video, timing_data, output_dir
     result = subprocess.run(ffmpeg_video_cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"  ❌ Video encoding failed:")
-        print(result.stderr[:500])
+        logger.error(f"  ❌ Video encoding failed:")
+        logger.info(result.stderr[:500])
         return None
 
-    print(f"  ✓ Silent video created\n")
+    logger.info(f"  ✓ Silent video created\n")
 
-    print(f"[PHASE 4] Single-pass audio processing and muxing")
+    logger.info(f"[PHASE 4] Single-pass audio processing and muxing")
 
     audio_files = [os.path.join(video.audio_dir, f"{scene.scene_id}.mp3") for scene in video.scenes]
     audio_concat_file = f"{temp_dir}/audio_concat.txt"
@@ -354,26 +359,26 @@ def generate_video_from_timing_optimized_fallback(video, timing_data, output_dir
     result = subprocess.run(ffmpeg_final_cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"  ❌ Audio integration failed:")
-        print(result.stderr[:500])
+        logger.error(f"  ❌ Audio integration failed:")
+        logger.info(result.stderr[:500])
         return None
 
     file_size = os.path.getsize(final_video_path) / (1024 * 1024)
-    print(f"\n  ✓ Final video created: {final_video}")
-    print(f"  📦 Size: {file_size:.1f} MB")
-    print(f"  ⏱️  Duration: {timing_data['total_duration']:.1f}s\n")
+    logger.info(f"\n  ✓ Final video created: {final_video}")
+    logger.info(f"  📦 Size: {file_size:.1f} MB")
+    logger.info(f"  ⏱️  Duration: {timing_data['total_duration']:.1f}s\n")
 
     import shutil
     shutil.rmtree(temp_dir)
-    print(f"  ✓ Cleaned up temp files\n")
+    logger.info(f"  ✓ Cleaned up temp files\n")
 
     return final_video_path
 
 def generate_all_videos_with_audio():
-    print("\n" + "="*80)
-    print("VIDEO GENERATION v3.0 - GPU-OPTIMIZED")
-    print("Ultra-fast generation with parallel processing and streaming pipelines")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("VIDEO GENERATION v3.0 - GPU-OPTIMIZED")
+    logger.info("Ultra-fast generation with parallel processing and streaming pipelines")
+    logger.info("="*80 + "\n")
 
     output_dir = "../videos/unified_v3_optimized"
     os.makedirs(output_dir, exist_ok=True)
@@ -388,7 +393,7 @@ def generate_all_videos_with_audio():
                      if d.startswith(sanitized_id) and os.path.isdir(os.path.join(audio_base, d))]
 
         if not audio_dirs:
-            print(f"⚠️  No audio found for {video.video_id}, skipping...")
+            logger.warning(f"⚠️  No audio found for {video.video_id}, skipping...")
             continue
 
         audio_dir = os.path.join(audio_base, audio_dirs[0])
@@ -397,20 +402,20 @@ def generate_all_videos_with_audio():
         timing_files = [f for f in os.listdir(audio_dir) if '_timing_' in f and f.endswith('.json')]
 
         if not timing_files:
-            print(f"⚠️  No timing report for {video.video_id}, skipping...")
+            logger.warning(f"⚠️  No timing report for {video.video_id}, skipping...")
             continue
 
         videos_to_generate.append(video)
 
-    print(f"Found {len(videos_to_generate)}/{len(ALL_VIDEOS)} videos ready for generation\n")
+    logger.info(f"Found {len(videos_to_generate)}/{len(ALL_VIDEOS)} videos ready for generation\n")
 
     generated_videos = []
     failed_videos = []
 
     for i, video in enumerate(videos_to_generate, 1):
-        print(f"{'#'*80}")
-        print(f"# VIDEO {i}/{len(videos_to_generate)}: {video.title}")
-        print(f"{'#'*80}")
+        logger.info(f"{'#'*80}")
+        logger.info(f"# VIDEO {i}/{len(videos_to_generate)}: {video.title}")
+        logger.info(f"{'#'*80}")
 
         try:
             timing_data = load_timing_report(video)
@@ -429,39 +434,39 @@ def generate_all_videos_with_audio():
                 failed_videos.append(video.video_id)
 
         except Exception as e:
-            print(f"\n❌ Error generating {video.video_id}: {str(e)}\n")
+            logger.error(f"\n❌ Error generating {video.video_id}: {str(e)}\n")
             failed_videos.append(video.video_id)
 
-    print("\n" + "="*80)
-    print("✓ VIDEO GENERATION COMPLETE")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ VIDEO GENERATION COMPLETE")
+    logger.info("="*80 + "\n")
 
     if generated_videos:
-        print(f"Successfully generated: {len(generated_videos)}/{len(videos_to_generate)}\n")
+        logger.info(f"Successfully generated: {len(generated_videos)}/{len(videos_to_generate)}\n")
 
         total_duration = sum(v['duration'] for v in generated_videos)
         total_size = sum(v['size_mb'] for v in generated_videos)
 
-        print("Video Details:")
-        print("-" * 80)
-        print(f"{'Video ID':<25} {'Duration':<12} {'Size':<12} {'Status'}")
-        print("-" * 80)
+        logger.info("Video Details:")
+        logger.info("-" * 80)
+        logger.info(f"{'Video ID':<25} {'Duration':<12} {'Size':<12} {'Status'}")
+        logger.info("-" * 80)
 
         for v in generated_videos:
-            print(f"{v['video_id']:<25} {v['duration']:>6.1f}s {v['size_mb']:>8.1f} MB    ✓")
+            logger.info(f"{v['video_id']:<25} {v['duration']:>6.1f}s {v['size_mb']:>8.1f} MB    ✓")
 
-        print("-" * 80)
-        print(f"{'TOTAL':<25} {total_duration:>6.1f}s {total_size:>8.1f} MB")
-        print()
+        logger.info("-" * 80)
+        logger.info(f"{'TOTAL':<25} {total_duration:>6.1f}s {total_size:>8.1f} MB")
+        logger.info()
 
-        print(f"All videos saved to: {output_dir}/")
+        logger.info(f"All videos saved to: {output_dir}/")
 
     if failed_videos:
-        print(f"\n⚠️  Failed to generate {len(failed_videos)} video(s):")
+        logger.error(f"\n⚠️  Failed to generate {len(failed_videos)} video(s):")
         for vid_id in failed_videos:
-            print(f"  - {vid_id}")
+            logger.info(f"  - {vid_id}")
 
-    print("\n" + "="*80)
+    logger.info("\n" + "="*80)
 
     summary_file = os.path.join(output_dir, f"generation_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
     with open(summary_file, 'w') as f:
@@ -475,7 +480,7 @@ def generate_all_videos_with_audio():
             'version': 'v3.0-optimized'
         }, f, indent=2)
 
-    print(f"Summary saved: {summary_file}\n")
+    logger.info(f"Summary saved: {summary_file}\n")
 
 if __name__ == "__main__":
     generate_all_videos_with_audio()

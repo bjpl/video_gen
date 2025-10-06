@@ -16,6 +16,11 @@ import os
 import sys
 import yaml
 from pathlib import Path
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 sys.path.append('.')
 
@@ -34,8 +39,8 @@ class SetAwareWizard(VideoWizard):
     def run(self):
         """Run set-aware wizard"""
         print_header("SET-AWARE VIDEO CREATION WIZARD")
-        print("Create standalone videos or organize them into sets!")
-        print()
+        logger.info("Create standalone videos or organize them into sets!")
+        logger.info()
         print_info("Press Ctrl+C at any time to cancel\n")
 
         try:
@@ -51,19 +56,19 @@ class SetAwareWizard(VideoWizard):
             self.step_generate()
 
         except KeyboardInterrupt:
-            print(f"\n\n{Colors.YELLOW}⚠️  Wizard cancelled{Colors.END}")
+            logger.warning(f"\n\n{Colors.YELLOW}⚠️  Wizard cancelled{Colors.END}")
             self.save_draft()
             sys.exit(0)
 
     def step_set_mode(self):
         """Ask if creating standalone or set video"""
-        print(f"\n{Colors.BOLD}STEP 0: VIDEO ORGANIZATION{Colors.END}")
-        print(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
+        logger.info(f"\n{Colors.BOLD}STEP 0: VIDEO ORGANIZATION{Colors.END}")
+        logger.info(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
 
-        print("How do you want to organize this video?\n")
-        print("  1. Standalone video (single independent video)")
-        print("  2. Create new video set (new collection)")
-        print("  3. Add to existing set (extend existing collection)")
+        logger.info("How do you want to organize this video?\n")
+        logger.info("  1. Standalone video (single independent video)")
+        logger.info("  2. Create new video set (new collection)")
+        logger.info("  3. Add to existing set (extend existing collection)")
 
         choice = print_prompt("\nSelect (1-3): ") or '1'
 
@@ -83,13 +88,13 @@ class SetAwareWizard(VideoWizard):
 
     def configure_new_set(self):
         """Configure a new video set"""
-        print(f"\n{Colors.BOLD}NEW SET CONFIGURATION{Colors.END}")
-        print(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
+        logger.info(f"\n{Colors.BOLD}NEW SET CONFIGURATION{Colors.END}")
+        logger.info(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
 
         # Set ID
         set_id = print_prompt("Set ID (e.g., 'tutorial_series_2024'): ")
         if not set_id:
-            print(f"{Colors.RED}✗ Set ID required{Colors.END}")
+            logger.error(f"{Colors.RED}✗ Set ID required{Colors.END}")
             sys.exit(1)
 
         # Set name
@@ -100,24 +105,24 @@ class SetAwareWizard(VideoWizard):
         description = print_prompt("Set description: ") or f"{set_name} video collection"
 
         # Set defaults
-        print("\nSet-level defaults (applied to all videos):")
+        logger.info("\nSet-level defaults (applied to all videos):")
 
         # Accent color
-        print("\nDefault accent color:")
+        logger.info("\nDefault accent color:")
         colors = [
             ('orange', 'Orange'), ('blue', 'Blue'), ('purple', 'Purple'),
             ('green', 'Green'), ('pink', 'Pink'), ('cyan', 'Cyan')
         ]
         for i, (color, name) in enumerate(colors, 1):
-            print(f"  {i}. {name}")
+            logger.info(f"  {i}. {name}")
 
         color_choice = print_prompt("\nSelect (1-6, default=2): ") or '2'
         accent_color = colors[int(color_choice) - 1][0]
 
         # Voice
-        print("\nDefault voice:")
-        print("  1. Male (Andrew)")
-        print("  2. Female (Aria)")
+        logger.info("\nDefault voice:")
+        logger.info("  1. Male (Andrew)")
+        logger.info("  2. Female (Aria)")
         voice_choice = print_prompt("\nSelect (1-2, default=1): ") or '1'
         voice = 'male' if voice_choice == '1' else 'female'
 
@@ -125,9 +130,9 @@ class SetAwareWizard(VideoWizard):
         duration = int(print_prompt("\nDefault target duration (seconds, default=60): ") or '60')
 
         # Naming convention
-        print("\nNaming convention:")
-        print("  1. Numbered (tutorial-01, tutorial-02, ...)")
-        print("  2. Descriptive (quick_start, advanced_features, ...)")
+        logger.info("\nNaming convention:")
+        logger.info("  1. Numbered (tutorial-01, tutorial-02, ...)")
+        logger.info("  2. Descriptive (quick_start, advanced_features, ...)")
         naming_choice = print_prompt("\nSelect (1-2, default=1): ") or '1'
 
         prefix = print_prompt("Filename prefix (or Enter for none): ") or ''
@@ -171,15 +176,15 @@ class SetAwareWizard(VideoWizard):
         self.set_dir = Path(f"../sets/{set_id}")
 
         print_success(f"\nSet configured: {set_name}")
-        print(f"  Location: {self.set_dir}\n")
+        logger.info(f"  Location: {self.set_dir}\n")
 
     def select_existing_set(self):
         """Select an existing set to add to"""
         sets_dir = Path("../sets")
 
         if not sets_dir.exists():
-            print(f"{Colors.RED}✗ No sets directory found{Colors.END}")
-            print("  Creating first set instead...")
+            logger.error(f"{Colors.RED}✗ No sets directory found{Colors.END}")
+            logger.info("  Creating first set instead...")
             self.set_mode = 'new_set'
             self.configure_new_set()
             return
@@ -193,14 +198,14 @@ class SetAwareWizard(VideoWizard):
                     existing_sets.append(item)
 
         if not existing_sets:
-            print(f"{Colors.YELLOW}⚠️  No existing sets found{Colors.END}")
-            print("  Creating first set instead...")
+            logger.warning(f"{Colors.YELLOW}⚠️  No existing sets found{Colors.END}")
+            logger.info("  Creating first set instead...")
             self.set_mode = 'new_set'
             self.configure_new_set()
             return
 
-        print(f"\n{Colors.BOLD}EXISTING SETS{Colors.END}")
-        print(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
+        logger.info(f"\n{Colors.BOLD}EXISTING SETS{Colors.END}")
+        logger.info(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
 
         for i, set_path in enumerate(existing_sets, 1):
             # Load set config to get name
@@ -210,8 +215,8 @@ class SetAwareWizard(VideoWizard):
             set_name = config['set'].get('name', set_path.name)
             video_count = len(config['set'].get('videos', []))
 
-            print(f"  {i}. {set_name}")
-            print(f"     ({video_count} video(s), {set_path.name})")
+            logger.info(f"  {i}. {set_name}")
+            logger.info(f"     ({video_count} video(s), {set_path.name})")
 
         choice = int(print_prompt(f"\nSelect set (1-{len(existing_sets)}): ") or '1')
         selected_set = existing_sets[choice - 1]
@@ -226,8 +231,8 @@ class SetAwareWizard(VideoWizard):
 
     def step_generate(self):
         """Enhanced generation with set support"""
-        print(f"\n{Colors.BOLD}STEP 6: GENERATING{Colors.END}")
-        print(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
+        logger.info(f"\n{Colors.BOLD}STEP 6: GENERATING{Colors.END}")
+        logger.info(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
 
         timestamp = self.video_data['video'].get('timestamp') or \
                    __import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -245,7 +250,7 @@ class SetAwareWizard(VideoWizard):
             print_success(f"YAML saved: {yaml_file}\n")
 
             # Generate script
-            print("Generating professional narration...")
+            logger.info("Generating professional narration...")
 
             from generate_script_from_yaml import ScriptGenerator
 
@@ -253,23 +258,23 @@ class SetAwareWizard(VideoWizard):
             try:
                 unified_video, md_file, py_file = generator.generate(yaml_file, output_dir='drafts')
 
-                print(f"\n{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
-                print(f"{Colors.BOLD}{Colors.GREEN}✓ STANDALONE VIDEO CREATED{Colors.END}")
-                print(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}\n")
+                logger.info(f"\n{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
+                logger.info(f"{Colors.BOLD}{Colors.GREEN}✓ STANDALONE VIDEO CREATED{Colors.END}")
+                logger.info(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}\n")
 
-                print("Files created:")
-                print(f"  📋 {yaml_file}")
-                print(f"  📝 {md_file}")
-                print(f"  🐍 {py_file}\n")
+                logger.info("Files created:")
+                logger.info(f"  📋 {yaml_file}")
+                logger.info(f"  📝 {md_file}")
+                logger.info(f"  🐍 {py_file}\n")
 
-                print("Next steps:")
-                print(f"  1. Review narration: cat {md_file}")
-                print(f"  2. Generate as standalone:")
-                print(f"     python generate_all_videos_unified_v2.py")
-                print(f"  3. Or convert to set later\n")
+                logger.info("Next steps:")
+                logger.info(f"  1. Review narration: cat {md_file}")
+                logger.info(f"  2. Generate as standalone:")
+                logger.info(f"     python generate_all_videos_unified_v2.py")
+                logger.info(f"  3. Or convert to set later\n")
 
             except Exception as e:
-                print(f"{Colors.RED}❌ Error: {e}{Colors.END}\n")
+                logger.error(f"{Colors.RED}❌ Error: {e}{Colors.END}\n")
 
         else:  # new_set or existing_set
             # Create/update set
@@ -302,21 +307,21 @@ class SetAwareWizard(VideoWizard):
 
             print_success(f"Set config updated: {config_file}")
 
-            print(f"\n{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
-            print(f"{Colors.BOLD}{Colors.GREEN}✓ VIDEO ADDED TO SET{Colors.END}")
-            print(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}\n")
+            logger.info(f"\n{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
+            logger.info(f"{Colors.BOLD}{Colors.GREEN}✓ VIDEO ADDED TO SET{Colors.END}")
+            logger.info(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}\n")
 
-            print("Set details:")
-            print(f"  Set: {self.set_config['set']['name']}")
-            print(f"  Location: {self.set_dir}")
-            print(f"  Total videos: {len(self.set_config['set']['videos'])}\n")
+            logger.info("Set details:")
+            logger.info(f"  Set: {self.set_config['set']['name']}")
+            logger.info(f"  Location: {self.set_dir}")
+            logger.info(f"  Total videos: {len(self.set_config['set']['videos'])}\n")
 
-            print("Next steps:")
-            print(f"  1. Add more videos to this set (run wizard again)")
-            print(f"  2. Generate the entire set:")
-            print(f"     python generate_video_set.py {self.set_dir}")
-            print(f"  3. Render videos:")
-            print(f"     python generate_videos_from_set.py {self.set_dir.parent.parent / 'output' / self.set_config['set']['id']}\n")
+            logger.info("Next steps:")
+            logger.info(f"  1. Add more videos to this set (run wizard again)")
+            logger.info(f"  2. Generate the entire set:")
+            logger.info(f"     python generate_video_set.py {self.set_dir}")
+            logger.info(f"  3. Render videos:")
+            logger.info(f"     python generate_videos_from_set.py {self.set_dir.parent.parent / 'output' / self.set_config['set']['id']}\n")
 
 
 def main():
@@ -344,7 +349,7 @@ def main():
     # Pre-configure based on arguments
     if args.standalone:
         wizard.set_mode = 'standalone'
-        print(f"{Colors.BOLD}Creating standalone video{Colors.END}\n")
+        logger.info(f"{Colors.BOLD}Creating standalone video{Colors.END}\n")
         wizard.video_data = {'video': {}, 'scenes': []}
         wizard.step_basics()
         wizard.step_content_type()
@@ -356,7 +361,7 @@ def main():
     elif args.set:
         set_path = Path(args.set)
         if not set_path.exists() or not (set_path / 'set_config.yaml').exists():
-            print(f"{Colors.RED}✗ Invalid set: {set_path}{Colors.END}")
+            logger.error(f"{Colors.RED}✗ Invalid set: {set_path}{Colors.END}")
             sys.exit(1)
 
         wizard.set_mode = 'existing_set'
@@ -365,7 +370,7 @@ def main():
         with open(set_path / 'set_config.yaml', 'r') as f:
             wizard.set_config = yaml.safe_load(f)
 
-        print(f"{Colors.BOLD}Adding to set: {wizard.set_config['set']['name']}{Colors.END}\n")
+        logger.info(f"{Colors.BOLD}Adding to set: {wizard.set_config['set']['name']}{Colors.END}\n")
 
         wizard.video_data = {'video': {}, 'scenes': []}
         wizard.step_basics()

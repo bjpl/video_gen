@@ -20,6 +20,11 @@ import os
 import sys
 import argparse
 from datetime import datetime
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 class Colors:
     HEADER = '\033[95m'
@@ -34,20 +39,20 @@ class Colors:
 
 def print_banner():
     """Print welcome banner"""
-    print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.CYAN}           VIDEO CREATION SYSTEM - Unified Entry Point{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}\n")
+    logger.info(f"\n{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}")
+    logger.info(f"{Colors.BOLD}{Colors.CYAN}           VIDEO CREATION SYSTEM - Unified Entry Point{Colors.END}")
+    logger.info(f"{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}\n")
 
 
 def print_workflow():
     """Print workflow diagram"""
-    print(f"{Colors.BOLD}Complete Workflow:{Colors.END}\n")
-    print("  INPUT METHOD → Script Generation → Review → Audio → Video → DONE!\n")
-    print("  Available input methods:")
-    print(f"    {Colors.GREEN}✓{Colors.END} Document (README, guides, markdown)")
-    print(f"    {Colors.GREEN}✓{Colors.END} YouTube (transcripts with search)")
-    print(f"    {Colors.GREEN}✓{Colors.END} Wizard (guided Q&A)")
-    print(f"    {Colors.GREEN}✓{Colors.END} YAML (direct input)\n")
+    logger.info(f"{Colors.BOLD}Complete Workflow:{Colors.END}\n")
+    logger.info("  INPUT METHOD → Script Generation → Review → Audio → Video → DONE!\n")
+    logger.info("  Available input methods:")
+    logger.info(f"    {Colors.GREEN}✓{Colors.END} Document (README, guides, markdown)")
+    logger.info(f"    {Colors.GREEN}✓{Colors.END} YouTube (transcripts with search)")
+    logger.info(f"    {Colors.GREEN}✓{Colors.END} Wizard (guided Q&A)")
+    logger.info(f"    {Colors.GREEN}✓{Colors.END} YAML (direct input)\n")
 
 
 def main():
@@ -103,8 +108,8 @@ Examples:
 
     try:
         if args.document:
-            print(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Document Parser\n")
-            print(f"Source: {args.document}\n")
+            logger.info(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Document Parser\n")
+            logger.info(f"Source: {args.document}\n")
 
             from generate_script_from_document import generate_yaml_from_document
 
@@ -116,7 +121,7 @@ Examples:
             )
 
         elif args.youtube or args.youtube_url or args.youtube_id:
-            print(f"{Colors.BOLD}INPUT METHOD:{Colors.END} YouTube Transcript\n")
+            logger.info(f"{Colors.BOLD}INPUT METHOD:{Colors.END} YouTube Transcript\n")
 
             # Determine video ID/query
             if args.youtube_id:
@@ -126,39 +131,39 @@ Examples:
             else:
                 video_ref = f"--search \"{args.youtube}\""
 
-            print(f"⚠️  Running YouTube generator...\n")
+            logger.warning(f"⚠️  Running YouTube generator...\n")
             os.system(f"python generate_script_from_youtube.py {video_ref} "
                      f"--accent-color {args.accent_color} --voice {args.voice} --duration {args.duration}")
             return
 
         elif args.wizard:
-            print(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Interactive Wizard\n")
+            logger.info(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Interactive Wizard\n")
             os.system("python generate_script_wizard.py")
             return
 
         elif args.yaml:
-            print(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Direct YAML\n")
+            logger.info(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Direct YAML\n")
             yaml_file = args.yaml
 
         # If we have YAML file, proceed to script generation
         if yaml_file and os.path.exists(yaml_file):
             if not args.auto:
-                print(f"\n{Colors.YELLOW}Review the YAML file before proceeding:{Colors.END}")
-                print(f"  cat {yaml_file}\n")
+                logger.info(f"\n{Colors.YELLOW}Review the YAML file before proceeding:{Colors.END}")
+                logger.info(f"  cat {yaml_file}\n")
 
                 proceed = input("Generate script now? (y/n): ").lower()
                 if proceed != 'y':
-                    print(f"\n{Colors.YELLOW}Stopped.{Colors.END} Run when ready:")
-                    print(f"  python generate_script_from_yaml.py {yaml_file}\n")
+                    logger.info(f"\n{Colors.YELLOW}Stopped.{Colors.END} Run when ready:")
+                    logger.info(f"  python generate_script_from_yaml.py {yaml_file}\n")
                     return
 
             # Generate script
-            print(f"\n{Colors.BOLD}Generating script from YAML...{Colors.END}\n")
+            logger.info(f"\n{Colors.BOLD}Generating script from YAML...{Colors.END}\n")
             ai_flag = '--use-ai' if args.use_ai else ''
             os.system(f"python generate_script_from_yaml.py {yaml_file} {ai_flag}")
 
     except Exception as e:
-        print(f"\n{Colors.RED}❌ Error: {e}{Colors.END}\n")
+        logger.error(f"\n{Colors.RED}❌ Error: {e}{Colors.END}\n")
         sys.exit(1)
 
 

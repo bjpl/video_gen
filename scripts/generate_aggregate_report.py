@@ -8,6 +8,11 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 def generate_aggregate_dashboard(audio_base_dir):
     """Generate single dashboard for all videos"""
@@ -178,33 +183,33 @@ def generate_aggregate_dashboard(audio_base_dir):
         f.write("\nNext step: python generate_videos_from_timings_v3_simple.py\n")
         f.write("=" * 80 + "\n")
 
-    print(f"\n{'='*80}")
-    print("AGGREGATE DASHBOARD GENERATED")
-    print(f"{'='*80}\n")
-    print(f"Videos analyzed: {dashboard['overview']['total_videos']}")
-    print(f"Total duration:  {dashboard['overview']['total_duration_minutes']:.1f} minutes\n")
+    logger.info(f"\n{'='*80}")
+    logger.info("AGGREGATE DASHBOARD GENERATED")
+    logger.info(f"{'='*80}\n")
+    logger.info(f"Videos analyzed: {dashboard['overview']['total_videos']}")
+    logger.info(f"Total duration:  {dashboard['overview']['total_duration_minutes']:.1f} minutes\n")
 
-    print("📊 Dashboard saved:")
-    print(f"   JSON: {os.path.basename(dashboard_file)}")
-    print(f"   TXT:  {os.path.basename(summary_file)}\n")
+    logger.info("📊 Dashboard saved:")
+    logger.info(f"   JSON: {os.path.basename(dashboard_file)}")
+    logger.info(f"   TXT:  {os.path.basename(summary_file)}\n")
 
     # Print quick status
     if dashboard['health']['videos_with_errors']:
-        print(f"❌ {len(dashboard['health']['videos_with_errors'])} videos have errors - FIX REQUIRED")
+        logger.error(f"❌ {len(dashboard['health']['videos_with_errors'])} videos have errors - FIX REQUIRED")
         for vid_id in dashboard['health']['videos_with_errors']:
-            print(f"   - {vid_id}")
+            logger.info(f"   - {vid_id}")
 
     if dashboard['health']['videos_with_warnings']:
-        print(f"\n⚠️  {len(dashboard['health']['videos_with_warnings'])} videos have warnings - REVIEW RECOMMENDED")
+        logger.warning(f"\n⚠️  {len(dashboard['health']['videos_with_warnings'])} videos have warnings - REVIEW RECOMMENDED")
         for vid_id in dashboard['health']['videos_with_warnings']:
-            print(f"   - {vid_id}")
+            logger.info(f"   - {vid_id}")
 
     if len(dashboard['health']['videos_ready']) == dashboard['overview']['total_videos']:
-        print("✅ ALL VIDEOS READY FOR GENERATION!")
+        logger.info("✅ ALL VIDEOS READY FOR GENERATION!")
     else:
-        print(f"\n✅ {len(dashboard['health']['videos_ready'])} videos ready")
+        logger.info(f"\n✅ {len(dashboard['health']['videos_ready'])} videos ready")
 
-    print(f"\n{'='*80}\n")
+    logger.info(f"\n{'='*80}\n")
 
     return dashboard, summary_file
 
@@ -212,10 +217,10 @@ if __name__ == "__main__":
     audio_dir = "../audio/unified_system_v2"
 
     if not os.path.exists(audio_dir):
-        print(f"❌ Audio directory not found: {audio_dir}")
-        print("Run generate_all_videos_unified_v2.py first!")
+        logger.error(f"❌ Audio directory not found: {audio_dir}")
+        logger.info("Run generate_all_videos_unified_v2.py first!")
         exit(1)
 
     dashboard, summary = generate_aggregate_dashboard(audio_dir)
 
-    print(f"📄 Read the summary:\n   cat {summary}")
+    logger.info(f"📄 Read the summary:\n   cat {summary}")

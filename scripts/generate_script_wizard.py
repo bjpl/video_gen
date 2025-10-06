@@ -19,6 +19,11 @@ import os
 import sys
 import json
 from datetime import datetime
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 # ANSI color codes for better UX
 class Colors:
@@ -33,17 +38,17 @@ class Colors:
 
 def print_header(text):
     """Print section header"""
-    print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.CYAN}{text}{Colors.END}")
-    print(f"{Colors.BOLD}{Colors.CYAN}{'─'*80}{Colors.END}\n")
+    logger.info(f"\n{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}")
+    logger.info(f"{Colors.BOLD}{Colors.CYAN}{text}{Colors.END}")
+    logger.info(f"{Colors.BOLD}{Colors.CYAN}{'─'*80}{Colors.END}\n")
 
 def print_success(text):
     """Print success message"""
-    print(f"{Colors.GREEN}✓{Colors.END} {text}")
+    logger.info(f"{Colors.GREEN}✓{Colors.END} {text}")
 
 def print_info(text):
     """Print info message"""
-    print(f"{Colors.BLUE}ℹ{Colors.END} {text}")
+    logger.info(f"{Colors.BLUE}ℹ{Colors.END} {text}")
 
 def print_prompt(text):
     """Print input prompt"""
@@ -51,8 +56,8 @@ def print_prompt(text):
 
 def print_section(number, title):
     """Print step section"""
-    print(f"\n{Colors.BOLD}STEP {number}: {title}{Colors.END}")
-    print(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
+    logger.info(f"\n{Colors.BOLD}STEP {number}: {title}{Colors.END}")
+    logger.info(f"{Colors.CYAN}{'─'*80}{Colors.END}\n")
 
 
 class VideoWizard:
@@ -111,8 +116,8 @@ class VideoWizard:
     def run(self):
         """Run the complete wizard"""
         print_header("VIDEO CREATION WIZARD")
-        print("This wizard guides you through creating professional video scripts.")
-        print("Answer questions and we'll generate narration automatically!\n")
+        logger.info("This wizard guides you through creating professional video scripts.")
+        logger.info("Answer questions and we'll generate narration automatically!\n")
         print_info("Press Ctrl+C at any time to cancel")
         print_info("Press Enter to use suggested defaults\n")
 
@@ -136,7 +141,7 @@ class VideoWizard:
             self.step_generate()
 
         except KeyboardInterrupt:
-            print(f"\n\n{Colors.YELLOW}⚠️  Wizard cancelled{Colors.END}")
+            logger.warning(f"\n\n{Colors.YELLOW}⚠️  Wizard cancelled{Colors.END}")
             self.save_draft()
             sys.exit(0)
 
@@ -147,7 +152,7 @@ class VideoWizard:
         # Topic
         topic = print_prompt("What's your video about?\n> ")
         if not topic:
-            print(f"{Colors.RED}✗ Topic required{Colors.END}")
+            logger.error(f"{Colors.RED}✗ Topic required{Colors.END}")
             sys.exit(1)
 
         # Title
@@ -155,7 +160,7 @@ class VideoWizard:
         title = print_prompt(f"\nVideo title? (or press Enter for: \"{suggested_title}\")\n> ") or suggested_title
 
         # Accent color
-        print("\nChoose an accent color:")
+        logger.info("\nChoose an accent color:")
         colors = [
             ('orange', '🟠 Orange (energetic, creative)'),
             ('blue', '🔵 Blue (professional, trustworthy)'),
@@ -166,25 +171,25 @@ class VideoWizard:
         ]
 
         for i, (color, desc) in enumerate(colors, 1):
-            print(f"  {i}. {desc}")
+            logger.info(f"  {i}. {desc}")
 
         color_choice = print_prompt("\nSelect (1-6): ") or '2'
         accent_color = colors[int(color_choice) - 1][0]
 
         # Voice
-        print("\nChoose voice:")
-        print("  1. Male (Andrew - confident, professional)")
-        print("  2. Female (Aria - clear, crisp)")
+        logger.info("\nChoose voice:")
+        logger.info("  1. Male (Andrew - confident, professional)")
+        logger.info("  2. Female (Aria - clear, crisp)")
 
         voice_choice = print_prompt("\nSelect (1-2): ") or '1'
         voice = 'male' if voice_choice == '1' else 'female'
 
         # Duration
-        print("\nTarget duration (common options):")
-        print("  1. ~30 seconds (quick overview)")
-        print("  2. ~60 seconds (standard guide)")
-        print("  3. ~90 seconds (detailed tutorial)")
-        print("  4. ~120 seconds (comprehensive)")
+        logger.info("\nTarget duration (common options):")
+        logger.info("  1. ~30 seconds (quick overview)")
+        logger.info("  2. ~60 seconds (standard guide)")
+        logger.info("  3. ~90 seconds (detailed tutorial)")
+        logger.info("  4. ~120 seconds (comprehensive)")
 
         dur_choice = print_prompt("\nSelect (1-4) or enter seconds: ") or '2'
         duration_map = {'1': 30, '2': 60, '3': 90, '4': 120}
@@ -209,12 +214,12 @@ class VideoWizard:
         """Select content type and template"""
         print_section(2, "CONTENT TYPE")
 
-        print("What type of video are you creating?\n")
+        logger.info("What type of video are you creating?\n")
 
         for i, (key, template) in enumerate(self.templates.items(), 1):
-            print(f"  {i}. {key.replace('_', ' ').title():<20} - {template['description']}")
+            logger.info(f"  {i}. {key.replace('_', ' ').title():<20} - {template['description']}")
 
-        print(f"  {len(self.templates)+1}. Custom (build your own structure)")
+        logger.info(f"  {len(self.templates)+1}. Custom (build your own structure)")
 
         choice = print_prompt(f"\nSelect (1-{len(self.templates)+1}): ") or '1'
         choice_idx = int(choice) - 1
@@ -237,13 +242,13 @@ class VideoWizard:
             template = self.templates[template_key]
             scene_pattern = template['scene_pattern']
 
-            print(f"Template structure: {len(scene_pattern)} scenes")
-            print()
+            logger.info(f"Template structure: {len(scene_pattern)} scenes")
+            logger.info()
 
             for i, scene_type in enumerate(scene_pattern, 1):
-                print(f"  Scene {i}: {scene_type.title()}")
+                logger.info(f"  Scene {i}: {scene_type.title()}")
 
-            print()
+            logger.info()
 
             modify = print_prompt("Use this structure? (y/n, default=y): ") or 'y'
 
@@ -253,7 +258,7 @@ class VideoWizard:
                 return
 
         # Custom structure
-        print("How many sections/topics do you want to cover? (2-6 recommended)")
+        logger.info("How many sections/topics do you want to cover? (2-6 recommended)")
         num_topics = int(print_prompt("> ") or '3')
 
         topics = []
@@ -284,7 +289,7 @@ class VideoWizard:
         topic_idx = 0
 
         for i, scene_type in enumerate(scene_pattern):
-            print(f"\n{Colors.BOLD}━━━ SCENE {i+1}: {scene_type.upper()} ━━━{Colors.END}\n")
+            logger.info(f"\n{Colors.BOLD}━━━ SCENE {i+1}: {scene_type.upper()} ━━━{Colors.END}\n")
 
             if scene_type == 'title':
                 scene = self._wizard_title_scene(template)
@@ -331,7 +336,7 @@ class VideoWizard:
         header = print_prompt("\nHeader text? (or Enter for topic)\n> ") or topic
 
         # Key points
-        print("\nWhat are the key points about this topic? (one per line, empty line when done)")
+        logger.info("\nWhat are the key points about this topic? (one per line, empty line when done)")
         key_points = []
         while True:
             point = print_prompt("> ")
@@ -344,7 +349,7 @@ class VideoWizard:
 
         commands = []
         if has_commands:
-            print("\nEnter commands (one per line, empty line when done):")
+            logger.info("\nEnter commands (one per line, empty line when done):")
             while len(commands) < 10:
                 cmd = print_prompt("> ")
                 if not cmd:
@@ -372,8 +377,8 @@ class VideoWizard:
         header = print_prompt("\nHeader text? (or Enter for topic)\n> ") or topic
 
         # List items
-        print("\nList items (one per line, empty line when done)")
-        print("Format: \"Title: Description\" or just \"Title\"")
+        logger.info("\nList items (one per line, empty line when done)")
+        logger.info("Format: \"Title: Description\" or just \"Title\"")
 
         items = []
         while len(items) < 6:
@@ -442,23 +447,23 @@ class VideoWizard:
         video = self.video_data['video']
         scenes = self.video_data['scenes']
 
-        print(f"{Colors.BOLD}Video:{Colors.END} {video['title']}")
-        print(f"{Colors.BOLD}Scenes:{Colors.END} {len(scenes)}")
-        print(f"{Colors.BOLD}Accent:{Colors.END} {video['accent_color'].title()}")
-        print(f"{Colors.BOLD}Voice:{Colors.END} {video['voice'].title()}")
-        print(f"{Colors.BOLD}Target:{Colors.END} ~{video['target_duration']}s\n")
+        logger.info(f"{Colors.BOLD}Video:{Colors.END} {video['title']}")
+        logger.info(f"{Colors.BOLD}Scenes:{Colors.END} {len(scenes)}")
+        logger.info(f"{Colors.BOLD}Accent:{Colors.END} {video['accent_color'].title()}")
+        logger.info(f"{Colors.BOLD}Voice:{Colors.END} {video['voice'].title()}")
+        logger.info(f"{Colors.BOLD}Target:{Colors.END} ~{video['target_duration']}s\n")
 
-        print(f"{Colors.BOLD}Topics Covered:{Colors.END}")
+        logger.info(f"{Colors.BOLD}Topics Covered:{Colors.END}")
         for i, scene in enumerate(scenes, 1):
             if scene['type'] == 'title':
-                print(f"  {i}. Introduction")
+                logger.info(f"  {i}. Introduction")
             elif scene['type'] == 'outro':
-                print(f"  {i}. Closing")
+                logger.info(f"  {i}. Closing")
             else:
                 topic = scene.get('header', scene.get('topic', f'Scene {i}'))
-                print(f"  {i}. {topic}")
+                logger.info(f"  {i}. {topic}")
 
-        print()
+        logger.info()
         proceed = print_prompt("Generate script? (y/n): ").lower() or 'y'
 
         if proceed != 'y':
@@ -483,7 +488,7 @@ class VideoWizard:
         print_success(f"YAML saved: {yaml_file}\n")
 
         # Generate script using existing script generator
-        print("Generating professional narration...")
+        logger.info("Generating professional narration...")
 
         # Import and run script generator
         from generate_script_from_yaml import ScriptGenerator
@@ -492,24 +497,24 @@ class VideoWizard:
         try:
             unified_video, md_file, py_file = generator.generate(yaml_file, output_dir='drafts')
 
-            print(f"\n{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
-            print(f"{Colors.BOLD}{Colors.GREEN}✓ WIZARD COMPLETE{Colors.END}")
-            print(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}\n")
+            logger.info(f"\n{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}")
+            logger.info(f"{Colors.BOLD}{Colors.GREEN}✓ WIZARD COMPLETE{Colors.END}")
+            logger.info(f"{Colors.BOLD}{Colors.GREEN}{'='*80}{Colors.END}\n")
 
-            print("Files created:")
-            print(f"  📋 {yaml_file}")
-            print(f"  📝 {md_file}")
-            print(f"  🐍 {py_file}\n")
+            logger.info("Files created:")
+            logger.info(f"  📋 {yaml_file}")
+            logger.info(f"  📝 {md_file}")
+            logger.info(f"  🐍 {py_file}\n")
 
-            print("Next steps:")
-            print(f"  1. Review narration: cat {md_file}")
-            print(f"  2. Copy VIDEO object from {py_file} to generate_all_videos_unified_v2.py")
-            print(f"  3. Generate video: python generate_all_videos_unified_v2.py\n")
+            logger.info("Next steps:")
+            logger.info(f"  1. Review narration: cat {md_file}")
+            logger.info(f"  2. Copy VIDEO object from {py_file} to generate_all_videos_unified_v2.py")
+            logger.info(f"  3. Generate video: python generate_all_videos_unified_v2.py\n")
 
         except Exception as e:
-            print(f"{Colors.RED}❌ Error generating script: {e}{Colors.END}")
-            print(f"   YAML saved, you can manually run:")
-            print(f"   python generate_script_from_yaml.py {yaml_file}\n")
+            logger.error(f"{Colors.RED}❌ Error generating script: {e}{Colors.END}")
+            logger.info(f"   YAML saved, you can manually run:")
+            logger.info(f"   python generate_script_from_yaml.py {yaml_file}\n")
 
     def save_draft(self):
         """Save draft for resuming later"""
@@ -525,8 +530,8 @@ class VideoWizard:
         with open(draft_file, 'w') as f:
             json.dump(self.video_data, f, indent=2)
 
-        print(f"\n{Colors.YELLOW}💾 Draft saved: {draft_file}{Colors.END}")
-        print(f"   Resume with: python generate_script_wizard.py --resume {draft_file}\n")
+        logger.info(f"\n{Colors.YELLOW}💾 Draft saved: {draft_file}{Colors.END}")
+        logger.info(f"   Resume with: python generate_script_wizard.py --resume {draft_file}\n")
 
 
 if __name__ == "__main__":
@@ -542,7 +547,7 @@ if __name__ == "__main__":
     wizard = VideoWizard()
 
     if args.resume:
-        print(f"⚠️  Resume functionality not yet implemented")
-        print(f"   Planned feature: Load {args.resume}")
+        logger.warning(f"⚠️  Resume functionality not yet implemented")
+        logger.info(f"   Planned feature: Load {args.resume}")
 
     wizard.run()

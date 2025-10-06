@@ -18,6 +18,11 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 # Import color constants
 import sys
@@ -56,13 +61,13 @@ class NarrationGenerator:
                 api_key = os.environ.get('ANTHROPIC_API_KEY')
                 if api_key:
                     self.ai_client = anthropic.Anthropic(api_key=api_key)
-                    print("✅ AI narration enabled (Claude API)")
+                    logger.info("✅ AI narration enabled (Claude API)")
                 else:
-                    print("⚠️  ANTHROPIC_API_KEY not found, falling back to template-based")
+                    logger.warning("⚠️  ANTHROPIC_API_KEY not found, falling back to template-based")
                     self.use_ai = False
             except ImportError:
-                print("⚠️  anthropic package not installed, falling back to template-based")
-                print("   Install: pip install anthropic")
+                logger.warning("⚠️  anthropic package not installed, falling back to template-based")
+                logger.info("   Install: pip install anthropic")
                 self.use_ai = False
 
     def generate_title_narration(self, scene_data):
@@ -376,8 +381,8 @@ Generate ONLY the narration text, nothing else."""
             return narration
 
         except Exception as e:
-            print(f"⚠️  AI generation failed for {scene_type}: {e}")
-            print("   Falling back to template-based narration")
+            logger.error(f"⚠️  AI generation failed for {scene_type}: {e}")
+            logger.info("   Falling back to template-based narration")
 
             # Fallback to template-based
             self.use_ai = False
@@ -583,7 +588,7 @@ class ScriptGenerator:
             f.write(f"\n*Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n")
             f.write(f"*Edit this script, then regenerate code with: python import_script.py*\n")
 
-        print(f"✅ Markdown script saved: {output_file}")
+        logger.info(f"✅ Markdown script saved: {output_file}")
         return output_file
 
     def export_python_code(self, unified_video, output_file):
@@ -636,21 +641,21 @@ class ScriptGenerator:
             f.write("# Add this VIDEO object to ALL_VIDEOS list in generate_all_videos_unified_v2.py\n")
             f.write("# Then run: python generate_all_videos_unified_v2.py\n")
 
-        print(f"✅ Python code saved: {output_file}")
+        logger.info(f"✅ Python code saved: {output_file}")
         return output_file
 
     def generate(self, yaml_file, output_dir="drafts"):
         """Main generation function"""
-        print(f"\n{'='*80}")
-        print("SCRIPT GENERATOR - YAML to Video")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info("SCRIPT GENERATOR - YAML to Video")
+        logger.info(f"{'='*80}\n")
 
         # Load YAML
-        print(f"Loading: {yaml_file}")
+        logger.info(f"Loading: {yaml_file}")
         yaml_data = self.load_yaml(yaml_file)
 
         # Generate UnifiedVideo structure
-        print("Generating video structure...")
+        logger.info("Generating video structure...")
         unified_video = self.generate_unified_video(yaml_data)
 
         # Create output directory
@@ -672,24 +677,24 @@ class ScriptGenerator:
         total_duration = sum(s['estimated_duration'] for s in unified_video['scenes'])
         total_words = sum(s['word_count'] for s in unified_video['scenes'])
 
-        print(f"\n{'='*80}")
-        print("SCRIPT GENERATION COMPLETE")
-        print(f"{'='*80}\n")
-        print(f"Video: {unified_video['title']}")
-        print(f"Scenes: {total_scenes}")
-        print(f"Estimated Duration: {total_duration:.1f}s ({total_duration/60:.1f} min)")
-        print(f"Total Words: {total_words}")
-        print(f"Average WPM: {(total_words / total_duration) * 60:.0f}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info("SCRIPT GENERATION COMPLETE")
+        logger.info(f"{'='*80}\n")
+        logger.info(f"Video: {unified_video['title']}")
+        logger.info(f"Scenes: {total_scenes}")
+        logger.info(f"Estimated Duration: {total_duration:.1f}s ({total_duration/60:.1f} min)")
+        logger.info(f"Total Words: {total_words}")
+        logger.info(f"Average WPM: {(total_words / total_duration) * 60:.0f}\n")
 
-        print("Generated files:")
-        print(f"  📝 Script (review/edit): {md_file}")
-        print(f"  🐍 Code (ready to use):  {py_file}\n")
+        logger.info("Generated files:")
+        logger.info(f"  📝 Script (review/edit): {md_file}")
+        logger.info(f"  🐍 Code (ready to use):  {py_file}\n")
 
-        print("Next steps:")
-        print("  1. Review and edit the markdown script if needed")
-        print("  2. Copy VIDEO object from Python file to generate_all_videos_unified_v2.py")
-        print("  3. Run: python generate_all_videos_unified_v2.py")
-        print(f"\n{'='*80}\n")
+        logger.info("Next steps:")
+        logger.info("  1. Review and edit the markdown script if needed")
+        logger.info("  2. Copy VIDEO object from Python file to generate_all_videos_unified_v2.py")
+        logger.info("  3. Run: python generate_all_videos_unified_v2.py")
+        logger.info(f"\n{'='*80}\n")
 
         return unified_video, md_file, py_file
 
@@ -708,7 +713,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not os.path.exists(args.yaml_file):
-        print(f"❌ File not found: {args.yaml_file}")
+        logger.error(f"❌ File not found: {args.yaml_file}")
         sys.exit(1)
 
     generator = ScriptGenerator(use_ai=args.use_ai)

@@ -1,4 +1,9 @@
 """
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 Language Configuration - Multilingual Voice Mapping
 ===================================================
 Complete voice configuration for 50+ languages supported by Edge-TTS.
@@ -323,8 +328,8 @@ def get_supported_genders(lang_code):
 
 if __name__ == "__main__":
     # Display supported languages
-    print("Supported Languages:")
-    print("=" * 80)
+    logger.info("Supported Languages:")
+    logger.info("=" * 80)
 
     for lang in list_available_languages():
         name = get_language_name(lang)
@@ -332,7 +337,7 @@ if __name__ == "__main__":
         genders = get_supported_genders(lang)
         rtl = " (RTL)" if is_rtl_language(lang) else ""
 
-        print(f"{lang.upper():<5} {name:<15} {name_local:<20} {len(genders)} voices{rtl}")
+        logger.info(f"{lang.upper():<5} {name:<15} {name_local:<20} {len(genders)} voices{rtl}")
 
-    print("\n" + "=" * 80)
-    print(f"Total: {len(list_available_languages())} languages supported")
+    logger.info("\n" + "=" * 80)
+    logger.info(f"Total: {len(list_available_languages())} languages supported")

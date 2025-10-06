@@ -28,6 +28,11 @@ import sys
 import asyncio
 import argparse
 from pathlib import Path
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 sys.path.append('.')
 
@@ -42,7 +47,7 @@ try:
     HAS_YOUTUBE = True
 except ImportError:
     HAS_YOUTUBE = False
-    print("⚠️  YouTube support requires additional setup")
+    logger.warning("⚠️  YouTube support requires additional setup")
 
 
 async def generate_from_document(
@@ -54,17 +59,17 @@ async def generate_from_document(
 ):
     """Generate multilingual videos from document"""
 
-    print(f"\n{'='*80}")
-    print(f"GENERATING MULTILINGUAL VIDEOS FROM DOCUMENT")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING MULTILINGUAL VIDEOS FROM DOCUMENT")
+    logger.info(f"{'='*80}\n")
 
     # Parse document
-    print(f"Parsing: {source_file}")
+    logger.info(f"Parsing: {source_file}")
     builder = parse_document_to_builder(source_file)
 
     # Get source video
     if not builder.videos:
-        print("❌ No videos generated from document")
+        logger.error("❌ No videos generated from document")
         return
 
     source_video = builder.videos[0]
@@ -113,7 +118,7 @@ async def generate_from_document(
     # Auto-translate and export
     paths = await ml.auto_translate_and_export()
 
-    print(f"\n✅ Multilingual sets created successfully!")
+    logger.info(f"\n✅ Multilingual sets created successfully!")
 
     return paths
 
@@ -127,19 +132,19 @@ async def generate_from_github(
 ):
     """Generate multilingual videos from GitHub README"""
 
-    print(f"\n{'='*80}")
-    print(f"GENERATING MULTILINGUAL VIDEOS FROM GITHUB")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING MULTILINGUAL VIDEOS FROM GITHUB")
+    logger.info(f"{'='*80}\n")
 
     # Import here to avoid circular dependency
     from document_to_programmatic import github_readme_to_video
 
     # Parse GitHub README
-    print(f"Parsing: {github_url}")
+    logger.info(f"Parsing: {github_url}")
     builder = github_readme_to_video(github_url)
 
     if not builder.videos:
-        print("❌ No videos generated from GitHub README")
+        logger.error("❌ No videos generated from GitHub README")
         return
 
     source_video = builder.videos[0]
@@ -185,7 +190,7 @@ async def generate_from_github(
 
     paths = await ml.auto_translate_and_export()
 
-    print(f"\n✅ Multilingual sets created from GitHub README!")
+    logger.info(f"\n✅ Multilingual sets created from GitHub README!")
 
     return paths
 
@@ -201,20 +206,20 @@ async def generate_from_youtube(
     """Generate multilingual videos from YouTube"""
 
     if not HAS_YOUTUBE:
-        print("❌ YouTube support not available")
-        print("   Install: pip install youtube-transcript-api")
+        logger.error("❌ YouTube support not available")
+        logger.info("   Install: pip install youtube-transcript-api")
         return None
 
-    print(f"\n{'='*80}")
-    print(f"GENERATING MULTILINGUAL VIDEOS FROM YOUTUBE")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING MULTILINGUAL VIDEOS FROM YOUTUBE")
+    logger.info(f"{'='*80}\n")
 
     # Parse YouTube
-    print(f"Parsing: {youtube_url}")
+    logger.info(f"Parsing: {youtube_url}")
     builder = parse_youtube_to_builder(youtube_url, target_duration=target_duration)
 
     if not builder.videos:
-        print("❌ No videos generated from YouTube")
+        logger.error("❌ No videos generated from YouTube")
         return
 
     source_video = builder.videos[0]
@@ -260,7 +265,7 @@ async def generate_from_youtube(
 
     paths = await ml.auto_translate_and_export()
 
-    print(f"\n✅ Multilingual sets created from YouTube!")
+    logger.info(f"\n✅ Multilingual sets created from YouTube!")
 
     return paths
 
@@ -350,34 +355,34 @@ Examples:
 
     # List languages
     if args.list_languages:
-        print("\nSupported Languages:")
-        print("=" * 80)
+        logger.info("\nSupported Languages:")
+        logger.info("=" * 80)
 
         for lang in list_available_languages():
             name = get_language_name(lang)
             name_local = get_language_name(lang, local=True)
-            print(f"  {lang.upper():<5} {name:<20} ({name_local})")
+            logger.info(f"  {lang.upper():<5} {name:<20} ({name_local})")
 
-        print("=" * 80)
-        print(f"\nTotal: {len(list_available_languages())} languages supported")
-        print(f"\nUsage: --languages en es fr de pt it")
+        logger.info("=" * 80)
+        logger.info(f"\nTotal: {len(list_available_languages())} languages supported")
+        logger.info(f"\nUsage: --languages en es fr de pt it")
         return
 
     # Validate input
     if not any([args.source, args.github, args.youtube]):
-        print("❌ Please provide an input source:")
-        print("   --source README.md")
-        print("   --github https://github.com/user/repo")
-        print("   --youtube https://youtube.com/watch?v=ID")
-        print("\nOr use --list-languages to see supported languages")
+        logger.error("❌ Please provide an input source:")
+        logger.info("   --source README.md")
+        logger.info("   --github https://github.com/user/repo")
+        logger.info("   --youtube https://youtube.com/watch?v=ID")
+        logger.info("\nOr use --list-languages to see supported languages")
         sys.exit(1)
 
     # Validate languages
     available_langs = list_available_languages()
     for lang in args.languages:
         if lang not in available_langs:
-            print(f"⚠️  Warning: '{lang}' may not be fully supported")
-            print(f"   Use --list-languages to see all supported languages")
+            logger.warning(f"⚠️  Warning: '{lang}' may not be fully supported")
+            logger.info(f"   Use --list-languages to see all supported languages")
 
     # Generate based on source
     if args.source:

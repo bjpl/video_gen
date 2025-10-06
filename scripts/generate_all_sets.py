@@ -20,6 +20,11 @@ import asyncio
 from pathlib import Path
 from datetime import datetime
 import json
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 sys.path.append('.')
 
@@ -34,8 +39,8 @@ def discover_sets(sets_dir: str = "../sets") -> list:
     sets_path = Path(sets_dir)
 
     if not sets_path.exists():
-        print(f"❌ Sets directory not found: {sets_path}")
-        print(f"   Creating directory: {sets_path}")
+        logger.error(f"❌ Sets directory not found: {sets_path}")
+        logger.info(f"   Creating directory: {sets_path}")
         sets_path.mkdir(parents=True, exist_ok=True)
         return []
 
@@ -79,44 +84,44 @@ async def main():
     args = parser.parse_args()
 
     # Discover sets
-    print(f"\n{'='*80}")
-    print(f"DISCOVERING VIDEO SETS")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"DISCOVERING VIDEO SETS")
+    logger.info(f"{'='*80}\n")
 
-    print(f"Scanning: {args.sets_dir}")
+    logger.info(f"Scanning: {args.sets_dir}")
 
     discovered = discover_sets(args.sets_dir)
 
     if not discovered:
-        print(f"\n⚠️  No video sets found in {args.sets_dir}")
-        print(f"   Create a set with: mkdir -p {args.sets_dir}/my_set")
-        print(f"   Then add: {args.sets_dir}/my_set/set_config.yaml\n")
+        logger.warning(f"\n⚠️  No video sets found in {args.sets_dir}")
+        logger.info(f"   Create a set with: mkdir -p {args.sets_dir}/my_set")
+        logger.info(f"   Then add: {args.sets_dir}/my_set/set_config.yaml\n")
         return
 
-    print(f"\n✓ Found {len(discovered)} video set(s):\n")
+    logger.info(f"\n✓ Found {len(discovered)} video set(s):\n")
 
     for i, set_path in enumerate(discovered, 1):
         set_name = Path(set_path).name
-        print(f"  {i}. {set_name}")
+        logger.info(f"  {i}. {set_name}")
 
         # Count video files
         yaml_files = list(Path(set_path).glob("*.yaml"))
         # Exclude set_config.yaml
         video_files = [f for f in yaml_files if f.name != "set_config.yaml"]
-        print(f"     → {len(video_files)} video file(s)")
+        logger.info(f"     → {len(video_files)} video file(s)")
 
-    print()
+    logger.info()
 
     # If --list flag, exit here
     if args.list:
-        print("Use: python generate_all_sets.py (to generate all sets)\n")
+        logger.info("Use: python generate_all_sets.py (to generate all sets)\n")
         return
 
     # Confirm generation
     response = input(f"Generate all {len(discovered)} sets? (y/N): ").strip().lower()
 
     if response != 'y':
-        print("\n⚠️  Generation cancelled\n")
+        logger.warning("\n⚠️  Generation cancelled\n")
         return
 
     # Generate all sets
@@ -160,7 +165,7 @@ def save_master_index(sets_dir: str, output_dir: str):
     with open(index_file, 'w') as f:
         json.dump(master_index, f, indent=2)
 
-    print(f"\n✓ Master index saved: {index_file}\n")
+    logger.info(f"\n✓ Master index saved: {index_file}\n")
 
 
 if __name__ == "__main__":

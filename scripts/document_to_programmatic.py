@@ -23,6 +23,11 @@ Usage:
 """
 
 import sys
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 sys.path.append('.')
 
 from generate_script_from_document import MarkdownParser, read_document
@@ -64,7 +69,7 @@ def parse_document_to_builder(
     """
 
     # Read document
-    print(f"Reading document: {source}")
+    logger.info(f"Reading document: {source}")
     content = read_document(source)
 
     # Parse structure
@@ -86,7 +91,7 @@ def parse_document_to_builder(
     if not set_name:
         set_name = structure.get('title', set_id).title()
 
-    print(f"Creating video set: {set_name}")
+    logger.info(f"Creating video set: {set_name}")
 
     # Create builder
     builder = VideoSetBuilder(
@@ -105,7 +110,7 @@ def parse_document_to_builder(
         scenes=scenes
     )
 
-    print(f"✓ Parsed {len(structure.get('sections', []))} sections → {len(scenes)} scenes")
+    logger.info(f"✓ Parsed {len(structure.get('sections', []))} sections → {len(scenes)} scenes")
 
     return builder
 
@@ -217,12 +222,12 @@ def parse_document_to_set(
     # Export
     set_path = builder.export_to_yaml(output_dir)
 
-    print(f"\n✓ Document parsed and exported!")
-    print(f"  → {set_path}")
-    print(f"\nNext steps:")
-    print(f"  cd scripts")
-    print(f"  python generate_video_set.py ../{set_path}")
-    print(f"  python generate_videos_from_set.py ../output/{builder.set_id}")
+    logger.info(f"\n✓ Document parsed and exported!")
+    logger.info(f"  → {set_path}")
+    logger.info(f"\nNext steps:")
+    logger.info(f"  cd scripts")
+    logger.info(f"  python generate_video_set.py ../{set_path}")
+    logger.info(f"  python generate_videos_from_set.py ../output/{builder.set_id}")
 
     return str(set_path)
 
@@ -258,7 +263,7 @@ def github_readme_to_video(
     if '/blob/' not in github_url:
         # Try main branch
         readme_url = f"{github_url}/blob/main/README.md"
-        print(f"Attempting: {readme_url}")
+        logger.info(f"Attempting: {readme_url}")
     else:
         readme_url = github_url
 
@@ -316,4 +321,4 @@ Examples:
         **kwargs
     )
 
-    print(f"\n✅ Ready to generate!")
+    logger.info(f"\n✅ Ready to generate!")

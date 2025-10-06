@@ -19,6 +19,11 @@ import edge_tts
 from datetime import timedelta
 import wave
 import contextlib
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 WIDTH, HEIGHT = 1920, 1080
 FPS = 30
@@ -206,15 +211,15 @@ class UnifiedVideo:
         return all_valid
 
     def generate_preview(self):
-        print(f"\n{'='*80}")
-        print(f"PREVIEW: {self.title}")
-        print(f"{'='*80}\n")
-        print(f"Video ID: {self.video_id}")
-        print(f"Accent Color: RGB{self.accent_color}")
-        print(f"Total Scenes: {len(self.scenes)}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"PREVIEW: {self.title}")
+        logger.info(f"{'='*80}\n")
+        logger.info(f"Video ID: {self.video_id}")
+        logger.info(f"Accent Color: RGB{self.accent_color}")
+        logger.info(f"Total Scenes: {len(self.scenes)}\n")
 
-        print("Scene Breakdown:")
-        print("-" * 80)
+        logger.info("Scene Breakdown:")
+        logger.info("-" * 80)
 
         total_words = 0
         estimated_total = 0
@@ -225,23 +230,23 @@ class UnifiedVideo:
             est_duration = word_count / 2.25
             estimated_total += est_duration
 
-            print(f"\n[{i}] {scene.scene_id} ({scene.scene_type.upper()})")
-            print(f"    Voice: {scene.voice}")
-            print(f"    Words: {word_count}")
-            print(f"    Est. Duration: {est_duration:.1f}s")
-            print(f"    Narration: \"{scene.narration[:80]}...\"")
+            logger.info(f"\n[{i}] {scene.scene_id} ({scene.scene_type.upper()})")
+            logger.info(f"    Voice: {scene.voice}")
+            logger.info(f"    Words: {word_count}")
+            logger.info(f"    Est. Duration: {est_duration:.1f}s")
+            logger.info(f"    Narration: \"{scene.narration[:80]}...\"")
 
             if scene.warnings:
-                print(f"    ⚠️  Warnings: {len(scene.warnings)}")
+                logger.warning(f"    ⚠️  Warnings: {len(scene.warnings)}")
                 for warning in scene.warnings:
-                    print(f"        - {warning}")
+                    logger.warning(f"        - {warning}")
 
-        print("\n" + "=" * 80)
-        print(f"TOTAL ESTIMATED:")
-        print(f"  Words: {total_words}")
-        print(f"  Duration: {estimated_total:.1f}s ({estimated_total/60:.1f} minutes)")
-        print(f"  Average WPM: {(total_words / estimated_total) * 60:.0f}")
-        print("=" * 80 + "\n")
+        logger.info("\n" + "=" * 80)
+        logger.info(f"TOTAL ESTIMATED:")
+        logger.info(f"  Words: {total_words}")
+        logger.info(f"  Duration: {estimated_total:.1f}s ({estimated_total/60:.1f} minutes)")
+        logger.info(f"  Average WPM: {(total_words / estimated_total) * 60:.0f}")
+        logger.info("=" * 80 + "\n")
 
         return estimated_total
 
@@ -254,16 +259,16 @@ class UnifiedVideo:
         self.audio_dir = os.path.join(output_dir, audio_folder_name)
         os.makedirs(self.audio_dir, exist_ok=True)
 
-        print(f"\n{'='*80}")
-        print(f"GENERATING AUDIO: {self.title}")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"GENERATING AUDIO: {self.title}")
+        logger.info(f"{'='*80}\n")
 
         for i, scene in enumerate(self.scenes, 1):
             voice = VOICE_CONFIG.get(scene.voice, VOICE_CONFIG["male"])
             audio_file = os.path.join(self.audio_dir, f"{scene.scene_id}.mp3")
 
-            print(f"[{i}/{len(self.scenes)}] {scene.scene_id}")
-            print(f"    Generating with {voice}...")
+            logger.info(f"[{i}/{len(self.scenes)}] {scene.scene_id}")
+            logger.info(f"    Generating with {voice}...")
 
             communicate = edge_tts.Communicate(scene.narration, voice, rate="+0%", volume="+0%")
             await communicate.save(audio_file)
@@ -275,20 +280,20 @@ class UnifiedVideo:
             scene.final_duration = max(scene.min_duration, scene.actual_audio_duration + 1.0)
 
             file_size = os.path.getsize(audio_file) / 1024
-            print(f"    ✓ Duration: {duration:.2f}s (file: {file_size:.1f} KB)")
+            logger.info(f"    ✓ Duration: {duration:.2f}s (file: {file_size:.1f} KB)")
 
             if duration < scene.min_duration:
-                print(f"    ⚠️  Audio shorter than minimum ({scene.min_duration}s) - will pad video")
+                logger.warning(f"    ⚠️  Audio shorter than minimum ({scene.min_duration}s) - will pad video")
             elif duration > scene.max_duration:
-                print(f"    ⚠️  Audio longer than maximum ({scene.max_duration}s) - scene extended to {scene.final_duration:.2f}s")
+                logger.warning(f"    ⚠️  Audio longer than maximum ({scene.max_duration}s) - scene extended to {scene.final_duration:.2f}s")
 
         self.total_duration = sum(scene.final_duration for scene in self.scenes)
 
-        print(f"\n{'='*80}")
-        print(f"AUDIO GENERATION COMPLETE")
-        print(f"  Total Duration: {self.total_duration:.2f}s")
-        print(f"  Audio Files: {len(self.scenes)}")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"AUDIO GENERATION COMPLETE")
+        logger.info(f"  Total Duration: {self.total_duration:.2f}s")
+        logger.info(f"  Audio Files: {len(self.scenes)}")
+        logger.info(f"{'='*80}\n")
 
         return self.audio_dir
 
@@ -339,25 +344,25 @@ class UnifiedVideo:
         with open(report_file, 'w') as f:
             json.dump(report, f, indent=2)
 
-        print(f"\n{'='*80}")
-        print(f"TIMING REPORT")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"TIMING REPORT")
+        logger.info(f"{'='*80}\n")
 
-        print(f"{'Scene':<25} {'Start':<8} {'End':<8} {'Duration':<10} {'Audio':<10} {'Pad':<8}")
-        print("-" * 80)
+        logger.info(f"{'Scene':<25} {'Start':<8} {'End':<8} {'Duration':<10} {'Audio':<10} {'Pad':<8}")
+        logger.info("-" * 80)
 
         for scene_data in report['scenes']:
-            print(f"{scene_data['scene_id']:<25} "
+            logger.info(f"{scene_data['scene_id']:<25} "
                   f"{scene_data['start_time']:>6.1f}s "
                   f"{scene_data['end_time']:>6.1f}s "
                   f"{scene_data['duration']:>8.2f}s "
                   f"{scene_data['audio_duration']:>8.2f}s "
                   f"{scene_data['padding']:>6.2f}s")
 
-        print("-" * 80)
-        print(f"{'TOTAL':<25} {'':8} {cumulative_time:>6.1f}s\n")
+        logger.info("-" * 80)
+        logger.info(f"{'TOTAL':<25} {'':8} {cumulative_time:>6.1f}s\n")
 
-        print(f"Timing report saved: {report_file}\n")
+        logger.info(f"Timing report saved: {report_file}\n")
 
         return report
 
@@ -372,7 +377,7 @@ class UnifiedVideo:
         with open(report_file, 'w') as f:
             json.dump(self.validation_report, f, indent=2)
 
-        print(f"Validation report saved: {report_file}")
+        logger.info(f"Validation report saved: {report_file}")
         return report_file
 
     def save_preview_file(self, output_dir):
@@ -433,7 +438,7 @@ class UnifiedVideo:
             f.write(f"  Average WPM: {(total_words / estimated_total) * 60:.0f}\n")
             f.write("="*80 + "\n")
 
-        print(f"Preview file saved: {preview_file}")
+        logger.info(f"Preview file saved: {preview_file}")
         return preview_file
 
     def save_metadata_manifest(self, output_dir):
@@ -464,7 +469,7 @@ class UnifiedVideo:
         with open(manifest_file, 'w') as f:
             json.dump(manifest, f, indent=2)
 
-        print(f"Metadata manifest saved: {manifest_file}")
+        logger.info(f"Metadata manifest saved: {manifest_file}")
         return manifest_file
 
 QUICK_REFERENCE_VIDEO = UnifiedVideo(
@@ -560,71 +565,71 @@ QUICK_REFERENCE_VIDEO = UnifiedVideo(
 )
 
 async def main():
-    print("\n" + "="*80)
-    print("UNIFIED VIDEO PRODUCTION SYSTEM v2.0")
-    print("Audio-Duration-Driven | Smart File Naming | Multi-Stage Validation")
-    print("="*80)
+    logger.info("\n" + "="*80)
+    logger.info("UNIFIED VIDEO PRODUCTION SYSTEM v2.0")
+    logger.info("Audio-Duration-Driven | Smart File Naming | Multi-Stage Validation")
+    logger.info("="*80)
 
     video = QUICK_REFERENCE_VIDEO
     reports_dir = "../audio/unified_system/reports"
     os.makedirs(reports_dir, exist_ok=True)
 
-    print("\n[STEP 1] VALIDATION & CONSISTENCY CHECKS")
-    print("-" * 80)
+    logger.info("\n[STEP 1] VALIDATION & CONSISTENCY CHECKS")
+    logger.info("-" * 80)
     if video.validate():
-        print("✓ All validation checks passed")
+        logger.info("✓ All validation checks passed")
     else:
-        print("⚠️  Validation warnings found:")
+        logger.warning("⚠️  Validation warnings found:")
         for issue in video.validation_report.get('issues', []):
-            print(f"  ERROR: {issue}")
+            logger.error(f"  ERROR: {issue}")
         for warning in video.validation_report.get('warnings', []):
-            print(f"  WARN: {warning}")
+            logger.warning(f"  WARN: {warning}")
 
     validation_file = video.save_validation_report(reports_dir)
-    print(f"  → Validation report: {os.path.basename(validation_file)}")
+    logger.info(f"  → Validation report: {os.path.basename(validation_file)}")
 
-    print("\n[STEP 2] PREVIEW & STORYBOARD GENERATION")
-    print("-" * 80)
+    logger.info("\n[STEP 2] PREVIEW & STORYBOARD GENERATION")
+    logger.info("-" * 80)
     estimated = video.generate_preview()
     preview_file = video.save_preview_file(reports_dir)
-    print(f"  → Preview file: {os.path.basename(preview_file)}")
+    logger.info(f"  → Preview file: {os.path.basename(preview_file)}")
 
-    print("\n[STEP 3] AUDIO GENERATION WITH PRECISE TIMING")
-    print("-" * 80)
-    print("Generating audio first to measure exact durations...")
+    logger.info("\n[STEP 3] AUDIO GENERATION WITH PRECISE TIMING")
+    logger.info("-" * 80)
+    logger.info("Generating audio first to measure exact durations...")
     await video.generate_audio_with_timing("../audio/unified_system")
-    print(f"  → Audio folder: {os.path.basename(video.audio_dir)}")
+    logger.info(f"  → Audio folder: {os.path.basename(video.audio_dir)}")
 
-    print("\n[STEP 4] TIMING ANALYSIS & SYNCHRONIZATION REPORT")
-    print("-" * 80)
+    logger.info("\n[STEP 4] TIMING ANALYSIS & SYNCHRONIZATION REPORT")
+    logger.info("-" * 80)
     report = video.generate_timing_report()
 
-    print("\n[STEP 5] METADATA MANIFEST GENERATION")
-    print("-" * 80)
+    logger.info("\n[STEP 5] METADATA MANIFEST GENERATION")
+    logger.info("-" * 80)
     manifest_file = video.save_metadata_manifest(reports_dir)
-    print(f"  → Manifest: {os.path.basename(manifest_file)}")
+    logger.info(f"  → Manifest: {os.path.basename(manifest_file)}")
 
-    print("\n[STEP 6] FILE NAMING PREVIEW")
-    print("-" * 80)
-    print("Smart filenames generated:")
-    print(f"  Video (silent):     {video.generate_smart_filename('video', include_audio=False)}")
-    print(f"  Video (with audio): {video.generate_smart_filename('video', include_audio=True)}")
-    print(f"  Audio directory:    {video.generate_smart_filename('audio_dir')}")
-    print(f"  Timing report:      {video.generate_smart_filename('timing_report')}")
+    logger.info("\n[STEP 6] FILE NAMING PREVIEW")
+    logger.info("-" * 80)
+    logger.info("Smart filenames generated:")
+    logger.info(f"  Video (silent):     {video.generate_smart_filename('video', include_audio=False)}")
+    logger.info(f"  Video (with audio): {video.generate_smart_filename('video', include_audio=True)}")
+    logger.info(f"  Audio directory:    {video.generate_smart_filename('audio_dir')}")
+    logger.info(f"  Timing report:      {video.generate_smart_filename('timing_report')}")
 
-    print("\n" + "="*80)
-    print("✓ UNIFIED SYSTEM PREPARATION COMPLETE")
-    print("="*80)
-    print(f"\nKey Metrics:")
-    print(f"  Total Duration: {video.total_duration:.2f}s (measured from actual audio)")
-    print(f"  Scene Count: {len(video.scenes)}")
-    print(f"  Audio Files: {len(video.scenes)} generated and measured")
-    print(f"  Generation Timestamp: {video.generation_timestamp}")
-    print(f"\nNext Step:")
-    print(f"  Use measured timings to generate perfectly synchronized video")
-    print(f"  Video duration will match audio exactly: {video.total_duration:.2f}s")
-    print(f"\nAll reports saved to: {reports_dir}/")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ UNIFIED SYSTEM PREPARATION COMPLETE")
+    logger.info("="*80)
+    logger.info(f"\nKey Metrics:")
+    logger.info(f"  Total Duration: {video.total_duration:.2f}s (measured from actual audio)")
+    logger.info(f"  Scene Count: {len(video.scenes)}")
+    logger.info(f"  Audio Files: {len(video.scenes)} generated and measured")
+    logger.info(f"  Generation Timestamp: {video.generation_timestamp}")
+    logger.info(f"\nNext Step:")
+    logger.info(f"  Use measured timings to generate perfectly synchronized video")
+    logger.info(f"  Video duration will match audio exactly: {video.total_duration:.2f}s")
+    logger.info(f"\nAll reports saved to: {reports_dir}/")
+    logger.info("="*80 + "\n")
 
 if __name__ == "__main__":
     asyncio.run(main())

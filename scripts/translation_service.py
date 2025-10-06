@@ -17,8 +17,12 @@ Supports:
 import os
 import sys
 import json
+import logging
 from typing import Dict, List, Optional
 from pathlib import Path
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 # Try importing translation libraries
 try:
@@ -26,7 +30,7 @@ try:
     HAS_ANTHROPIC = True
 except ImportError:
     HAS_ANTHROPIC = False
-    print("⚠️  anthropic not installed: pip install anthropic")
+    logger.warning("⚠️  anthropic not installed: pip install anthropic")
 
 try:
     from googletrans import Translator
@@ -61,7 +65,7 @@ class TranslationService:
             if api_key:
                 self.anthropic_client = Anthropic(api_key=api_key)
             else:
-                print("⚠️  ANTHROPIC_API_KEY not set")
+                logger.warning("⚠️  ANTHROPIC_API_KEY not set")
                 if not HAS_GOOGLE_TRANS:
                     raise ValueError("No translation method available. Set ANTHROPIC_API_KEY or install googletrans.")
                 self.preferred_method = 'google'
@@ -397,14 +401,14 @@ if __name__ == "__main__":
         # Test translation
         text = "Welcome to Python programming. This tutorial covers variables, functions, and classes."
 
-        print("Testing translation service...")
-        print(f"Source (EN): {text}\n")
+        logger.info("Testing translation service...")
+        logger.info(f"Source (EN): {text}\n")
 
         for lang in ['es', 'fr', 'de', 'pt']:
             try:
                 translation = await service.translate(text, lang, context_type='narration')
-                print(f"{lang.upper()}: {translation}")
+                logger.info(f"{lang.upper()}: {translation}")
             except Exception as e:
-                print(f"{lang.upper()}: Error - {e}")
+                logger.error(f"{lang.upper()}: Error - {e}")
 
     asyncio.run(test_translation())

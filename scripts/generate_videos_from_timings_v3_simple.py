@@ -16,6 +16,11 @@ import shutil
 import numpy as np
 from PIL import Image
 from datetime import datetime
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 sys.path.append('.')
 from generate_documentation_videos import (
@@ -49,14 +54,14 @@ def load_timing_report(video):
         raise FileNotFoundError(f"No timing report found in {video.audio_dir}")
 
     timing_file = os.path.join(video.audio_dir, timing_files[0])
-    print(f"  Loading timing report: {os.path.basename(timing_file)}")
+    logger.info(f"  Loading timing report: {os.path.basename(timing_file)}")
     with open(timing_file, 'r') as f:
         return json.load(f)
 
 def generate_video_from_timing_fast(video, timing_data, output_dir):
-    print(f"\n{'='*80}")
-    print(f"GENERATING VIDEO (FAST): {video.title}")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"GENERATING VIDEO (FAST): {video.title}")
+    logger.info(f"{'='*80}\n")
 
     temp_dir = f"temp_v3_fast_{video.video_id}"
     os.makedirs(temp_dir, exist_ok=True)
@@ -68,7 +73,7 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
     anim_frames = int(ANIM_DURATION * FPS)
 
     for scene_num, (scene, scene_timing) in enumerate(zip(video.scenes, timing_data['scenes'])):
-        print(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id} ({scene_timing['duration']:.2f}s)")
+        logger.info(f"[{scene_num + 1}/{len(video.scenes)}] {scene.scene_id} ({scene_timing['duration']:.2f}s)")
 
         if scene.scene_type == 'title':
             start_frame, end_frame = create_title_keyframes(
@@ -274,7 +279,7 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
                 frame_paths.append(filename)
                 frame_idx += 1
 
-    print(f"\n  Frames: {len(frame_paths)} ({len(frame_paths) / FPS:.2f}s)")
+    logger.info(f"\n  Frames: {len(frame_paths)} ({len(frame_paths) / FPS:.2f}s)")
 
     concat_file = f"{temp_dir}/concat.txt"
     with open(concat_file, 'w') as f:
@@ -287,7 +292,7 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
     silent_video = video.generate_smart_filename(file_type="video", include_audio=False)
     silent_video_path = os.path.join(output_dir, silent_video)
 
-    print(f"  GPU encoding video...")
+    logger.info(f"  GPU encoding video...")
 
     ffmpeg_video_cmd = [
         FFMPEG_PATH,
@@ -308,10 +313,10 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
     result = subprocess.run(ffmpeg_video_cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"  ❌ Encoding failed: {result.stderr[:300]}")
+        logger.error(f"  ❌ Encoding failed: {result.stderr[:300]}")
         return None
 
-    print(f"  ✓ Video encoded")
+    logger.info(f"  ✓ Video encoded")
 
     audio_files = [os.path.join(video.audio_dir, f"{scene.scene_id}.mp3") for scene in video.scenes]
     audio_concat_file = f"{temp_dir}/audio_concat.txt"
@@ -320,7 +325,7 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
         for audio_file in audio_files:
             f.write(f"file '{os.path.abspath(audio_file)}'\n")
 
-    print(f"  Processing audio...")
+    logger.info(f"  Processing audio...")
 
     delay_ms = int(ANIM_DURATION * 1000)
     final_video = video.generate_smart_filename(file_type="video", include_audio=True)
@@ -341,21 +346,21 @@ def generate_video_from_timing_fast(video, timing_data, output_dir):
     result = subprocess.run(ffmpeg_final_cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"  ❌ Audio integration failed: {result.stderr[:300]}")
+        logger.error(f"  ❌ Audio integration failed: {result.stderr[:300]}")
         return None
 
     file_size = os.path.getsize(final_video_path) / (1024 * 1024)
-    print(f"  ✓ Complete: {file_size:.1f} MB, {timing_data['total_duration']:.1f}s\n")
+    logger.info(f"  ✓ Complete: {file_size:.1f} MB, {timing_data['total_duration']:.1f}s\n")
 
     shutil.rmtree(temp_dir)
 
     return final_video_path
 
 def generate_all_videos_fast():
-    print("\n" + "="*80)
-    print("VIDEO GENERATION v3.0 - SIMPLE & FAST")
-    print("NumPy-accelerated blending + Optimized GPU encoding")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("VIDEO GENERATION v3.0 - SIMPLE & FAST")
+    logger.info("NumPy-accelerated blending + Optimized GPU encoding")
+    logger.info("="*80 + "\n")
 
     output_dir = "../videos/unified_v3_fast"
     os.makedirs(output_dir, exist_ok=True)
@@ -379,15 +384,15 @@ def generate_all_videos_fast():
         if timing_files:
             videos_to_generate.append(video)
 
-    print(f"Generating {len(videos_to_generate)} videos\n")
+    logger.info(f"Generating {len(videos_to_generate)} videos\n")
 
     generated_videos = []
     failed_videos = []
 
     for i, video in enumerate(videos_to_generate, 1):
-        print(f"{'#'*80}")
-        print(f"# VIDEO {i}/{len(videos_to_generate)}: {video.title}")
-        print(f"{'#'*80}")
+        logger.info(f"{'#'*80}")
+        logger.info(f"# VIDEO {i}/{len(videos_to_generate)}: {video.title}")
+        logger.info(f"{'#'*80}")
 
         try:
             timing_data = load_timing_report(video)
@@ -405,22 +410,22 @@ def generate_all_videos_fast():
                 failed_videos.append(video.video_id)
 
         except Exception as e:
-            print(f"\n❌ Error: {str(e)}\n")
+            logger.error(f"\n❌ Error: {str(e)}\n")
             failed_videos.append(video.video_id)
 
-    print("\n" + "="*80)
-    print("✓ COMPLETE")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ COMPLETE")
+    logger.info("="*80 + "\n")
 
     if generated_videos:
         total_dur = sum(v['duration'] for v in generated_videos)
         total_size = sum(v['size_mb'] for v in generated_videos)
 
         for v in generated_videos:
-            print(f"✓ {v['video_id']:<25} {v['duration']:>6.1f}s {v['size_mb']:>8.1f} MB")
+            logger.info(f"✓ {v['video_id']:<25} {v['duration']:>6.1f}s {v['size_mb']:>8.1f} MB")
 
-        print("-" * 80)
-        print(f"  {'TOTAL':<25} {total_dur:>6.1f}s {total_size:>8.1f} MB\n")
+        logger.info("-" * 80)
+        logger.info(f"  {'TOTAL':<25} {total_dur:>6.1f}s {total_size:>8.1f} MB\n")
 
     summary_file = os.path.join(output_dir, f"summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
     with open(summary_file, 'w') as f:

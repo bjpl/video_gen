@@ -7,6 +7,11 @@ Handles multi-line narration properly
 
 import sys
 import asyncio
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 sys.path.append('.')
 
 from unified_video_system import (
@@ -269,9 +274,9 @@ VIDEO_03 = UnifiedVideo(
 ALL_VIDEOS = [VIDEO_01, VIDEO_02, VIDEO_03]
 
 async def main():
-    print("\n" + "="*80)
-    print("META-DOCUMENTATION VIDEOS - AI-ENHANCED NARRATION")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("META-DOCUMENTATION VIDEOS - AI-ENHANCED NARRATION")
+    logger.info("="*80 + "\n")
 
     import os
     output_dir = "../audio/unified_system_v2"
@@ -280,9 +285,9 @@ async def main():
     os.makedirs(reports_dir, exist_ok=True)
 
     for i, video in enumerate(ALL_VIDEOS, 1):
-        print(f"\n{'#'*80}")
-        print(f"# VIDEO {i}/{len(ALL_VIDEOS)}: {video.title}")
-        print(f"{'#'*80}\n")
+        logger.info(f"\n{'#'*80}")
+        logger.info(f"# VIDEO {i}/{len(ALL_VIDEOS)}: {video.title}")
+        logger.info(f"{'#'*80}\n")
 
         # Validation
         video.validate()
@@ -295,13 +300,13 @@ async def main():
         video.generate_timing_report()
         video.save_metadata_manifest(reports_dir)
 
-    print("\n" + "="*80)
-    print("✓ AUDIO COMPLETE FOR ALL 3 VIDEOS")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ AUDIO COMPLETE FOR ALL 3 VIDEOS")
+    logger.info("="*80 + "\n")
 
     total = sum(v.total_duration for v in ALL_VIDEOS)
-    print(f"Total duration: {total:.1f}s ({total/60:.1f} minutes)")
-    print("\nNext: python generate_videos_from_timings_v3_simple.py\n")
+    logger.info(f"Total duration: {total:.1f}s ({total/60:.1f} minutes)")
+    logger.info("\nNext: python generate_videos_from_timings_v3_simple.py\n")
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -20,6 +20,11 @@ import os
 import sys
 from datetime import datetime
 from urllib.parse import urlparse
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 # Try to import requests for URL fetching
 try:
@@ -27,7 +32,7 @@ try:
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
-    print("⚠️  Install 'requests' for URL support: pip install requests")
+    logger.warning("⚠️  Install 'requests' for URL support: pip install requests")
 
 def read_document(source):
     """Read document from file or URL"""
@@ -40,12 +45,12 @@ def read_document(source):
             source = source.replace('github.com', 'raw.githubusercontent.com')
             source = source.replace('/blob/', '/')
 
-        print(f"Fetching from URL: {source}")
+        logger.info(f"Fetching from URL: {source}")
         response = requests.get(source)
         response.raise_for_status()
         return response.text
     else:
-        print(f"Reading file: {source}")
+        logger.info(f"Reading file: {source}")
         with open(source, 'r', encoding='utf-8') as f:
             return f.read()
 
@@ -369,25 +374,25 @@ class DocumentToVideoConverter:
 def generate_yaml_from_document(doc_source, accent_color='blue', voice='male', target_duration=60):
     """Main function: Document → YAML"""
 
-    print(f"\n{'='*80}")
-    print("DOCUMENT TO VIDEO CONVERTER")
-    print(f"{'='*80}\n")
+    logger.info(f"\n{'='*80}")
+    logger.info("DOCUMENT TO VIDEO CONVERTER")
+    logger.info(f"{'='*80}\n")
 
     # Read document
     doc_text = read_document(doc_source)
-    print(f"✓ Document loaded ({len(doc_text)} characters)\n")
+    logger.info(f"✓ Document loaded ({len(doc_text)} characters)\n")
 
     # Parse structure
     parser = MarkdownParser()
     structure = parser.parse(doc_text)
-    print(f"✓ Parsed structure:")
-    print(f"  Title: {structure['title']}")
-    print(f"  Sections: {len(structure['sections'])}\n")
+    logger.info(f"✓ Parsed structure:")
+    logger.info(f"  Title: {structure['title']}")
+    logger.info(f"  Sections: {len(structure['sections'])}\n")
 
     # Convert to scenes
     converter = DocumentToVideoConverter(target_duration=target_duration)
     scenes = converter.convert_to_scenes(structure)
-    print(f"✓ Generated {len(scenes)} scenes\n")
+    logger.info(f"✓ Generated {len(scenes)} scenes\n")
 
     # Create YAML structure
     video_id = converter._slugify(structure['title'] or 'generated_video')
@@ -416,15 +421,15 @@ def generate_yaml_from_document(doc_source, accent_color='blue', voice='male', t
     with open(yaml_file, 'w') as f:
         yaml.dump(yaml_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
 
-    print(f"{'='*80}")
-    print("YAML GENERATED")
-    print(f"{'='*80}\n")
-    print(f"Output: {yaml_file}\n")
-    print("Next steps:")
-    print(f"  1. Review YAML: cat {yaml_file}")
-    print(f"  2. Edit if needed: nano {yaml_file}")
-    print(f"  3. Generate script: python generate_script_from_yaml.py {yaml_file}")
-    print(f"\n{'='*80}\n")
+    logger.info(f"{'='*80}")
+    logger.info("YAML GENERATED")
+    logger.info(f"{'='*80}\n")
+    logger.info(f"Output: {yaml_file}\n")
+    logger.info("Next steps:")
+    logger.info(f"  1. Review YAML: cat {yaml_file}")
+    logger.info(f"  2. Edit if needed: nano {yaml_file}")
+    logger.info(f"  3. Generate script: python generate_script_from_yaml.py {yaml_file}")
+    logger.info(f"\n{'='*80}\n")
 
     return yaml_file
 
@@ -449,5 +454,5 @@ if __name__ == "__main__":
             target_duration=args.duration
         )
     except Exception as e:
-        print(f"\n❌ Error: {e}\n")
+        logger.error(f"\n❌ Error: {e}\n")
         sys.exit(1)

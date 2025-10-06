@@ -9,6 +9,11 @@ Generates all 5 documentation videos with:
 """
 
 import sys
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 sys.path.append('.')
 
 from unified_video_system import *
@@ -229,8 +234,8 @@ ALL_VIDEOS = [
                     "description": "Test Your Environment",
                     "commands": [
                         "# Check dependencies",
-                        "$ python -c \"from PIL import Image; print('OK')\"",
-                        "$ python -c \"import edge_tts; print('OK')\"",
+                        "$ python -c \"from PIL import Image; logger.info('OK')\"",
+                        "$ python -c \"import edge_tts; logger.info('OK')\"",
                         "",
                         "# Check GPU",
                         "$ nvidia-smi",
@@ -590,10 +595,10 @@ ALL_VIDEOS = [
 
 
 async def generate_all_videos():
-    print("\n" + "="*80)
-    print("UNIFIED VIDEO PRODUCTION SYSTEM v2.0")
-    print("Batch Generation: All 5 Documentation Videos")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("UNIFIED VIDEO PRODUCTION SYSTEM v2.0")
+    logger.info("Batch Generation: All 5 Documentation Videos")
+    logger.info("="*80 + "\n")
 
     reports_dir = "../audio/unified_system_v2/reports"
     audio_base_dir = "../audio/unified_system_v2"
@@ -602,36 +607,36 @@ async def generate_all_videos():
     all_reports = []
 
     for i, video in enumerate(ALL_VIDEOS, 1):
-        print(f"\n{'#'*80}")
-        print(f"# VIDEO {i}/5: {video.title}")
-        print(f"{'#'*80}\n")
+        logger.info(f"\n{'#'*80}")
+        logger.info(f"# VIDEO {i}/5: {video.title}")
+        logger.info(f"{'#'*80}\n")
 
-        print("[STEP 1] Validation")
-        print("-" * 80)
+        logger.info("[STEP 1] Validation")
+        logger.info("-" * 80)
         if video.validate():
-            print("✓ All validation checks passed")
+            logger.info("✓ All validation checks passed")
         else:
-            print("⚠️  Validation warnings:")
+            logger.warning("⚠️  Validation warnings:")
             for warning in video.validation_report.get('warnings', []):
-                print(f"  - {warning}")
+                logger.warning(f"  - {warning}")
 
         validation_file = video.save_validation_report(reports_dir)
 
-        print("\n[STEP 2] Preview & Storyboard")
-        print("-" * 80)
+        logger.info("\n[STEP 2] Preview & Storyboard")
+        logger.info("-" * 80)
         estimated = video.generate_preview()
         preview_file = video.save_preview_file(reports_dir)
 
-        print("\n[STEP 3] Audio Generation with Timing")
-        print("-" * 80)
+        logger.info("\n[STEP 3] Audio Generation with Timing")
+        logger.info("-" * 80)
         await video.generate_audio_with_timing(audio_base_dir)
 
-        print("\n[STEP 4] Timing Report")
-        print("-" * 80)
+        logger.info("\n[STEP 4] Timing Report")
+        logger.info("-" * 80)
         timing_report = video.generate_timing_report()
 
-        print("\n[STEP 5] Metadata Manifest")
-        print("-" * 80)
+        logger.info("\n[STEP 5] Metadata Manifest")
+        logger.info("-" * 80)
         manifest_file = video.save_metadata_manifest(reports_dir)
 
         all_reports.append({
@@ -647,28 +652,28 @@ async def generate_all_videos():
             }
         })
 
-        print(f"\n✓ {video.title} preparation complete")
-        print(f"  Duration: {video.total_duration:.2f}s")
-        print(f"  Scenes: {len(video.scenes)}")
-        print(f"  Audio files: {len(video.scenes)}")
+        logger.info(f"\n✓ {video.title} preparation complete")
+        logger.info(f"  Duration: {video.total_duration:.2f}s")
+        logger.info(f"  Scenes: {len(video.scenes)}")
+        logger.info(f"  Audio files: {len(video.scenes)}")
 
-    print("\n" + "="*80)
-    print("✓ ALL VIDEOS PREPARED SUCCESSFULLY")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("✓ ALL VIDEOS PREPARED SUCCESSFULLY")
+    logger.info("="*80 + "\n")
 
-    print("Summary:")
-    print("-" * 80)
+    logger.info("Summary:")
+    logger.info("-" * 80)
     total_duration = sum(r['duration'] for r in all_reports)
     total_scenes = sum(r['scene_count'] for r in all_reports)
 
     for report in all_reports:
-        print(f"{report['video_id']:<25} {report['duration']:>6.1f}s  ({report['scene_count']} scenes)")
+        logger.info(f"{report['video_id']:<25} {report['duration']:>6.1f}s  ({report['scene_count']} scenes)")
 
-    print("-" * 80)
-    print(f"{'TOTAL':<25} {total_duration:>6.1f}s  ({total_scenes} scenes)")
-    print(f"\n Total runtime: {total_duration/60:.1f} minutes")
-    print(f" All reports saved to: {reports_dir}/")
-    print("="*80 + "\n")
+    logger.info("-" * 80)
+    logger.info(f"{'TOTAL':<25} {total_duration:>6.1f}s  ({total_scenes} scenes)")
+    logger.info(f"\n Total runtime: {total_duration/60:.1f} minutes")
+    logger.info(f" All reports saved to: {reports_dir}/")
+    logger.info("="*80 + "\n")
 
     summary_file = os.path.join(reports_dir, f"batch_summary_{ALL_VIDEOS[0].generation_timestamp}.json")
     with open(summary_file, 'w') as f:
@@ -680,7 +685,7 @@ async def generate_all_videos():
             'timestamp': ALL_VIDEOS[0].generation_timestamp
         }, f, indent=2)
 
-    print(f"Batch summary saved: {summary_file}\n")
+    logger.info(f"Batch summary saved: {summary_file}\n")
 
 if __name__ == "__main__":
     asyncio.run(generate_all_videos())

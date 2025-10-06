@@ -23,6 +23,11 @@ Usage:
 """
 
 import sys
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 sys.path.append('.')
 
 from python_set_builder import VideoSetBuilder
@@ -36,7 +41,7 @@ try:
     HAS_YOUTUBE = True
 except ImportError:
     HAS_YOUTUBE = False
-    print("⚠️  YouTube transcript support requires: pip install youtube-transcript-api")
+    logger.warning("⚠️  YouTube transcript support requires: pip install youtube-transcript-api")
 
 
 def extract_video_id(url_or_id):
@@ -61,7 +66,7 @@ def fetch_transcript(video_id):
         full_text = ' '.join([entry['text'] for entry in transcript_list])
         return {'transcript': full_text, 'entries': transcript_list}
     except Exception as e:
-        print(f"⚠️  Could not fetch transcript: {e}")
+        logger.warning(f"⚠️  Could not fetch transcript: {e}")
         return None
 
 
@@ -100,7 +105,7 @@ def parse_youtube_to_builder(
         builder.export_to_yaml('sets/youtube_tutorial')
     """
 
-    print(f"Fetching YouTube transcript: {youtube_url}")
+    logger.info(f"Fetching YouTube transcript: {youtube_url}")
 
     # Extract video ID
     video_id = extract_video_id(youtube_url)
@@ -119,7 +124,7 @@ def parse_youtube_to_builder(
         # Try to get video title (simplified - would need YouTube API for real title)
         set_name = f"YouTube Summary: {video_id}"
 
-    print(f"Creating video set: {set_name}")
+    logger.info(f"Creating video set: {set_name}")
 
     # Create builder
     builder = VideoSetBuilder(
@@ -138,7 +143,7 @@ def parse_youtube_to_builder(
         scenes=scenes
     )
 
-    print(f"✓ Parsed transcript → {len(scenes)} scenes")
+    logger.info(f"✓ Parsed transcript → {len(scenes)} scenes")
 
     return builder
 
@@ -225,11 +230,11 @@ def parse_youtube_to_set(
     builder = parse_youtube_to_builder(youtube_url, **kwargs)
     set_path = builder.export_to_yaml(output_dir)
 
-    print(f"\n✓ YouTube video parsed and exported!")
-    print(f"  → {set_path}")
-    print(f"\nNext steps:")
-    print(f"  cd scripts")
-    print(f"  python generate_video_set.py ../{set_path}")
+    logger.info(f"\n✓ YouTube video parsed and exported!")
+    logger.info(f"  → {set_path}")
+    logger.info(f"\nNext steps:")
+    logger.info(f"  cd scripts")
+    logger.info(f"  python generate_video_set.py ../{set_path}")
 
     return str(set_path)
 
@@ -237,9 +242,9 @@ def parse_youtube_to_set(
 def example_parse_multiple_youtube():
     """Example: Parse multiple YouTube videos into one set"""
 
-    print("\n" + "="*80)
-    print("EXAMPLE: Multiple YouTube Videos → One Set")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE: Multiple YouTube Videos → One Set")
+    logger.info("="*80 + "\n")
 
     from python_set_builder import VideoSetBuilder
 
@@ -270,14 +275,14 @@ def example_parse_multiple_youtube():
                 # Add to main set
                 builder.videos.append(video)
 
-                print(f"  ✓ Video {i} parsed")
+                logger.info(f"  ✓ Video {i} parsed")
 
         except Exception as e:
-            print(f"  ⚠️  Skipped video {i}: {e}")
+            logger.warning(f"  ⚠️  Skipped video {i}: {e}")
 
     builder.export_to_yaml('../sets/youtube_collection')
 
-    print(f"\n✓ Created set with {len(builder.videos)} YouTube summaries!")
+    logger.info(f"\n✓ Created set with {len(builder.videos)} YouTube summaries!")
 
 
 if __name__ == "__main__":
@@ -314,7 +319,7 @@ Examples:
     args = parser.parse_args()
 
     if args.run_examples:
-        print("Note: Examples use placeholder URLs - replace with real YouTube URLs")
+        logger.info("Note: Examples use placeholder URLs - replace with real YouTube URLs")
         example_3_parse_and_customize()
     elif args.url:
         kwargs = {
@@ -336,6 +341,6 @@ Examples:
             **kwargs
         )
 
-        print(f"\n✅ Ready to generate!")
+        logger.info(f"\n✅ Ready to generate!")
     else:
         parser.print_help()

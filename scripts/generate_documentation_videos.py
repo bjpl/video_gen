@@ -2,6 +2,10 @@ from PIL import Image, ImageDraw, ImageFont
 import subprocess
 import os
 import shutil
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 WIDTH, HEIGHT = 1920, 1080
 FPS = 30
@@ -1323,9 +1327,9 @@ VIDEO_DEFINITIONS = {
 }
 
 def generate_video(video_name, video_config):
-    print(f"\n{'='*70}")
-    print(f"GENERATING: {video_config['title'].upper()}")
-    print(f"{'='*70}\n")
+    logger.info(f"\n{'='*70}")
+    logger.info(f"GENERATING: {video_config['title'].upper()}")
+    logger.info(f"{'='*70}\n")
 
     scenes = video_config['scenes']
     accent = video_config['accent']
@@ -1342,7 +1346,7 @@ def generate_video(video_name, video_config):
     frame_idx = 0
 
     for scene_num, scene in enumerate(scenes):
-        print(f"🎨 Scene {scene_num + 1}: {scene.get('header', scene.get('title', 'Scene'))}...")
+        logger.info(f"🎨 Scene {scene_num + 1}: {scene.get('header', scene.get('title', 'Scene'))}...")
 
         if scene['type'] == 'title':
             start_frame, end_frame = create_title_keyframes(
@@ -1400,8 +1404,8 @@ def generate_video(video_name, video_config):
                 frame_paths.append(filename)
                 frame_idx += 1
 
-    print(f"\n📊 Total frames: {len(frame_paths)}")
-    print(f"⏱️  Duration: {len(frame_paths) / FPS:.1f}s\n")
+    logger.info(f"\n📊 Total frames: {len(frame_paths)}")
+    logger.info(f"⏱️  Duration: {len(frame_paths) / FPS:.1f}s\n")
 
     concat_file = f"{temp_dir}/concat.txt"
     with open(concat_file, 'w') as f:
@@ -1415,11 +1419,11 @@ def generate_video(video_name, video_config):
             f.write(f"Scene {i}: {scene.get('header', scene.get('title', 'Scene'))}\n")
             f.write(f"{scene['narration']}\n\n")
 
-    print(f"📝 Narration script saved: {narration_script_file}\n")
+    logger.info(f"📝 Narration script saved: {narration_script_file}\n")
 
-    print(f"{'='*70}")
-    print("ENCODING VIDEO")
-    print(f"{'='*70}\n")
+    logger.info(f"{'='*70}")
+    logger.info("ENCODING VIDEO")
+    logger.info(f"{'='*70}\n")
 
     output_filename = video_config['filename']
 
@@ -1436,42 +1440,42 @@ def generate_video(video_name, video_config):
 
     if result.returncode == 0:
         file_size = os.path.getsize(output_filename)
-        print(f"\n✨ Video created: {output_filename}")
-        print(f"📦 Size: {file_size / (1024*1024):.1f} MB")
-        print(f"⏱️  Duration: {len(frame_paths) / FPS:.1f}s\n")
+        logger.info(f"\n✨ Video created: {output_filename}")
+        logger.info(f"📦 Size: {file_size / (1024*1024):.1f} MB")
+        logger.info(f"⏱️  Duration: {len(frame_paths) / FPS:.1f}s\n")
 
         shutil.rmtree(temp_dir)
-        print("✓ Cleaned up temp files")
+        logger.info("✓ Cleaned up temp files")
     else:
-        print("\n❌ Error during encoding")
+        logger.error("\n❌ Error during encoding")
 
     return output_filename
 
 if __name__ == "__main__":
-    print(f"\n{'='*70}")
-    print("DOCUMENTATION VIDEO SERIES GENERATOR")
-    print(f"{'='*70}\n")
+    logger.info(f"\n{'='*70}")
+    logger.info("DOCUMENTATION VIDEO SERIES GENERATOR")
+    logger.info(f"{'='*70}\n")
 
-    print(f"Total videos to generate: {len(VIDEO_DEFINITIONS)}")
-    print(f"Estimated total time: ~3 minutes\n")
+    logger.info(f"Total videos to generate: {len(VIDEO_DEFINITIONS)}")
+    logger.info(f"Estimated total time: ~3 minutes\n")
 
     generated_videos = []
 
     for video_name, video_config in VIDEO_DEFINITIONS.items():
         output = generate_video(video_name, video_config)
         generated_videos.append(output)
-        print(f"\n{'='*70}\n")
+        logger.info(f"\n{'='*70}\n")
 
-    print(f"{'='*70}")
-    print("ALL VIDEOS GENERATED SUCCESSFULLY")
-    print(f"{'='*70}\n")
+    logger.info(f"{'='*70}")
+    logger.info("ALL VIDEOS GENERATED SUCCESSFULLY")
+    logger.info(f"{'='*70}\n")
 
-    print("Generated videos:")
+    logger.info("Generated videos:")
     for video in generated_videos:
         if os.path.exists(video):
             size = os.path.getsize(video) / (1024*1024)
-            print(f"  ✓ {video} ({size:.1f} MB)")
+            logger.info(f"  ✓ {video} ({size:.1f} MB)")
 
-    print("\n📝 Next step: Generate audio for each video")
-    print("    Run: python generate_documentation_audio.py")
-    print(f"\n{'='*70}\n")
+    logger.info("\n📝 Next step: Generate audio for each video")
+    logger.info("    Run: python generate_documentation_audio.py")
+    logger.info(f"\n{'='*70}\n")

@@ -27,6 +27,11 @@ import asyncio
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any
+import logging
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 
 # Add scripts directory to path
 sys.path.append('.')
@@ -79,7 +84,7 @@ class VideoSet:
         if 'id' not in set_config:
             raise ValueError("Set configuration must have 'id'")
 
-        print(f"✓ Loaded set: {set_config.get('name', set_config['id'])}")
+        logger.info(f"✓ Loaded set: {set_config.get('name', set_config['id'])}")
 
     def get_set_id(self) -> str:
         """Get set identifier"""
@@ -160,7 +165,7 @@ class VideoSet:
             video_path = self.set_dir / video_file
 
             if not video_path.exists():
-                print(f"⚠️  Warning: Video file not found: {video_path}")
+                logger.warning(f"⚠️  Warning: Video file not found: {video_path}")
                 continue
 
             # Load video YAML
@@ -267,24 +272,24 @@ class VideoSet:
 
     async def generate_set(self, output_base: str = None):
         """Generate all videos in the set"""
-        print(f"\n{'='*80}")
-        print(f"VIDEO SET GENERATION: {self.get_set_name()}")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"VIDEO SET GENERATION: {self.get_set_name()}")
+        logger.info(f"{'='*80}\n")
 
         # Create output structure
         output_dirs = self.create_output_structure(output_base)
 
-        print(f"Set ID: {self.get_set_id()}")
-        print(f"Output: {output_dirs['base']}\n")
+        logger.info(f"Set ID: {self.get_set_id()}")
+        logger.info(f"Output: {output_dirs['base']}\n")
 
         # Load and generate videos
-        print("Loading video definitions...")
+        logger.info("Loading video definitions...")
         unified_videos = self.generate_unified_videos()
 
-        print(f"✓ Loaded {len(unified_videos)} videos\n")
+        logger.info(f"✓ Loaded {len(unified_videos)} videos\n")
 
         # Generate scripts
-        print("Generating scripts...")
+        logger.info("Generating scripts...")
         for video in unified_videos:
             # Save preview
             preview_file = output_dirs['script'] / f"{video.video_id}_preview.txt"
@@ -298,15 +303,15 @@ class VideoSet:
             with open(validation_file, 'w') as f:
                 json.dump(video.validation_report, f, indent=2)
 
-            print(f"  ✓ {video.video_id}")
+            logger.info(f"  ✓ {video.video_id}")
 
-        print(f"\n✓ Scripts generated\n")
+        logger.info(f"\n✓ Scripts generated\n")
 
         # Generate audio with timing
-        print("Generating audio with precise timing...")
+        logger.info("Generating audio with precise timing...")
 
         for i, video in enumerate(unified_videos, 1):
-            print(f"\n[{i}/{len(unified_videos)}] {video.title}")
+            logger.info(f"\n[{i}/{len(unified_videos)}] {video.title}")
 
             await video.generate_audio_with_timing(str(output_dirs['audio']))
 
@@ -317,28 +322,28 @@ class VideoSet:
             manifest_file = output_dirs['report'] / f"{video.video_id}_manifest.json"
             video.save_metadata_manifest(str(output_dirs['report']))
 
-            print(f"  ✓ Duration: {video.total_duration:.2f}s")
+            logger.info(f"  ✓ Duration: {video.total_duration:.2f}s")
 
-        print(f"\n✓ All audio generated\n")
+        logger.info(f"\n✓ All audio generated\n")
 
         # Generate set manifest
         self.generate_set_manifest(unified_videos, output_dirs)
 
-        print(f"\n{'='*80}")
-        print(f"✓ SET PREPARATION COMPLETE: {self.get_set_name()}")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"✓ SET PREPARATION COMPLETE: {self.get_set_name()}")
+        logger.info(f"{'='*80}\n")
 
         total_duration = sum(v.total_duration for v in unified_videos)
 
-        print(f"Summary:")
-        print(f"  Videos: {len(unified_videos)}")
-        print(f"  Total Duration: {total_duration:.1f}s ({total_duration/60:.1f} min)")
-        print(f"  Output: {output_dirs['base']}\n")
+        logger.info(f"Summary:")
+        logger.info(f"  Videos: {len(unified_videos)}")
+        logger.info(f"  Total Duration: {total_duration:.1f}s ({total_duration/60:.1f} min)")
+        logger.info(f"  Output: {output_dirs['base']}\n")
 
-        print("Next steps:")
-        print(f"  1. Review scripts in: {output_dirs['script']}/")
-        print(f"  2. Generate videos:")
-        print(f"     python generate_videos_from_set.py {output_dirs['base']}\n")
+        logger.info("Next steps:")
+        logger.info(f"  1. Review scripts in: {output_dirs['script']}/")
+        logger.info(f"  2. Generate videos:")
+        logger.info(f"     python generate_videos_from_set.py {output_dirs['base']}\n")
 
         return unified_videos, output_dirs
 
@@ -383,22 +388,22 @@ class VideoSet:
         with open(manifest_file, 'w') as f:
             json.dump(manifest, f, indent=2)
 
-        print(f"✓ Set manifest saved: {manifest_file}")
+        logger.info(f"✓ Set manifest saved: {manifest_file}")
 
 
 async def generate_sets(set_dirs: List[str], output_base: str = None):
     """Generate multiple video sets"""
-    print(f"\n{'#'*80}")
-    print(f"# MULTI-SET VIDEO GENERATION")
-    print(f"# Processing {len(set_dirs)} video sets")
-    print(f"{'#'*80}\n")
+    logger.info(f"\n{'#'*80}")
+    logger.info(f"# MULTI-SET VIDEO GENERATION")
+    logger.info(f"# Processing {len(set_dirs)} video sets")
+    logger.info(f"{'#'*80}\n")
 
     results = []
 
     for i, set_dir in enumerate(set_dirs, 1):
-        print(f"\n{'='*80}")
-        print(f"SET {i}/{len(set_dirs)}")
-        print(f"{'='*80}\n")
+        logger.info(f"\n{'='*80}")
+        logger.info(f"SET {i}/{len(set_dirs)}")
+        logger.info(f"{'='*80}\n")
 
         try:
             video_set = VideoSet(set_dir)
@@ -413,7 +418,7 @@ async def generate_sets(set_dirs: List[str], output_base: str = None):
             })
 
         except Exception as e:
-            print(f"\n❌ Error processing set {set_dir}: {e}\n")
+            logger.error(f"\n❌ Error processing set {set_dir}: {e}\n")
             results.append({
                 'set_id': Path(set_dir).name,
                 'status': 'failed',
@@ -421,29 +426,29 @@ async def generate_sets(set_dirs: List[str], output_base: str = None):
             })
 
     # Summary
-    print(f"\n{'#'*80}")
-    print(f"# MULTI-SET GENERATION COMPLETE")
-    print(f"{'#'*80}\n")
+    logger.info(f"\n{'#'*80}")
+    logger.info(f"# MULTI-SET GENERATION COMPLETE")
+    logger.info(f"{'#'*80}\n")
 
     successful = [r for r in results if r['status'] == 'success']
     failed = [r for r in results if r['status'] == 'failed']
 
-    print(f"Results:")
-    print(f"  ✓ Successful: {len(successful)}")
-    print(f"  ✗ Failed: {len(failed)}\n")
+    logger.info(f"Results:")
+    logger.info(f"  ✓ Successful: {len(successful)}")
+    logger.error(f"  ✗ Failed: {len(failed)}\n")
 
     if successful:
-        print("Successful sets:")
+        logger.info("Successful sets:")
         for result in successful:
-            print(f"  ✓ {result['set_name']}: {result['videos']} videos")
-            print(f"    → {result['output']}")
+            logger.info(f"  ✓ {result['set_name']}: {result['videos']} videos")
+            logger.info(f"    → {result['output']}")
 
     if failed:
-        print("\nFailed sets:")
+        logger.error("\nFailed sets:")
         for result in failed:
-            print(f"  ✗ {result['set_id']}: {result['error']}")
+            logger.error(f"  ✗ {result['set_id']}: {result['error']}")
 
-    print()
+    logger.info()
 
 
 def main():
@@ -473,13 +478,13 @@ Examples:
     # Validate set directories
     for set_dir in args.sets:
         if not Path(set_dir).exists():
-            print(f"❌ Set directory not found: {set_dir}")
+            logger.error(f"❌ Set directory not found: {set_dir}")
             sys.exit(1)
 
         config_file = Path(set_dir) / 'set_config.yaml'
         if not config_file.exists():
-            print(f"❌ Set configuration not found: {config_file}")
-            print(f"   Each set directory must contain 'set_config.yaml'")
+            logger.error(f"❌ Set configuration not found: {config_file}")
+            logger.info(f"   Each set directory must contain 'set_config.yaml'")
             sys.exit(1)
 
     # Generate sets
