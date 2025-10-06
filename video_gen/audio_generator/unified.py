@@ -349,20 +349,24 @@ class UnifiedAudioGenerator:
 
         cumulative_time = 0.0
         for scene, scene_result in zip(video.scenes, scene_results):
+            # Use fallback values if fields are None
+            final_duration = scene.final_duration or 0.0
+            audio_duration = scene_result.duration or 0.0
+
             scene_data = {
                 "scene_id": scene.scene_id,
                 "scene_type": scene.scene_type,
                 "voice": scene.voice,
                 "start_time": cumulative_time,
-                "end_time": cumulative_time + scene.final_duration,
-                "duration": scene.final_duration,
-                "audio_duration": scene_result.duration,
-                "padding": scene.final_duration - scene_result.duration,
+                "end_time": cumulative_time + final_duration,
+                "duration": final_duration,
+                "audio_duration": audio_duration,
+                "padding": final_duration - audio_duration,
                 "audio_file": str(scene_result.audio_file.name),
                 "narration_preview": scene.narration[:100] + "..." if len(scene.narration) > 100 else scene.narration
             }
             report["scenes"].append(scene_data)
-            cumulative_time += scene.final_duration
+            cumulative_time += final_duration
 
         # Save report
         report_file = output_dir / f"{video.video_id}_timing_report.json"

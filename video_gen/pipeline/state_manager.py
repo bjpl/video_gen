@@ -166,9 +166,26 @@ class TaskState:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
+        # Convert result to dict if it has to_dict method (for VideoConfig, etc.)
+        result_value = self.result
+        if result_value is not None and hasattr(result_value, 'to_dict'):
+            result_value = result_value.to_dict()
+
+        # Convert input_config items if they have to_dict method
+        input_config_value = self.input_config
+        if isinstance(input_config_value, dict):
+            input_config_value = {}
+            for key, val in self.input_config.items():
+                if hasattr(val, 'to_dict'):
+                    input_config_value[key] = val.to_dict()
+                else:
+                    input_config_value[key] = val
+        elif hasattr(input_config_value, 'to_dict'):
+            input_config_value = input_config_value.to_dict()
+
         return {
             "task_id": self.task_id,
-            "input_config": self.input_config,
+            "input_config": input_config_value,
             "status": self.status.value,
             "current_stage": self.current_stage,
             "overall_progress": self.overall_progress,
@@ -176,7 +193,7 @@ class TaskState:
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-            "result": self.result,
+            "result": result_value,
             "errors": self.errors,
             "warnings": self.warnings,
             "metadata": self.metadata,

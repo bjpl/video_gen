@@ -310,7 +310,7 @@ class DocumentAdapter(InputAdapter):
         accent_color = kwargs.get('accent_color', 'blue')
         voice = kwargs.get('voice', 'male')
         max_scenes_per_video = kwargs.get('max_scenes_per_video', 20)  # Increased from 8 to 20 for comprehensive videos
-        split_by_h2 = kwargs.get('split_by_h2', False)  # Changed to False to create single comprehensive video
+        split_by_h2 = kwargs.get('split_by_h2', True)  # Split by H2 headings by default to create multiple videos
         video_count = kwargs.get('video_count', 1)  # User-specified number of videos
 
         # Group sections by level 2 headings if split_by_h2 is enabled OR if video_count > 1

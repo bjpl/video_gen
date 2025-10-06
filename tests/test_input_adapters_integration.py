@@ -3,7 +3,7 @@ Integration tests for input adapters.
 
 Tests app/input_adapters/ including:
 - DocumentAdapter with real markdown
-- YAMLFileAdapter with various configs
+- YAMLAdapter with various configs
 - YouTubeAdapter (mocked API calls)
 - WizardAdapter
 - ProgrammaticAdapter
@@ -20,7 +20,7 @@ from app.input_adapters.document import DocumentAdapter
 from app.input_adapters.yaml_file import YAMLAdapter
 from app.input_adapters.youtube import YouTubeAdapter
 from app.input_adapters.programmatic import ProgrammaticAdapter
-from video_gen.shared.models import VideoConfig, Scene
+# Removed unused imports
 
 
 class TestDocumentAdapterIntegration:
@@ -55,7 +55,7 @@ Content for section 2.
             temp_path = f.name
 
         try:
-            result = await document_adapter.adapt(
+            result = await document_adapter.parse(
                 source=temp_path,
                 accent_color=(59, 130, 246),
                 voice="male"
@@ -72,7 +72,7 @@ Content for section 2.
         """Test DocumentAdapter with direct text content."""
         text_content = "This is a simple text for testing."
 
-        result = await document_adapter.adapt(
+        result = await document_adapter.parse(
             source=text_content,
             accent_color=(16, 185, 129),
             voice="female"
@@ -88,7 +88,7 @@ Content for section 2.
             temp_path = f.name
 
         try:
-            result = await document_adapter.adapt(
+            result = await document_adapter.parse(
                 source=temp_path,
                 accent_color=(59, 130, 246),
                 voice="male",
@@ -110,7 +110,7 @@ Content for section 2.
             temp_path = f.name
 
         try:
-            result = await document_adapter.adapt(
+            result = await document_adapter.parse(
                 source=temp_path,
                 accent_color=(59, 130, 246),
                 voice="male"
@@ -124,7 +124,7 @@ Content for section 2.
     @pytest.mark.asyncio
     async def test_document_adapter_handles_missing_file(self, document_adapter):
         """Test DocumentAdapter handles missing files."""
-        result = await document_adapter.adapt(
+        result = await document_adapter.parse(
             source="/nonexistent/file.md",
             accent_color=(59, 130, 246),
             voice="male"
@@ -134,7 +134,7 @@ Content for section 2.
         assert result.success is False or result.error is not None
 
 
-class TestYAMLFileAdapterIntegration:
+class TestYAMLAdapterIntegration:
     """Integration tests for YAMLAdapter."""
 
     @pytest.fixture
@@ -173,7 +173,7 @@ scenes:
             temp_path = f.name
 
         try:
-            result = await yaml_adapter.adapt(
+            result = await yaml_adapter.parse(
                 source=temp_path,
                 accent_color=(59, 130, 246),
                 voice="male"
@@ -202,7 +202,7 @@ scenes:
             temp_path = f.name
 
         try:
-            result = await yaml_adapter.adapt(
+            result = await yaml_adapter.parse(
                 source=temp_path,
                 accent_color=(59, 130, 246),
                 voice="male"
@@ -225,7 +225,7 @@ scenes:
             temp_path = f.name
 
         try:
-            result = await yaml_adapter.adapt(
+            result = await yaml_adapter.parse(
                 source=temp_path,
                 accent_color=(59, 130, 246),
                 voice="male"
@@ -239,7 +239,7 @@ scenes:
     @pytest.mark.asyncio
     async def test_yaml_adapter_with_missing_file(self, yaml_adapter):
         """Test YAMLAdapter handles missing files."""
-        result = await yaml_adapter.adapt(
+        result = await yaml_adapter.parse(
             source="/nonexistent/config.yaml",
             accent_color=(59, 130, 246),
             voice="male"
@@ -274,7 +274,7 @@ class TestYouTubeAdapterIntegration:
         }
         mock_get.return_value = mock_response
 
-        result = await youtube_adapter.adapt(
+        result = await youtube_adapter.parse(
             source="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             accent_color=(59, 130, 246),
             voice="male"
@@ -286,7 +286,7 @@ class TestYouTubeAdapterIntegration:
     @pytest.mark.asyncio
     async def test_youtube_adapter_with_invalid_url(self, youtube_adapter):
         """Test YouTubeAdapter handles invalid URLs."""
-        result = await youtube_adapter.adapt(
+        result = await youtube_adapter.parse(
             source="https://invalid-url.com",
             accent_color=(59, 130, 246),
             voice="male"
@@ -301,7 +301,7 @@ class TestYouTubeAdapterIntegration:
         """Test YouTubeAdapter handles API errors gracefully."""
         mock_get.side_effect = Exception("API Error")
 
-        result = await youtube_adapter.adapt(
+        result = await youtube_adapter.parse(
             source="https://www.youtube.com/watch?v=test",
             accent_color=(59, 130, 246),
             voice="male"
@@ -335,7 +335,7 @@ class TestProgrammaticAdapterIntegration:
             ]
         )
 
-        result = await programmatic_adapter.adapt(
+        result = await programmatic_adapter.parse(
             source=video_config,
             accent_color=(59, 130, 246),
             voice="male"
@@ -361,7 +361,7 @@ class TestProgrammaticAdapterIntegration:
             ]
         }
 
-        result = await programmatic_adapter.adapt(
+        result = await programmatic_adapter.parse(
             source=video_dict,
             accent_color=(59, 130, 246),
             voice="male"
@@ -373,7 +373,7 @@ class TestProgrammaticAdapterIntegration:
     @pytest.mark.asyncio
     async def test_programmatic_adapter_with_invalid_source(self, programmatic_adapter):
         """Test ProgrammaticAdapter handles invalid source types."""
-        result = await programmatic_adapter.adapt(
+        result = await programmatic_adapter.parse(
             source="invalid_string_source",
             accent_color=(59, 130, 246),
             voice="male"
@@ -405,7 +405,7 @@ class TestAdapterColorAndVoiceHandling:
         """Get all available adapters."""
         return [
             DocumentAdapter(),
-            YAMLFileAdapter(),
+            YAMLAdapter(),
             ProgrammaticAdapter()
         ]
 
@@ -442,7 +442,7 @@ class TestAdapterErrorMessages:
         """Test DocumentAdapter errors include helpful details."""
         adapter = DocumentAdapter()
 
-        result = await adapter.adapt(
+        result = await adapter.parse(
             source="/definitely/does/not/exist.md",
             accent_color=(0, 0, 0),
             voice="male"
@@ -454,10 +454,10 @@ class TestAdapterErrorMessages:
 
     @pytest.mark.asyncio
     async def test_yaml_adapter_error_has_details(self):
-        """Test YAMLFileAdapter errors include helpful details."""
-        adapter = YAMLFileAdapter()
+        """Test YAMLAdapter errors include helpful details."""
+        adapter = YAMLAdapter()
 
-        result = await adapter.adapt(
+        result = await adapter.parse(
             source="/nonexistent.yaml",
             accent_color=(0, 0, 0),
             voice="male"
