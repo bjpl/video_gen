@@ -7,7 +7,7 @@ Python code, providing the most flexible input method.
 from typing import Any
 
 from .base import InputAdapter, InputAdapterResult
-from ..shared.models import VideoSet
+from ..shared.models import VideoSet, VideoConfig
 
 
 class ProgrammaticAdapter(InputAdapter):
@@ -28,7 +28,7 @@ class ProgrammaticAdapter(InputAdapter):
         """Adapt programmatic input to VideoSet structure.
 
         Args:
-            source: VideoSet object or dictionary
+            source: VideoSet, VideoConfig, or dictionary
             **kwargs: Additional parameters
 
         Returns:
@@ -40,6 +40,19 @@ class ProgrammaticAdapter(InputAdapter):
                 return InputAdapterResult(
                     success=True,
                     video_set=source
+                )
+
+            # Handle VideoConfig objects - wrap in VideoSet
+            if isinstance(source, VideoConfig):
+                video_set = VideoSet(
+                    set_id=source.video_id,
+                    name=source.title,
+                    description=source.description,
+                    videos=[source]
+                )
+                return InputAdapterResult(
+                    success=True,
+                    video_set=video_set
                 )
 
             # Handle dictionaries
@@ -65,12 +78,12 @@ class ProgrammaticAdapter(InputAdapter):
         """Validate programmatic source.
 
         Args:
-            source: VideoSet or dict
+            source: VideoSet, VideoConfig, or dict
 
         Returns:
-            True if valid VideoSet or dict
+            True if valid VideoSet, VideoConfig, or dict
         """
-        return isinstance(source, (VideoSet, dict))
+        return isinstance(source, (VideoSet, VideoConfig, dict))
 
     def supports_format(self, format_type: str) -> bool:
         """Check if format is supported.

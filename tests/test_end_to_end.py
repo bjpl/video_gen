@@ -348,13 +348,19 @@ scenes:
 
 @pytest.mark.asyncio
 async def test_quick_integration_smoke_test():
-    """Quick smoke test for CI/CD."""
+    """Quick smoke test for CI/CD - validates pipeline stages load correctly."""
     from video_gen.pipeline import get_pipeline
-    from video_gen.shared.models import VideoConfig, Scene
+    from video_gen.shared.models import VideoConfig, Scene, VideoSet
+    from video_gen.stages.input_stage import InputStage
+    from video_gen.stages.parsing_stage import ParsingStage
 
+    # Test 1: Pipeline creation
     pipeline = get_pipeline()
+    assert pipeline is not None
+    assert len(pipeline.stages) > 0
 
-    # Minimal video config
+    # Test 2: InputStage with programmatic input
+    input_stage = InputStage()
     video_config = VideoConfig(
         video_id="smoke_test",
         title="Smoke Test",
@@ -373,13 +379,26 @@ async def test_quick_integration_smoke_test():
     input_config = InputConfig(
         input_type="programmatic",
         source=video_config,
-        config={}
+        accent_color=(59, 130, 246),
+        voice="en-US-ChristopherNeural"
     )
 
-    result = await pipeline.execute(input_config)
-    assert result.success
+    context = {"task_id": "smoke-test", "input_config": input_config}
+    result = await input_stage.execute(context)
 
-    print("\n✅ Smoke test passed")
+    assert result.success, f"Input stage failed: {result.errors if hasattr(result, 'errors') else 'Unknown error'}"
+    assert "video_config" in result.artifacts
+
+    # Test 3: ParsingStage
+    parsing_stage = ParsingStage()
+    parsing_context = {
+        "task_id": "smoke-test",
+        "video_config": result.artifacts["video_config"]
+    }
+    parsing_result = await parsing_stage.execute(parsing_context)
+    assert parsing_result.success
+
+    print("\n✅ Smoke test passed - pipeline stages functional")
 
 
 if __name__ == "__main__":

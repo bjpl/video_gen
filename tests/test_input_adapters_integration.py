@@ -149,23 +149,25 @@ class TestYAMLAdapterIntegration:
     def sample_yaml_config(self):
         """Create sample YAML configuration."""
         return """
-title: Test Video
-accent_color: blue
-voice: male
-scenes:
-  - scene_type: title
-    scene_id: "1"
-    narration: "Welcome to the test"
-    visual_content:
-      title: "Test Video"
-      subtitle: "Introduction"
-  - scene_type: command
-    scene_id: "2"
-    narration: "Run this command"
-    visual_content:
-      header: "Setup"
-      commands:
-        - "pip install requirements"
+video:
+  id: test-video-1
+  title: Test Video
+  accent_color: blue
+  voice: male
+  scenes:
+    - scene_type: title
+      scene_id: "1"
+      narration: "Welcome to the test"
+      visual_content:
+        title: "Test Video"
+        subtitle: "Introduction"
+    - scene_type: command
+      scene_id: "2"
+      narration: "Run this command"
+      visual_content:
+        header: "Setup"
+        commands:
+          - "pip install requirements"
 """
 
     def test_yaml_adapter_with_valid_config(self, yaml_adapter, sample_yaml_config):
@@ -191,12 +193,14 @@ scenes:
     def test_yaml_adapter_with_minimal_config(self, yaml_adapter):
         """Test YAMLAdapter with minimal valid config."""
         minimal_yaml = """
-title: Minimal Video
-scenes:
-  - scene_type: title
-    scene_id: "1"
-    narration: "Test"
-    visual_content: {}
+video:
+  id: minimal-1
+  title: Minimal Video
+  scenes:
+    - scene_type: title
+      scene_id: "1"
+      narration: "Test"
+      visual_content: {}
 """
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
             f.write(minimal_yaml)
