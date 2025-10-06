@@ -367,15 +367,17 @@ class TestEducationalSceneRenderers:
 class TestCheckpointAndComparisonRenderers:
     """Test checkpoint and comparison scene renderers."""
 
+    # Checkpoint scene tests
     def test_create_checkpoint_keyframes_returns_valid_frames(self):
         """Test checkpoint keyframes return valid image tuple."""
-        # Import after verifying module exists
         try:
             from video_gen.renderers.checkpoint_scenes import create_checkpoint_keyframes
 
             start, end = create_checkpoint_keyframes(
-                "Checkpoint: Module 1 Complete",
-                ["Learned variables", "Understood loops", "Practiced functions"],
+                checkpoint_num=1,
+                completed_topics=["Variables", "Functions", "Loops"],
+                review_questions=["What is a variable?", "How do loops work?"],
+                next_topics=["Classes", "Objects", "Inheritance"],
                 accent_color=ACCENT_GREEN
             )
 
@@ -383,15 +385,349 @@ class TestCheckpointAndComparisonRenderers:
             assert isinstance(end, Image.Image)
             assert start.size == (WIDTH, HEIGHT)
             assert end.size == (WIDTH, HEIGHT)
-        except (ImportError, TypeError):
-            pytest.skip("checkpoint_keyframes function not available or signature different")
+            assert start.mode == 'RGB'
+            assert end.mode == 'RGB'
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
 
-    def test_create_comparison_keyframes_exists(self):
-        """Test comparison scene functions exist."""
+    def test_create_checkpoint_keyframes_with_empty_lists(self):
+        """Test checkpoint keyframes handle empty topic lists."""
         try:
-            from video_gen.renderers.comparison_scenes import create_comparison_keyframes
-            # If import succeeds, the module exists
-            assert callable(create_comparison_keyframes)
+            from video_gen.renderers.checkpoint_scenes import create_checkpoint_keyframes
+
+            start, end = create_checkpoint_keyframes(
+                checkpoint_num=2,
+                completed_topics=[],
+                review_questions=[],
+                next_topics=[],
+                accent_color=ACCENT_BLUE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    def test_create_checkpoint_keyframes_with_many_items(self):
+        """Test checkpoint keyframes with more than 6 items per column."""
+        try:
+            from video_gen.renderers.checkpoint_scenes import create_checkpoint_keyframes
+
+            many_topics = [f"Topic {i}" for i in range(10)]
+            start, end = create_checkpoint_keyframes(
+                checkpoint_num=3,
+                completed_topics=many_topics,
+                review_questions=many_topics,
+                next_topics=many_topics,
+                accent_color=ACCENT_PURPLE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    def test_create_checkpoint_keyframes_with_long_text(self):
+        """Test checkpoint keyframes truncate long item text."""
+        try:
+            from video_gen.renderers.checkpoint_scenes import create_checkpoint_keyframes
+
+            long_text = "This is a very long topic description that should be truncated to fit within the card"
+            start, end = create_checkpoint_keyframes(
+                checkpoint_num=4,
+                completed_topics=[long_text, long_text],
+                review_questions=[long_text],
+                next_topics=[long_text, long_text, long_text],
+                accent_color=ACCENT_ORANGE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    def test_create_quote_keyframes_returns_valid_frames(self):
+        """Test quote keyframes return valid image tuple."""
+        try:
+            from video_gen.renderers.checkpoint_scenes import create_quote_keyframes
+
+            start, end = create_quote_keyframes(
+                quote_text="Quality is not an act, it is a habit",
+                attribution="Aristotle",
+                accent_color=ACCENT_BLUE
+            )
+
+            assert isinstance(start, Image.Image)
+            assert isinstance(end, Image.Image)
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+            assert start.mode == 'RGB'
+            assert end.mode == 'RGB'
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    def test_create_quote_keyframes_with_long_quote(self):
+        """Test quote keyframes handle very long quotes (wrapping)."""
+        try:
+            from video_gen.renderers.checkpoint_scenes import create_quote_keyframes
+
+            long_quote = "This is a very long quote that should be wrapped across multiple lines to fit within the card width. " * 3
+            start, end = create_quote_keyframes(
+                quote_text=long_quote,
+                attribution="Long Author Name",
+                accent_color=ACCENT_GREEN
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    def test_create_quote_keyframes_with_empty_attribution(self):
+        """Test quote keyframes handle empty attribution."""
+        try:
+            from video_gen.renderers.checkpoint_scenes import create_quote_keyframes
+
+            start, end = create_quote_keyframes(
+                quote_text="A quote without attribution",
+                attribution="",
+                accent_color=ACCENT_PURPLE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    def test_create_quote_keyframes_with_short_quote(self):
+        """Test quote keyframes handle short single-line quotes."""
+        try:
+            from video_gen.renderers.checkpoint_scenes import create_quote_keyframes
+
+            start, end = create_quote_keyframes(
+                quote_text="Short quote",
+                attribution="Anonymous",
+                accent_color=ACCENT_ORANGE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("checkpoint_scenes module not available")
+
+    # Comparison scene tests
+    def test_create_code_comparison_keyframes_returns_valid_frames(self):
+        """Test code comparison keyframes return valid image tuple."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_code_comparison_keyframes
+
+            start, end = create_code_comparison_keyframes(
+                header="Performance Optimization",
+                before_code="def slow():\n    return [x**2 for x in range(1000)]",
+                after_code="def fast():\n    return numpy.square(numpy.arange(1000))",
+                accent_color=ACCENT_BLUE
+            )
+
+            assert isinstance(start, Image.Image)
+            assert isinstance(end, Image.Image)
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+            assert start.mode == 'RGB'
+            assert end.mode == 'RGB'
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_code_comparison_keyframes_with_custom_labels(self):
+        """Test code comparison with custom before/after labels."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_code_comparison_keyframes
+
+            start, end = create_code_comparison_keyframes(
+                header="Refactoring Example",
+                before_code="x = 1",
+                after_code="x = 2",
+                accent_color=ACCENT_GREEN,
+                before_label="Old Code",
+                after_label="New Code"
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_code_comparison_keyframes_with_long_code(self):
+        """Test code comparison with more than 10 lines (should truncate)."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_code_comparison_keyframes
+
+            long_code = "\n".join([f"line {i}" for i in range(20)])
+            start, end = create_code_comparison_keyframes(
+                header="Long Code Example",
+                before_code=long_code,
+                after_code=long_code,
+                accent_color=ACCENT_PURPLE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_code_comparison_keyframes_with_empty_lines(self):
+        """Test code comparison skips empty lines."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_code_comparison_keyframes
+
+            code_with_blanks = "line1\n\n\nline2\n\nline3"
+            start, end = create_code_comparison_keyframes(
+                header="Code with Blank Lines",
+                before_code=code_with_blanks,
+                after_code=code_with_blanks,
+                accent_color=ACCENT_ORANGE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_problem_keyframes_returns_valid_frames(self):
+        """Test problem keyframes return valid image tuple."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_problem_keyframes
+
+            start, end = create_problem_keyframes(
+                problem_number=1,
+                title="Two Sum",
+                problem_text="Given an array of integers, return indices of two numbers that add up to target.",
+                difficulty="easy",
+                accent_color=ACCENT_GREEN
+            )
+
+            assert isinstance(start, Image.Image)
+            assert isinstance(end, Image.Image)
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+            assert start.mode == 'RGB'
+            assert end.mode == 'RGB'
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_problem_keyframes_with_difficulty_levels(self):
+        """Test problem keyframes with different difficulty colors."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_problem_keyframes
+
+            difficulties = [("easy", ACCENT_GREEN), ("medium", ACCENT_ORANGE), ("hard", ACCENT_PINK)]
+
+            for difficulty, expected_color in difficulties:
+                start, end = create_problem_keyframes(
+                    problem_number=1,
+                    title=f"{difficulty.title()} Problem",
+                    problem_text="Test problem description",
+                    difficulty=difficulty,
+                    accent_color=ACCENT_BLUE
+                )
+                assert start.size == (WIDTH, HEIGHT)
+                assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_problem_keyframes_with_long_problem_text(self):
+        """Test problem keyframes wrap long problem text."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_problem_keyframes
+
+            long_problem = "This is a very long problem description that will need to be wrapped across multiple lines to fit within the card. " * 10
+            start, end = create_problem_keyframes(
+                problem_number=42,
+                title="Long Problem",
+                problem_text=long_problem,
+                difficulty="hard",
+                accent_color=ACCENT_PINK
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_problem_keyframes_with_unknown_difficulty(self):
+        """Test problem keyframes handle unknown difficulty gracefully."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_problem_keyframes
+
+            start, end = create_problem_keyframes(
+                problem_number=99,
+                title="Unknown Difficulty",
+                problem_text="Test problem with unknown difficulty level",
+                difficulty="extreme",  # Not in the list
+                accent_color=ACCENT_BLUE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_solution_keyframes_returns_valid_frames(self):
+        """Test solution keyframes return valid image tuple."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_solution_keyframes
+
+            start, end = create_solution_keyframes(
+                title="Hash Table Solution",
+                solution_code=["def twoSum(nums, target):", "    seen = {}", "    for i, n in enumerate(nums):"],
+                explanation="Time complexity: O(n), Space complexity: O(n)",
+                accent_color=ACCENT_GREEN
+            )
+
+            assert isinstance(start, Image.Image)
+            assert isinstance(end, Image.Image)
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+            assert start.mode == 'RGB'
+            assert end.mode == 'RGB'
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_solution_keyframes_with_long_code(self):
+        """Test solution keyframes truncate code at 12 lines."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_solution_keyframes
+
+            long_code = [f"line {i}" for i in range(20)]
+            start, end = create_solution_keyframes(
+                title="Long Solution",
+                solution_code=long_code,
+                explanation="This solution has many lines",
+                accent_color=ACCENT_BLUE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_solution_keyframes_with_empty_explanation(self):
+        """Test solution keyframes handle empty explanation."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_solution_keyframes
+
+            start, end = create_solution_keyframes(
+                title="Solution Without Explanation",
+                solution_code=["x = 1", "y = 2", "return x + y"],
+                explanation="",
+                accent_color=ACCENT_PURPLE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
+        except ImportError:
+            pytest.skip("comparison_scenes module not available")
+
+    def test_create_solution_keyframes_with_long_explanation(self):
+        """Test solution keyframes wrap long explanation text."""
+        try:
+            from video_gen.renderers.comparison_scenes import create_solution_keyframes
+
+            long_explanation = "This is a very long explanation that describes the solution approach in great detail. " * 20
+            start, end = create_solution_keyframes(
+                title="Detailed Solution",
+                solution_code=["code = 'simple'"],
+                explanation=long_explanation,
+                accent_color=ACCENT_ORANGE
+            )
+            assert start.size == (WIDTH, HEIGHT)
+            assert end.size == (WIDTH, HEIGHT)
         except ImportError:
             pytest.skip("comparison_scenes module not available")
 
