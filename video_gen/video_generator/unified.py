@@ -33,10 +33,9 @@ from dataclasses import dataclass
 logger = logging.getLogger(__name__)
 
 
-# Import scene rendering functions
-sys.path.append(str(Path(__file__).parent.parent.parent / "scripts"))
+# Import scene rendering functions from new modular renderers package
 try:
-    from generate_documentation_videos import (
+    from ..renderers import (
         create_title_keyframes, create_command_keyframes,
         create_list_keyframes, create_outro_keyframes,
         create_code_comparison_keyframes, create_quote_keyframes,
@@ -45,11 +44,26 @@ try:
         create_learning_objectives_keyframes, create_exercise_keyframes,
         ease_out_cubic, FPS, WIDTH, HEIGHT
     )
-except ImportError:
-    print("Warning: Could not import rendering functions from generate_documentation_videos")
-    FPS = 30
-    WIDTH = 1920
-    HEIGHT = 1080
+except ImportError as e:
+    logger.warning(f"Could not import rendering functions from renderers module: {e}")
+    logger.warning("Falling back to legacy script import")
+    # Fallback to legacy script (for backward compatibility)
+    sys.path.append(str(Path(__file__).parent.parent.parent / "scripts"))
+    try:
+        from generate_documentation_videos import (
+            create_title_keyframes, create_command_keyframes,
+            create_list_keyframes, create_outro_keyframes,
+            create_code_comparison_keyframes, create_quote_keyframes,
+            create_problem_keyframes, create_solution_keyframes,
+            create_checkpoint_keyframes, create_quiz_keyframes,
+            create_learning_objectives_keyframes, create_exercise_keyframes,
+            ease_out_cubic, FPS, WIDTH, HEIGHT
+        )
+    except ImportError:
+        logger.error("Could not import rendering functions from either renderers module or legacy script")
+        FPS = 30
+        WIDTH = 1920
+        HEIGHT = 1080
 
 # Constants
 TRANSITION_DURATION = 0.5
