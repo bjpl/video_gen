@@ -127,10 +127,10 @@ class YouTubeAdapter(BaseInputAdapter):
         """Fetch transcript for YouTube video"""
         try:
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
-            print(f"✓ Retrieved {len(transcript)} transcript segments")
+            logger.info(f"✓ Retrieved {len(transcript)} transcript segments")
             return transcript
         except Exception as e:
-            print(f"✗ Could not fetch transcript: {e}")
+            logger.warning(f"Could not fetch transcript: {e}")
             return None
 
     def _analyze_transcript(self, transcript: List[Dict]) -> Dict:

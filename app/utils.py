@@ -19,7 +19,7 @@ try:
     from generate_script_from_document import MarkdownParser, read_document
     from youtube_to_programmatic import extract_video_id, fetch_transcript
 except ImportError as e:
-    print(f"Warning: Could not import scripts: {e}")
+    logger.warning(f"Could not import scripts: {e}")
 
 
 # ============================================================================
@@ -242,7 +242,7 @@ async def list_templates() -> List[Dict]:
                 "example_path": str(yaml_file)
             })
         except Exception as e:
-            print(f"Warning: Could not load {yaml_file}: {e}")
+            logger.warning(f"Could not load {yaml_file}: {e}")
 
     return templates
 

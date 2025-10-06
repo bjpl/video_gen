@@ -12,10 +12,13 @@ Supports:
 """
 
 import re
+import logging
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
 from .base import BaseInputAdapter, VideoSet, VideoConfig
+
+logger = logging.getLogger(__name__)
 
 # Try to import requests for URL fetching
 try:
@@ -89,7 +92,7 @@ class DocumentAdapter(BaseInputAdapter):
             # Convert GitHub URLs to raw URLs
             url = self._convert_github_url(source)
 
-            print(f"Fetching from URL: {url}")
+            logger.info(f"Fetching from URL: {url}")
             try:
                 response = requests.get(url, timeout=30)
                 response.raise_for_status()
@@ -99,7 +102,7 @@ class DocumentAdapter(BaseInputAdapter):
             except requests.RequestException as e:
                 raise ValueError(f"Failed to fetch URL: {url}. Error: {e}")
         else:
-            print(f"Reading file: {source}")
+            logger.info(f"Reading file: {source}")
             with open(source, 'r', encoding='utf-8') as f:
                 return f.read()
 

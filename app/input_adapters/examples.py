@@ -13,9 +13,9 @@ import tempfile
 
 def example_document_adapter():
     """Example: Parse a markdown document"""
-    print("\n" + "="*80)
-    print("EXAMPLE 1: Document Adapter")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE 1: Document Adapter")
+    logger.info("="*80 + "\n")
 
     from . import DocumentAdapter
 
@@ -60,16 +60,16 @@ Follow these steps to get started with the project.
         voice='male'
     )
 
-    print(f"✓ Parsed document into video set")
-    print(f"  Set ID: {video_set.config.set_id}")
-    print(f"  Set Name: {video_set.config.set_name}")
-    print(f"  Videos: {len(video_set.videos)}")
-    print(f"  Scenes: {len(video_set.videos[0].scenes)}")
+    logger.info(f"✓ Parsed document into video set")
+    logger.info(f"  Set ID: {video_set.config.set_id}")
+    logger.info(f"  Set Name: {video_set.config.set_name}")
+    logger.info(f"  Videos: {len(video_set.videos)}")
+    logger.info(f"  Scenes: {len(video_set.videos[0].scenes)}")
 
     # Show scenes
-    print("\nScenes:")
+    logger.info("\nScenes:")
     for i, scene in enumerate(video_set.videos[0].scenes, 1):
-        print(f"  {i}. {scene['type'].upper()}: {scene.get('title') or scene.get('header', 'N/A')}")
+        logger.info(f"  {i}. {scene['type'].upper()}: {scene.get('title') or scene.get('header', 'N/A')}")
 
     # Clean up
     Path(temp_file).unlink()
@@ -79,9 +79,9 @@ Follow these steps to get started with the project.
 
 def example_yaml_adapter():
     """Example: Parse YAML configuration"""
-    print("\n" + "="*80)
-    print("EXAMPLE 2: YAML Adapter")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE 2: YAML Adapter")
+    logger.info("="*80 + "\n")
 
     from . import YAMLAdapter
     import yaml
@@ -140,16 +140,16 @@ def example_yaml_adapter():
     adapter = YAMLAdapter()
     video_set = adapter.parse(temp_file)
 
-    print(f"✓ Parsed YAML into video set")
-    print(f"  Set ID: {video_set.config.set_id}")
-    print(f"  Videos: {len(video_set.videos)}")
-    print(f"  Scenes: {len(video_set.videos[0].scenes)}")
+    logger.info(f"✓ Parsed YAML into video set")
+    logger.info(f"  Set ID: {video_set.config.set_id}")
+    logger.info(f"  Videos: {len(video_set.videos)}")
+    logger.info(f"  Scenes: {len(video_set.videos[0].scenes)}")
 
     # Show configuration
-    print("\nConfiguration:")
-    print(f"  Accent Color: {video_set.config.defaults['accent_color']}")
-    print(f"  Voice: {video_set.config.defaults['voice']}")
-    print(f"  Duration: {video_set.config.defaults['target_duration']}s")
+    logger.info("\nConfiguration:")
+    logger.info(f"  Accent Color: {video_set.config.defaults['accent_color']}")
+    logger.info(f"  Voice: {video_set.config.defaults['voice']}")
+    logger.info(f"  Duration: {video_set.config.defaults['target_duration']}s")
 
     # Clean up
     Path(temp_file).unlink()
@@ -159,9 +159,9 @@ def example_yaml_adapter():
 
 def example_programmatic_adapter():
     """Example: Create video set programmatically"""
-    print("\n" + "="*80)
-    print("EXAMPLE 3: Programmatic Adapter")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE 3: Programmatic Adapter")
+    logger.info("="*80 + "\n")
 
     from . import ProgrammaticAdapter, create_title_scene, create_list_scene, create_outro_scene
 
@@ -213,27 +213,27 @@ def example_programmatic_adapter():
 
     video_set = adapter.create_from_dict(video_set_data)
 
-    print(f"✓ Created video set programmatically")
-    print(f"  Set ID: {video_set.config.set_id}")
-    print(f"  Set Name: {video_set.config.set_name}")
-    print(f"  Videos: {len(video_set.videos)}")
+    logger.info(f"✓ Created video set programmatically")
+    logger.info(f"  Set ID: {video_set.config.set_id}")
+    logger.info(f"  Set Name: {video_set.config.set_name}")
+    logger.info(f"  Videos: {len(video_set.videos)}")
 
     # Show video details
     video = video_set.videos[0]
-    print(f"\nVideo: {video.title}")
-    print(f"  Scenes: {len(video.scenes)}")
+    logger.info(f"\nVideo: {video.title}")
+    logger.info(f"  Scenes: {len(video.scenes)}")
     for i, scene in enumerate(video.scenes, 1):
         narration = scene.get('narration', 'No narration')
-        print(f"  {i}. {scene['type']}: {narration[:50]}...")
+        logger.info(f"  {i}. {scene['type']}: {narration[:50]}...")
 
     return video_set
 
 
 def example_factory_pattern():
     """Example: Using adapter factory"""
-    print("\n" + "="*80)
-    print("EXAMPLE 4: Factory Pattern")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE 4: Factory Pattern")
+    logger.info("="*80 + "\n")
 
     from . import get_adapter
 
@@ -254,7 +254,7 @@ Second step instructions.
     # Get adapter using factory
     adapter = get_adapter('document', max_scenes=4, target_duration=45)
 
-    print(f"✓ Created adapter via factory: {adapter.__class__.__name__}")
+    logger.info(f"✓ Created adapter via factory: {adapter.__class__.__name__}")
 
     # Parse
     video_set = adapter.parse(
@@ -263,9 +263,9 @@ Second step instructions.
         voice='female'
     )
 
-    print(f"  Set ID: {video_set.config.set_id}")
-    print(f"  Accent Color: {video_set.config.defaults['accent_color']}")
-    print(f"  Voice: {video_set.config.defaults['voice']}")
+    logger.info(f"  Set ID: {video_set.config.set_id}")
+    logger.info(f"  Accent Color: {video_set.config.defaults['accent_color']}")
+    logger.info(f"  Voice: {video_set.config.defaults['voice']}")
 
     # Clean up
     Path(temp_file).unlink()
@@ -275,9 +275,9 @@ Second step instructions.
 
 def example_export_workflow():
     """Example: Complete export workflow"""
-    print("\n" + "="*80)
-    print("EXAMPLE 5: Export Workflow")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE 5: Export Workflow")
+    logger.info("="*80 + "\n")
 
     from . import DocumentAdapter
     import yaml
@@ -301,27 +301,27 @@ This demonstrates the complete export workflow.
     adapter = DocumentAdapter()
     video_set = adapter.parse(temp_file, set_id='export_demo')
 
-    print(f"✓ Parsed document")
+    logger.info(f"✓ Parsed document")
 
     # Export to temp directory
     with tempfile.TemporaryDirectory() as tmpdir:
         output_path = video_set.export_to_yaml(tmpdir)
 
-        print(f"✓ Exported to: {output_path}")
+        logger.info(f"✓ Exported to: {output_path}")
 
         # Verify files
         files = list(output_path.glob('*.yaml'))
-        print(f"  Files created: {len(files)}")
+        logger.info(f"  Files created: {len(files)}")
         for file in files:
-            print(f"    - {file.name}")
+            logger.info(f"    - {file.name}")
 
         # Load and verify
         with open(output_path / 'set_config.yaml') as f:
             config = yaml.safe_load(f)
 
-        print(f"\n✓ Verified set_config.yaml:")
-        print(f"  Set ID: {config['set']['id']}")
-        print(f"  Videos: {len(config['set']['videos'])}")
+        logger.info(f"\n✓ Verified set_config.yaml:")
+        logger.info(f"  Set ID: {config['set']['id']}")
+        logger.info(f"  Videos: {len(config['set']['videos'])}")
 
     # Clean up
     Path(temp_file).unlink()
@@ -329,9 +329,9 @@ This demonstrates the complete export workflow.
 
 def example_custom_adapter():
     """Example: Creating a custom adapter"""
-    print("\n" + "="*80)
-    print("EXAMPLE 6: Custom Adapter")
-    print("="*80 + "\n")
+    logger.info("\n" + "="*80)
+    logger.info("EXAMPLE 6: Custom Adapter")
+    logger.info("="*80 + "\n")
 
     from . import BaseInputAdapter, VideoSet, VideoConfig
 
@@ -400,19 +400,19 @@ def example_custom_adapter():
     adapter = CSVAdapter()
     video_set = adapter.parse('data.csv')  # Source not actually read in this example
 
-    print(f"✓ Created custom CSV adapter")
-    print(f"  Adapter: {adapter.__class__.__name__}")
-    print(f"  Videos: {len(video_set.videos)}")
-    print(f"  Scenes: {len(video_set.videos[0].scenes)}")
+    logger.info(f"✓ Created custom CSV adapter")
+    logger.info(f"  Adapter: {adapter.__class__.__name__}")
+    logger.info(f"  Videos: {len(video_set.videos)}")
+    logger.info(f"  Scenes: {len(video_set.videos[0].scenes)}")
 
     return video_set
 
 
 def run_all_examples():
     """Run all examples"""
-    print("\n" + "="*80)
-    print("INPUT ADAPTER EXAMPLES")
-    print("="*80)
+    logger.info("\n" + "="*80)
+    logger.info("INPUT ADAPTER EXAMPLES")
+    logger.info("="*80)
 
     try:
         # Run examples
@@ -423,12 +423,12 @@ def run_all_examples():
         example_export_workflow()
         example_custom_adapter()
 
-        print("\n" + "="*80)
-        print("✓ ALL EXAMPLES COMPLETED SUCCESSFULLY")
-        print("="*80 + "\n")
+        logger.info("\n" + "="*80)
+        logger.info("✓ ALL EXAMPLES COMPLETED SUCCESSFULLY")
+        logger.info("="*80 + "\n")
 
     except Exception as e:
-        print(f"\n❌ Error running examples: {e}")
+        logger.info(f"\n❌ Error running examples: {e}")
         import traceback
         traceback.print_exc()
 

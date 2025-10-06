@@ -15,6 +15,9 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 from dataclasses import dataclass, field
 import yaml
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -110,7 +113,7 @@ class VideoSet:
         with open(config_file, 'w') as f:
             yaml.dump(self.to_dict(), f, default_flow_style=False, sort_keys=False)
 
-        print(f"✓ Created: {config_file}")
+        logger.info(f"✓ Created: {config_file}")
 
         # Save individual video YAML files
         for video in self.videos:
@@ -135,10 +138,10 @@ class VideoSet:
             with open(video_file, 'w') as f:
                 yaml.dump(video_data, f, default_flow_style=False, sort_keys=False)
 
-            print(f"✓ Created: {video_file}")
+            logger.info(f"✓ Created: {video_file}")
 
-        print(f"\n✓ Set exported to: {output_path}")
-        print(f"  Videos: {len(self.videos)}")
+        logger.info(f"✓ Set exported to: {output_path}")
+        logger.info(f"  Videos: {len(self.videos)}")
 
         return output_path
 
