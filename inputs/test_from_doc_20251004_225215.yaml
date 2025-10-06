@@ -1,0 +1,20 @@
+video:
+  id: test
+  title: Test
+  description: Video generated from document
+  accent_color: blue
+  voice: male
+  version: v2.0
+  target_duration: 30
+  source: tmp7fbp3zt9.md
+scenes:
+- type: title
+  id: scene_01_title
+  title: Test
+  subtitle: Complete Guide
+  key_message: Master Test
+- type: outro
+  id: scene_02_outro
+  main_text: Learn More
+  sub_text: See Documentation
+  key_message: Everything you need to get started

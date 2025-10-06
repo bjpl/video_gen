@@ -1,0 +1,33 @@
+{
+  "video_id": "internet_guide_vol1_core_infrastructure_video_0",
+  "title": "Volume 1: Core Infrastructure",
+  "description": "Generated from C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\inputs\\Internet_Guide_Vol1_Core_Infrastructure.md",
+  "language": "en",
+  "total_duration": 13.53,
+  "scene_count": 3,
+  "generated_at": "2025-10-05T22:24:49.337497",
+  "pipeline": {
+    "task_id": "doc_1759728173",
+    "input_type": "document"
+  },
+  "scenes": [
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_0_title",
+      "type": "title",
+      "title": "How the Internet Works",
+      "duration": 4.6
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_0_list_0",
+      "type": "list",
+      "title": "internet_guide_vol1_core_infrastructure_video_0_list_0",
+      "duration": 4.07
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_0_outro",
+      "type": "outro",
+      "title": "internet_guide_vol1_core_infrastructure_video_0_outro",
+      "duration": 4.859999999999999
+    }
+  ]
+}

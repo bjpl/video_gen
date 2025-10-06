@@ -1,0 +1,48 @@
+video:
+  id: test_video_document
+  title: Test Video Document
+  description: Video generated from document
+  accent_color: blue
+  voice: male
+  version: v2.0
+  target_duration: 30
+  source: tmpb5gjp31c.md
+scenes:
+- type: title
+  id: scene_01_title
+  title: Test Video Document
+  subtitle: This is a test document for the auto-orchestrator
+  key_message: This is a test document for the auto-orchestrator.
+- type: list
+  id: scene_02_introduction
+  header: Introduction
+  description: This is a test document for the auto-orchestrator.
+  topic: This is a test document for the auto-orchestrator
+  items:
+  - This is a test document for the auto-orchestrator
+- type: list
+  id: scene_03_section_1_key_concept
+  header: 'Section 1: Key Concept'
+  description: Here we explain the first key concept with
+  topic: Here we explain the first key concept with important details
+  items:
+  - Here we explain the first key concept with important details
+- type: list
+  id: scene_04_section_2_examples
+  header: 'Section 2: Examples'
+  description: Examples help illustrate the concepts.
+  topic: Examples help illustrate the concepts
+  items:
+  - Examples help illustrate the concepts
+- type: list
+  id: scene_05_conclusion
+  header: Conclusion
+  description: Summary of the test video content.
+  topic: Summary of the test video content
+  items:
+  - Summary of the test video content
+- type: outro
+  id: scene_06_outro
+  main_text: Learn More
+  sub_text: See Documentation
+  key_message: Summary of the test video content.

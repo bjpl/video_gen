@@ -1,0 +1,143 @@
+{
+  "video_id": "internet_guide_vol1_core_infrastructure_main",
+  "title": "How the Internet Works",
+  "total_duration": 46.08,
+  "total_scenes": 12,
+  "voices_config": [
+    "male"
+  ],
+  "scenes": [
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_title",
+      "type": "title",
+      "voice": "male",
+      "start_time": 0,
+      "end_time": 3.14,
+      "duration": 3.14,
+      "audio_duration": 2.14,
+      "padding": 1.0,
+      "narration_preview": "Welcome to How the Internet Works"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_0",
+      "type": "list",
+      "voice": "male",
+      "start_time": 3.14,
+      "end_time": 7.210000000000001,
+      "duration": 4.07,
+      "audio_duration": 3.07,
+      "padding": 1.0000000000000004,
+      "narration_preview": "About volume 1: core infrastructure"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_1",
+      "type": "list",
+      "voice": "male",
+      "start_time": 7.210000000000001,
+      "end_time": 10.39,
+      "duration": 3.18,
+      "audio_duration": 2.18,
+      "padding": 1.0,
+      "narration_preview": "Let's explore table of contents"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_2",
+      "type": "list",
+      "voice": "male",
+      "start_time": 10.39,
+      "end_time": 15.09,
+      "duration": 4.7,
+      "audio_duration": 3.7,
+      "padding": 1.0,
+      "narration_preview": "About understanding what the internet actually is"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_3",
+      "type": "list",
+      "voice": "male",
+      "start_time": 15.09,
+      "end_time": 18.54,
+      "duration": 3.45,
+      "audio_duration": 2.45,
+      "padding": 1.0,
+      "narration_preview": "About physical infrastructure layer"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_4",
+      "type": "list",
+      "voice": "male",
+      "start_time": 18.54,
+      "end_time": 22.25,
+      "duration": 3.71,
+      "audio_duration": 2.71,
+      "padding": 1.0,
+      "narration_preview": "Let's explore the global cable network"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_5",
+      "type": "list",
+      "voice": "male",
+      "start_time": 22.25,
+      "end_time": 25.94,
+      "duration": 3.69,
+      "audio_duration": 2.69,
+      "padding": 1.0,
+      "narration_preview": "Let's explore last mile infrastructure"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_6",
+      "type": "list",
+      "voice": "male",
+      "start_time": 25.94,
+      "end_time": 29.87,
+      "duration": 3.93,
+      "audio_duration": 2.93,
+      "padding": 1.0,
+      "narration_preview": "About network hardware infrastructure"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_7",
+      "type": "list",
+      "voice": "male",
+      "start_time": 29.87,
+      "end_time": 33.22,
+      "duration": 3.35,
+      "audio_duration": 2.35,
+      "padding": 1.0,
+      "narration_preview": "Let's explore core routers"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_8",
+      "type": "list",
+      "voice": "male",
+      "start_time": 33.22,
+      "end_time": 37.51,
+      "duration": 4.29,
+      "audio_duration": 3.29,
+      "padding": 1.0,
+      "narration_preview": "Let's explore internet exchange points (ixps)"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_list_9",
+      "type": "list",
+      "voice": "male",
+      "start_time": 37.51,
+      "end_time": 41.22,
+      "duration": 3.71,
+      "audio_duration": 2.71,
+      "padding": 1.0,
+      "narration_preview": "Let's explore data center infrastructure"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_main_outro",
+      "type": "outro",
+      "voice": "male",
+      "start_time": 41.22,
+      "end_time": 46.08,
+      "duration": 4.859999999999999,
+      "audio_duration": 3.86,
+      "padding": 0.9999999999999996,
+      "narration_preview": "Thanks for watching! Check out the documentation for more details."
+    }
+  ]
+}

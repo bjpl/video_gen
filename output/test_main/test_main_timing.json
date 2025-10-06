@@ -1,0 +1,158 @@
+{
+  "video_id": "test_main",
+  "title": "Introduction to Python",
+  "total_duration": 14.93,
+  "total_scenes": 4,
+  "voices_config": [
+    "male"
+  ],
+  "audio_dir": "C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\audio\\unified_system\\test_main_audio",
+  "accent_color": [
+    59,
+    130,
+    246
+  ],
+  "scenes": [
+    {
+      "scene_id": "test_main_title",
+      "type": "title",
+      "voice": "male",
+      "start_time": 0,
+      "end_time": 3.45,
+      "duration": 3.45,
+      "audio_duration": 2.45,
+      "padding": 1.0,
+      "narration_preview": "Welcome to Introduction to Python",
+      "visual_content": {
+        "title": "Introduction to Python",
+        "subtitle": "Introduction to Python",
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "Python Programming",
+              "Course Introduction"
+            ],
+            "keywords": [
+              "Welcome",
+              "Python",
+              "Introduction",
+              "Programming"
+            ],
+            "complexity": "simple"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "test_main_list_0",
+      "type": "list",
+      "voice": "male",
+      "start_time": 3.45,
+      "end_time": 7.07,
+      "duration": 3.62,
+      "audio_duration": 2.62,
+      "padding": 1.0,
+      "narration_preview": "Let's explore key features",
+      "visual_content": {
+        "header": "Key Features",
+        "description": "Python is a high-level programming language.",
+        "items": [
+          "Easy to learn",
+          "Powerful libraries",
+          "Great community"
+        ],
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "features",
+              "product overview",
+              "exploration"
+            ],
+            "keywords": [
+              "explore",
+              "key features",
+              "let's"
+            ],
+            "complexity": "simple"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "test_main_list_1",
+      "type": "list",
+      "voice": "male",
+      "start_time": 7.07,
+      "end_time": 10.07,
+      "duration": 3.0,
+      "audio_duration": 1.54,
+      "padding": 1.46,
+      "narration_preview": "About getting started",
+      "visual_content": {
+        "header": "Getting Started",
+        "description": "Install Python from python",
+        "items": [
+          "org and start coding!"
+        ],
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "Getting Started",
+              "Introduction",
+              "Beginnings"
+            ],
+            "keywords": [
+              "start",
+              "begin",
+              "introduction",
+              "first steps"
+            ],
+            "complexity": "simple"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "test_main_outro",
+      "type": "outro",
+      "voice": "male",
+      "start_time": 10.07,
+      "end_time": 14.93,
+      "duration": 4.859999999999999,
+      "audio_duration": 3.86,
+      "padding": 0.9999999999999996,
+      "narration_preview": "Thanks for watching! Check out the documentation for more details.",
+      "visual_content": {
+        "main_text": "Learn More",
+        "sub_text": "See Full Documentation",
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "video ending",
+              "documentation reference"
+            ],
+            "keywords": [
+              "thanks",
+              "watching",
+              "documentation",
+              "details"
+            ],
+            "complexity": "simple"
+          }
+        }
+      }
+    }
+  ]
+}

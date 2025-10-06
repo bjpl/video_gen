@@ -1,0 +1,92 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-7.4.3, pluggy-1.6.0 -- C:\Users\brand\AppData\Local\Programs\Python\Python310\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.10.11', 'Platform': 'Windows-10-10.0.26200-SP0', 'Packages': {'pytest': '7.4.3', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.11.0', 'dash': '3.2.0', 'langsmith': '0.4.30', 'asyncio': '0.21.1', 'cov': '6.2.1', 'json-report': '1.5.0', 'metadata': '3.1.1', 'mock': '3.14.1', 'timeout': '2.4.0', 'xdist': '3.8.0', 'typeguard': '4.4.4'}, 'CI': 'true'}
+rootdir: C:\Users\brand\Development\Project_Workspace\active-development\video_gen
+plugins: anyio-4.11.0, dash-3.2.0, langsmith-0.4.30, asyncio-0.21.1, cov-6.2.1, json-report-1.5.0, metadata-3.1.1, mock-3.14.1, timeout-2.4.0, xdist-3.8.0, typeguard-4.4.4
+asyncio: mode=strict
+collecting ... collected 40 items
+
+tests/test_input_adapters.py::TestBaseAdapter::test_create_scene PASSED  [  2%]
+tests/test_input_adapters.py::TestDocumentAdapter::test_parse_markdown PASSED [  5%]
+tests/test_input_adapters.py::TestDocumentAdapter::test_parse_with_options PASSED [  7%]
+tests/test_input_adapters.py::TestDocumentAdapter::test_export_to_yaml PASSED [ 10%]
+tests/test_input_adapters.py::TestYouTubeAdapter::test_extract_video_id_from_url PASSED [ 12%]
+tests/test_input_adapters.py::TestYouTubeAdapter::test_has_commands PASSED [ 15%]
+tests/test_input_adapters.py::TestYAMLAdapter::test_parse_single_video PASSED [ 17%]
+tests/test_input_adapters.py::TestYAMLAdapter::test_parse_with_narration_generation PASSED [ 20%]
+tests/test_input_adapters.py::TestProgrammaticAdapter::test_create_from_dict PASSED [ 22%]
+tests/test_input_adapters.py::TestAdapterFactory::test_get_document_adapter PASSED [ 25%]
+tests/test_input_adapters.py::TestAdapterFactory::test_get_youtube_adapter PASSED [ 27%]
+tests/test_input_adapters.py::TestAdapterFactory::test_get_yaml_adapter PASSED [ 30%]
+tests/test_input_adapters.py::TestAdapterFactory::test_get_programmatic_adapter PASSED [ 32%]
+tests/test_input_adapters.py::TestAdapterFactory::test_invalid_adapter_type PASSED [ 35%]
+tests/test_input_adapters.py::TestAdapterFactory::test_adapter_with_options PASSED [ 37%]
+tests/test_input_adapters.py::TestVideoSet::test_to_dict PASSED          [ 40%]
+tests/test_input_adapters.py::TestVideoSet::test_export_to_yaml PASSED   [ 42%]
+tests/test_integration.py::test_health_check ERROR                       [ 45%]
+
+=================================== ERRORS ====================================
+_____________________ ERROR at setup of test_health_check _____________________
+
+    @pytest.fixture
+    def client():
+        """FastAPI test client"""
+>       return TestClient(app)
+
+tests\test_integration.py:25: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <starlette.testclient.TestClient object at 0x00000273069AA770>
+app = <fastapi.applications.FastAPI object at 0x00000273060B7F40>
+base_url = 'http://testserver', raise_server_exceptions = True, root_path = ''
+backend = 'asyncio', backend_options = None, cookies = None
+headers = {'user-agent': 'testclient'}, follow_redirects = True
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        base_url: str = "http://testserver",
+        raise_server_exceptions: bool = True,
+        root_path: str = "",
+        backend: typing.Literal["asyncio", "trio"] = "asyncio",
+        backend_options: dict[str, typing.Any] | None = None,
+        cookies: httpx._types.CookieTypes | None = None,
+        headers: dict[str, str] | None = None,
+        follow_redirects: bool = True,
+    ) -> None:
+        self.async_backend = _AsyncBackend(
+            backend=backend, backend_options=backend_options or {}
+        )
+        if _is_asgi3(app):
+            asgi_app = app
+        else:
+            app = typing.cast(ASGI2App, app)  # type: ignore[assignment]
+            asgi_app = _WrapASGI2(app)  # type: ignore[arg-type]
+        self.app = asgi_app
+        self.app_state: dict[str, typing.Any] = {}
+        transport = _TestClientTransport(
+            self.app,
+            portal_factory=self._portal_factory,
+            raise_server_exceptions=raise_server_exceptions,
+            root_path=root_path,
+            app_state=self.app_state,
+        )
+        if headers is None:
+            headers = {}
+        headers.setdefault("user-agent", "testclient")
+>       super().__init__(
+            app=self.app,
+            base_url=base_url,
+            headers=headers,
+            transport=transport,
+            follow_redirects=follow_redirects,
+            cookies=cookies,
+        )
+E       TypeError: Client.__init__() got an unexpected keyword argument 'app'
+
+..\..\..\..\AppData\Local\Programs\Python\Python310\lib\site-packages\starlette\testclient.py:429: TypeError
+=========================== short test summary info ===========================
+ERROR tests/test_integration.py::test_health_check - TypeError: Client.__init__() got an unexpected keyword argument 'app'
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 17 passed, 1 error in 4.80s =========================

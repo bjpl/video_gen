@@ -1,0 +1,44 @@
+{
+  "video_id": "internet_guide_vol1_core_infrastructure_video_0",
+  "title": "Volume 1: Core Infrastructure",
+  "total_duration": 13.53,
+  "total_scenes": 3,
+  "voices_config": [
+    "male"
+  ],
+  "scenes": [
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_0_title",
+      "type": "title",
+      "voice": "male",
+      "start_time": 0,
+      "end_time": 4.6,
+      "duration": 4.6,
+      "audio_duration": 3.6,
+      "padding": 0.9999999999999996,
+      "narration_preview": "Welcome to Volume 1: Core Infrastructure"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_0_list_0",
+      "type": "list",
+      "voice": "male",
+      "start_time": 4.6,
+      "end_time": 8.67,
+      "duration": 4.07,
+      "audio_duration": 3.07,
+      "padding": 1.0000000000000004,
+      "narration_preview": "About volume 1: core infrastructure"
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_0_outro",
+      "type": "outro",
+      "voice": "male",
+      "start_time": 8.67,
+      "end_time": 13.53,
+      "duration": 4.859999999999999,
+      "audio_duration": 3.86,
+      "padding": 0.9999999999999996,
+      "narration_preview": "Thanks for watching! Check out the documentation for more details."
+    }
+  ]
+}
