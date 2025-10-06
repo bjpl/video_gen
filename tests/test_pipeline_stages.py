@@ -24,13 +24,18 @@ try:
     from video_gen.shared.models import AdaptationResult
 except ImportError:
     from dataclasses import dataclass
-    from typing import Optional
+    from typing import Optional, Dict, Any
 
     @dataclass
     class AdaptationResult:
         success: bool
         video_set: Optional[VideoSet] = None
         error: Optional[str] = None
+        metadata: Dict[str, Any] = None
+
+        def __post_init__(self):
+            if self.metadata is None:
+                self.metadata = {}
 
 
 class TestInputStage:
@@ -83,7 +88,7 @@ class TestInputStage:
             description="Test",
             scenes=[Scene(scene_id="1", scene_type="title", narration="Test", visual_content={})]
         )
-        video_set = VideoSet(videos=[video_config])
+        video_set = VideoSet(set_id="test-set-1", name="Test Set", videos=[video_config])
         mock_adapter.adapt.return_value = AdaptationResult(
             success=True,
             video_set=video_set
@@ -129,10 +134,12 @@ class TestInputStage:
         """Test InputStage emits progress events."""
         mock_adapter = AsyncMock()
         video_config = VideoConfig(
+            video_id="test-1",
             title="Test",
+            description="Test video",
             scenes=[Scene(scene_id="1", scene_type="title", narration="Test", visual_content={})]
         )
-        video_set = VideoSet(videos=[video_config])
+        video_set = VideoSet(set_id="test-set-1", name="Test Set", videos=[video_config])
         mock_adapter.adapt.return_value = AdaptationResult(success=True, video_set=video_set)
         input_stage.adapters["yaml"] = mock_adapter
 
@@ -348,7 +355,9 @@ class TestStageIntegration:
         input_config = InputConfig(
             input_type="programmatic",
             source=VideoConfig(
+                video_id="test-1",
                 title="Test",
+                description="Test video",
                 scenes=[Scene(scene_id="1", scene_type="title", narration="Test", visual_content={})]
             ),
             accent_color=(0, 0, 0),
@@ -363,10 +372,12 @@ class TestStageIntegration:
         # Mock adapter
         mock_adapter = AsyncMock()
         video_config = VideoConfig(
+            video_id="test-1",
             title="Test",
+            description="Test video",
             scenes=[Scene(scene_id="1", scene_type="title", narration="Test", visual_content={})]
         )
-        video_set = VideoSet(videos=[video_config])
+        video_set = VideoSet(set_id="test-set-1", name="Test Set", videos=[video_config])
         mock_adapter.adapt.return_value = AdaptationResult(success=True, video_set=video_set)
         input_stage.adapters["programmatic"] = mock_adapter
 
