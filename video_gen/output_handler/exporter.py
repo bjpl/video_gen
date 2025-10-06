@@ -7,7 +7,7 @@ in various formats and quality settings.
 from typing import Optional, Dict, Any
 from pathlib import Path
 
-from ..config import get_config
+from ..shared.config import config
 
 
 class OutputExporter:
@@ -19,7 +19,8 @@ class OutputExporter:
 
     def __init__(self):
         """Initialize the output exporter."""
-        self.config = get_config()
+        # Use global config singleton
+        pass  # Config is imported as module-level singleton
 
     async def export(
         self,

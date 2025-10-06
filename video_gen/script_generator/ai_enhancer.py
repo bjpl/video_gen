@@ -6,7 +6,7 @@ for better engagement and clarity.
 
 from typing import Optional, Dict, Any
 
-from ..config import get_config
+from ..shared.config import config
 from ..exceptions import ScriptGenerationError
 
 
@@ -23,8 +23,7 @@ class AIScriptEnhancer:
         Args:
             api_key: Optional Anthropic API key (uses config if not provided)
         """
-        self.config = get_config()
-        self.api_key = api_key or self.config.get_api_key("anthropic")
+        self.api_key = api_key or config.get_api_key("anthropic")
 
         if not self.api_key:
             raise ScriptGenerationError("Anthropic API key not configured")

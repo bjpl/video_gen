@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import json
 
 from ..shared.models import SceneConfig as Scene
-from ..config import get_config
+from ..shared.config import config
 
 
 @dataclass
@@ -44,13 +44,14 @@ class ContentParser:
 
     def __init__(self):
         """Initialize the content parser."""
-        self.config = get_config()
+        # Use global config singleton
+        pass  # Config is imported as module-level singleton
         self.anthropic_available = False
 
         # Try to import and initialize Anthropic client
         try:
             from anthropic import AsyncAnthropic
-            api_key = self.config.get_api_key("anthropic")
+            api_key = config.get_api_key("anthropic")
             if api_key:
                 self.client = AsyncAnthropic(api_key=api_key)
                 self.anthropic_available = True
