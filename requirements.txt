@@ -2,7 +2,7 @@
 # ======================================================
 
 # Core image processing
-Pillow>=10.0.0
+Pillow>=11.3.0
 
 # Text-to-speech (neural voices)
 edge-tts>=7.2.3
@@ -40,17 +40,19 @@ google-api-python-client>=2.100.0
 # - High-quality translation (28+ languages)
 anthropic>=0.34.0
 
-# Environment variables (CRITICAL - missing dependency)
-python-dotenv>=1.0.0
+# Environment variables (CRITICAL)
+python-dotenv>=1.1.0
 
 # Alternative translation (free fallback) - REMOVED due to dependency conflicts
 # googletrans==4.0.0-rc1  # Conflicts with httpx, use Claude API instead
 
 # Web UI dependencies (FastAPI + HTMX + Alpine.js)
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-jinja2>=3.1.3
+fastapi>=0.118.0
+uvicorn[standard]>=0.37.0
+jinja2>=3.1.6
 python-multipart>=0.0.6
+pydantic>=2.11.0
+pydantic-settings>=2.11.0
 
 # Testing
 pytest>=8.0.0
