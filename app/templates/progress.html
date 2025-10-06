@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <ol class="flex items-center space-x-2 text-gray-500">
+            <li><a href="/" class="hover:text-blue-600">Home</a></li>
+            <li>→</li>
+            <li class="text-blue-600 font-medium">Progress</li>
+        </ol>
+    </nav>
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">⚡ Video Generation Progress</h1>
+        <p class="text-gray-600">Real-time progress tracking for your video generation</p>
+    </div>
+
+    <!-- Alpine.js component for progress tracking -->
+    <div x-data="{
+        taskId: new URLSearchParams(window.location.search).get('task_id'),
+        status: 'connecting',
+        progress: 0,
+        message: 'Connecting...',
+        languages: [],
+        completedLanguages: [],
+        error: null,
+        errorDetails: null,
+        errorExpanded: false,
+        eventSource: null,
+        pollingInterval: null,
+        currentStage: null,
+        pipelineStages: ['input', 'parsing', 'audio', 'video', 'output'],
+        videos: [],
+        videoProgress: {},
+        outputFiles: [],
+        retryPayload: null,
+
+        async init() {
+            if (!this.taskId) {
+                this.error = 'No task ID provided';
+                return;
+            }
+
+            // Connect to SSE stream
+            this.connectSSE();
+
+            // Fallback: Poll if SSE fails
+            setTimeout(() => {
+                if (this.status === 'connecting') {
+                    this.startPolling();
+                }
+            }, 2000);
+        },
+
+        connectSSE() {
+            this.eventSource = new EventSource(`/api/tasks/${this.taskId}/stream`);
+
+            this.eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.updateProgress(data);
+                } catch (e) {
+                    console.error('Failed to parse SSE data:', e);
+                }
+            };
+
+            this.eventSource.onerror = (error) => {
+                console.error('SSE error:', error);
+                if (this.eventSource) {
+                    this.eventSource.close();
+                }
+                this.startPolling();
+            };
+        },
+
+        async startPolling() {
+            const poll = async () => {
+                try {
+                    const response = await fetch(`/api/tasks/${this.taskId}`);
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            this.error = 'Task not found. It may have been deleted or never existed.';
+                            this.errorDetails = 'The requested task ID does not exist in the system.';
+                            return;
+                        } else if (response.status === 500) {
+                            this.error = 'Server error. Task tracking is currently unavailable.';
+                            this.errorDetails = 'The server encountered an internal error while tracking this task.';
+                            return;
+                        }
+                    }
+
+                    const data = await response.json();
+                    this.updateProgress(data);
+
+                    if (data.status !== 'complete' && data.status !== 'failed') {
+                        this.pollingInterval = setTimeout(poll, 1000);
+                    }
+                } catch (error) {
+                    this.error = error.message;
+                    this.errorDetails = error.stack || 'No additional details available';
+                    console.error('Polling error:', error);
+                }
+            };
+            poll();
+        },
+
+        updateProgress(data) {
+            this.status = data.status;
+            this.progress = data.progress;
+            this.message = data.message;
+            this.languages = data.languages || [];
+            this.completedLanguages = data.completed_languages || [];
+            this.currentStage = data.current_stage || null;
+            this.videos = data.videos || [];
+            this.videoProgress = data.video_progress || {};
+            this.outputFiles = data.output_files || [];
+            this.retryPayload = data.retry_payload || null;
+
+            // Handle error details
+            if (data.status === 'failed') {
+                this.error = data.error || 'Video generation failed';
+                this.errorDetails = data.error_details || 'No additional details available';
+            }
+
+            // Close SSE if complete
+            if (data.status === 'complete' || data.status === 'failed') {
+                if (this.eventSource) {
+                    this.eventSource.close();
+                }
+                if (this.pollingInterval) {
+                    clearTimeout(this.pollingInterval);
+                }
+            }
+        },
+
+        getStatusColor() {
+            switch(this.status) {
+                case 'complete': return 'bg-green-500';
+                case 'failed': return 'bg-red-500';
+                case 'processing': return 'bg-blue-500';
+                default: return 'bg-gray-500';
+            }
+        },
+
+        getStageStatus(stage) {
+            if (!this.currentStage) return 'pending';
+            const currentIndex = this.pipelineStages.indexOf(this.currentStage);
+            const stageIndex = this.pipelineStages.indexOf(stage);
+            if (stageIndex < currentIndex) return 'complete';
+            if (stageIndex === currentIndex) return 'active';
+            return 'pending';
+        },
+
+        getStageIcon(stage) {
+            const status = this.getStageStatus(stage);
+            if (status === 'complete') return '✅';
+            if (status === 'active') return '⏳';
+            return '⭕';
+        },
+
+        async retryTask() {
+            if (!this.retryPayload) {
+                alert('No retry information available');
+                return;
+            }
+
+            try {
+                const response = await fetch(this.retryPayload.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(this.retryPayload.data)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    window.location.href = `/progress?task_id=${data.task_id}`;
+                } else {
+                    alert('Failed to retry task');
+                }
+            } catch (error) {
+                alert('Error retrying task: ' + error.message);
+            }
+        }
+    }">
+        <!-- Error Display with Expandable Details -->
+        <div x-show="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <h3 class="font-semibold text-red-900 mb-2">❌ Error</h3>
+            <p class="text-red-700 mb-3" x-text="error"></p>
+
+            <!-- Expandable Error Details -->
+            <div x-show="errorDetails">
+                <button @click="errorExpanded = !errorExpanded"
+                        class="text-red-600 underline hover:text-red-800 font-medium mb-2 flex items-center gap-2">
+                    <span x-text="errorExpanded ? '▼' : '▶'"></span>
+                    <span x-text="errorExpanded ? 'Hide Details' : 'Show Details'"></span>
+                </button>
+
+                <div x-show="errorExpanded" class="bg-red-100 border border-red-300 rounded p-3 mb-3">
+                    <pre class="text-xs text-red-800 whitespace-pre-wrap" x-text="errorDetails"></pre>
+                </div>
+            </div>
+
+            <!-- Error Suggestions -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3">
+                <h4 class="font-semibold text-yellow-900 mb-2">💡 Suggestions:</h4>
+                <ul class="text-sm text-yellow-800 list-disc list-inside space-y-1">
+                    <li>Check that all API keys are properly configured</li>
+                    <li>Verify your input files are accessible</li>
+                    <li>Ensure you have sufficient disk space</li>
+                    <li>Check your internet connection for API calls</li>
+                </ul>
+            </div>
+
+            <!-- Error Actions -->
+            <div class="flex gap-3">
+                <button x-show="retryPayload" @click="retryTask()"
+                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors">
+                    🔄 Retry
+                </button>
+                <a href="/multilingual" class="px-4 py-2 border-2 border-red-300 rounded-lg hover:bg-red-100 font-semibold transition-colors">
+                    🏠 Back to Multilingual Page
+                </a>
+                <a href="/" class="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Progress Card -->
+        <div x-show="!error" class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xl font-semibold">Generation Status</h2>
+                    <span class="px-3 py-1 rounded-full text-sm font-medium"
+                          :class="{
+                              'bg-green-100 text-green-800': status === 'complete',
+                              'bg-red-100 text-red-800': status === 'failed',
+                              'bg-blue-100 text-blue-800': status === 'processing',
+                              'bg-yellow-100 text-yellow-800': status === 'connecting',
+                              'bg-gray-100 text-gray-800': !status
+                          }"
+                          x-text="status ? status.toUpperCase() : 'UNKNOWN'">
+                    </span>
+                </div>
+                <p class="text-gray-600" x-text="message"></p>
+            </div>
+
+            <!-- Pipeline Stages -->
+            <div x-show="currentStage" class="mb-6">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Pipeline Stage</h3>
+                <div class="flex items-center justify-between gap-2">
+                    <template x-for="(stage, index) in pipelineStages" :key="stage">
+                        <div class="flex items-center flex-1">
+                            <div class="flex flex-col items-center flex-1">
+                                <div class="flex items-center justify-center w-10 h-10 rounded-full text-lg mb-1 transition-all"
+                                     :class="{
+                                         'bg-green-100 border-2 border-green-500': getStageStatus(stage) === 'complete',
+                                         'bg-blue-100 border-2 border-blue-500 animate-pulse': getStageStatus(stage) === 'active',
+                                         'bg-gray-100 border-2 border-gray-300': getStageStatus(stage) === 'pending'
+                                     }">
+                                    <span x-text="getStageIcon(stage)"></span>
+                                </div>
+                                <span class="text-xs font-medium capitalize"
+                                      :class="{
+                                          'text-green-700': getStageStatus(stage) === 'complete',
+                                          'text-blue-700': getStageStatus(stage) === 'active',
+                                          'text-gray-500': getStageStatus(stage) === 'pending'
+                                      }"
+                                      x-text="stage"></span>
+                            </div>
+                            <div x-show="index < pipelineStages.length - 1"
+                                 class="flex-1 h-1 mx-2 rounded transition-all"
+                                 :class="{
+                                     'bg-green-500': getStageStatus(stage) === 'complete',
+                                     'bg-blue-300': getStageStatus(stage) === 'active',
+                                     'bg-gray-300': getStageStatus(stage) === 'pending'
+                                 }"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Overall Progress</span>
+                    <span class="text-sm font-medium text-gray-700" x-text="`${progress}%`"></span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="h-4 rounded-full transition-all duration-300"
+                         :class="getStatusColor()"
+                         :style="`width: ${progress}%`">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Per-Video Progress -->
+            <div x-show="videos.length > 0" class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">Video Progress</h3>
+                <div class="space-y-3">
+                    <template x-for="video in videos" :key="video">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-medium text-sm" x-text="video"></span>
+                                <span class="text-xs font-semibold text-gray-700"
+                                      x-text="`${videoProgress[video] || 0}%`"></span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full transition-all duration-300 bg-blue-500"
+                                     :style="`width: ${videoProgress[video] || 0}%`"></div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Language Progress -->
+            <div x-show="languages.length > 0">
+                <h3 class="text-lg font-semibold mb-3">Language Progress</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <template x-for="lang in languages" :key="lang">
+                        <div class="p-3 rounded-lg border-2 transition-all"
+                             :class="completedLanguages.includes(lang) ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50'">
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-sm" x-text="lang.toUpperCase()"></span>
+                                <span x-show="completedLanguages.includes(lang)" class="text-green-600">✅</span>
+                                <span x-show="!completedLanguages.includes(lang)" class="text-gray-400">⏳</span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Links -->
+        <div x-show="!error && status === 'complete' && outputFiles.length > 0" class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+            <h3 class="text-xl font-semibold text-green-900 mb-4">✅ Download Your Videos</h3>
+            <div class="space-y-2">
+                <template x-for="file in outputFiles" :key="file.path">
+                    <div class="flex items-center justify-between bg-white rounded-lg p-3 border border-green-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-green-600 text-xl">🎬</span>
+                            <div>
+                                <div class="font-medium text-gray-900" x-text="file.name"></div>
+                                <div class="text-xs text-gray-500" x-text="file.size || 'Ready'"></div>
+                            </div>
+                        </div>
+                        <a :href="`/api/download/${file.path}`"
+                           download
+                           class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors text-sm">
+                            Download
+                        </a>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Task Info -->
+        <div x-show="!error" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-900 mb-2">📊 Task Information</h3>
+            <dl class="text-sm text-blue-800 space-y-1">
+                <div class="flex">
+                    <dt class="font-medium w-32">Task ID:</dt>
+                    <dd class="font-mono text-xs" x-text="taskId"></dd>
+                </div>
+                <div class="flex">
+                    <dt class="font-medium w-32">Total Languages:</dt>
+                    <dd x-text="languages.length"></dd>
+                </div>
+                <div class="flex">
+                    <dt class="font-medium w-32">Completed:</dt>
+                    <dd x-text="completedLanguages.length"></dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 flex gap-4">
+            <a href="/multilingual" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors">
+                ← Back to Multilingual Page
+            </a>
+            <a href="/" class="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors">
+                Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

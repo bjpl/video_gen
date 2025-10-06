@@ -1,0 +1,461 @@
+{% extends "base.html" %}
+
+{% block title %}Scene Builder - Video Generation System{% endblock %}
+
+{% block content %}
+<div x-data="sceneBuilder()" x-cloak>
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <ol class="flex items-center space-x-2 text-gray-500">
+            <li><a href="/" class="hover:text-purple-600">Home</a></li>
+            <li>→</li>
+            <li class="text-purple-600 font-medium">Scene Builder</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">🧙 Advanced Scene Builder</h2>
+        <p class="text-gray-600">Build your video by adding and arranging scenes with complete control</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="mb-8 bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">1</div>
+                <span class="font-medium text-gray-700">Set Video Info</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full" :class="scenes.length > 0 ? 'bg-purple-500 text-white' : 'bg-gray-200 text-gray-500'" class="flex items-center justify-center font-bold">2</div>
+                <span class="font-medium" :class="scenes.length > 0 ? 'text-gray-700' : 'text-gray-400'">Add Scenes</span>
+            </div>
+            <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-bold">3</div>
+                <span class="font-medium text-gray-400">Generate</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Metadata -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Video Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Video ID</label>
+                <input type="text"
+                       x-model="videoSet.set_id"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                       placeholder="my_video">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                <input type="text"
+                       x-model="videoSet.set_name"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                       placeholder="My Awesome Video">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                <select x-model="videoSet.accent_color"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="blue">Blue</option>
+                    <option value="purple">Purple</option>
+                    <option value="orange">Orange</option>
+                    <option value="green">Green</option>
+                    <option value="pink">Pink</option>
+                    <option value="cyan">Cyan</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scene List -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Left: Scene Types -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Scene</h3>
+
+                <!-- General Scenes -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-gray-500 uppercase mb-3">General</h4>
+                    <div class="space-y-2">
+                        <button @click="addScene('title')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">🎬</span>
+                            <span class="font-medium">Title Slide</span>
+                        </button>
+                        <button @click="addScene('command')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">💻</span>
+                            <span class="font-medium">Command/Code</span>
+                        </button>
+                        <button @click="addScene('list')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">📋</span>
+                            <span class="font-medium">List Items</span>
+                        </button>
+                        <button @click="addScene('outro')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">✅</span>
+                            <span class="font-medium">Outro/CTA</span>
+                        </button>
+                        <button @click="addScene('code_comparison')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">🔄</span>
+                            <span class="font-medium">Code Comparison</span>
+                        </button>
+                        <button @click="addScene('quote')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">💬</span>
+                            <span class="font-medium">Quote</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Educational Scenes -->
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 uppercase mb-3">Educational</h4>
+                    <div class="space-y-2">
+                        <button @click="addScene('learning_objectives')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">🎯</span>
+                            <span class="font-medium">Learning Objectives</span>
+                        </button>
+                        <button @click="addScene('problem')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">❓</span>
+                            <span class="font-medium">Problem</span>
+                        </button>
+                        <button @click="addScene('solution')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">💡</span>
+                            <span class="font-medium">Solution</span>
+                        </button>
+                        <button @click="addScene('checkpoint')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">✓</span>
+                            <span class="font-medium">Checkpoint</span>
+                        </button>
+                        <button @click="addScene('quiz')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">📝</span>
+                            <span class="font-medium">Quiz</span>
+                        </button>
+                        <button @click="addScene('exercise')"
+                                class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                            <span class="text-xl mr-2">💪</span>
+                            <span class="font-medium">Exercise</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Scene Editor -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Scenes (<span x-text="scenes.length"></span>)
+                    </h3>
+                    <button @click="generateVideo()"
+                            :disabled="scenes.length === 0"
+                            class="bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Generate Video
+                    </button>
+                </div>
+
+                <!-- Scene List -->
+                <div class="space-y-4">
+                    <template x-for="(scene, index) in scenes" :key="index">
+                        <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-sm font-medium text-gray-500">#<span x-text="index + 1"></span></span>
+                                    <span class="text-lg" x-text="getSceneIcon(scene.type)"></span>
+                                    <span class="font-medium text-gray-900" x-text="getSceneName(scene.type)"></span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button @click="moveScene(index, -1)"
+                                            :disabled="index === 0"
+                                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">
+                                        ↑
+                                    </button>
+                                    <button @click="moveScene(index, 1)"
+                                            :disabled="index === scenes.length - 1"
+                                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">
+                                        ↓
+                                    </button>
+                                    <button @click="removeScene(index)"
+                                            class="p-1 text-red-400 hover:text-red-600">
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Scene Form (Dynamic based on type) -->
+                            <div class="space-y-3">
+                                <!-- Title Scene -->
+                                <template x-if="scene.type === 'title'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.subtitle" placeholder="Subtitle" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                    </div>
+                                </template>
+
+                                <!-- Command Scene -->
+                                <template x-if="scene.type === 'command'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.description" placeholder="Description" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.commands" rows="3" placeholder="Commands (one per line)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                    </div>
+                                </template>
+
+                                <!-- List Scene -->
+                                <template x-if="scene.type === 'list'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.items" rows="4" placeholder="Items (one per line)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                    </div>
+                                </template>
+
+                                <!-- Outro Scene -->
+                                <template x-if="scene.type === 'outro'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.message" placeholder="Message" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.cta" placeholder="Call to Action" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                    </div>
+                                </template>
+
+                                <!-- Educational Scenes -->
+                                <template x-if="['learning_objectives', 'problem', 'solution', 'checkpoint', 'quiz', 'exercise'].includes(scene.type)">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.content" rows="4" placeholder="Content (one item per line)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                    </div>
+                                </template>
+
+                                <!-- Voice Selection -->
+                                <select x-model="scene.voice" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                                    <option value="male">Andrew (Male)</option>
+                                    <option value="male_warm">Brandon (Male Warm)</option>
+                                    <option value="female">Aria (Female)</option>
+                                    <option value="female_friendly">Ava (Female Friendly)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Empty State -->
+                    <div x-show="scenes.length === 0" class="text-center py-12 text-gray-500">
+                        <p>No scenes yet. Add your first scene from the left panel.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div x-show="generating"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         style="display: none;">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Generating Video</h3>
+                <p class="text-gray-600 mb-4" x-text="progress.message"></p>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                         :style="`width: ${progress.progress}%`"></div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2"><span x-text="progress.progress"></span>%</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function sceneBuilder() {
+        return {
+            videoSet: {
+                set_id: 'my_video',
+                set_name: 'My Video',
+                accent_color: 'blue'
+            },
+            scenes: [],
+            generating: false,
+            progress: {
+                progress: 0,
+                message: 'Starting...'
+            },
+
+            addScene(type) {
+                const sceneTemplate = {
+                    type: type,
+                    voice: 'male'
+                };
+
+                // Add type-specific defaults
+                if (type === 'title') {
+                    sceneTemplate.title = '';
+                    sceneTemplate.subtitle = '';
+                } else if (type === 'command') {
+                    sceneTemplate.title = '';
+                    sceneTemplate.description = '';
+                    sceneTemplate.commands = '';
+                } else if (type === 'list') {
+                    sceneTemplate.title = '';
+                    sceneTemplate.items = '';
+                } else if (type === 'outro') {
+                    sceneTemplate.message = '';
+                    sceneTemplate.cta = '';
+                } else if (['learning_objectives', 'problem', 'solution', 'checkpoint', 'quiz', 'exercise'].includes(type)) {
+                    sceneTemplate.title = '';
+                    sceneTemplate.content = '';
+                }
+
+                this.scenes.push(sceneTemplate);
+            },
+
+            removeScene(index) {
+                this.scenes.splice(index, 1);
+            },
+
+            moveScene(index, direction) {
+                const newIndex = index + direction;
+                if (newIndex >= 0 && newIndex < this.scenes.length) {
+                    const temp = this.scenes[index];
+                    this.scenes[index] = this.scenes[newIndex];
+                    this.scenes[newIndex] = temp;
+                }
+            },
+
+            getSceneIcon(type) {
+                const icons = {
+                    title: '🎬',
+                    command: '💻',
+                    list: '📋',
+                    outro: '✅',
+                    code_comparison: '🔄',
+                    quote: '💬',
+                    learning_objectives: '🎯',
+                    problem: '❓',
+                    solution: '💡',
+                    checkpoint: '✓',
+                    quiz: '📝',
+                    exercise: '💪'
+                };
+                return icons[type] || '📄';
+            },
+
+            getSceneName(type) {
+                const names = {
+                    title: 'Title Slide',
+                    command: 'Command/Code',
+                    list: 'List Items',
+                    outro: 'Outro/CTA',
+                    code_comparison: 'Code Comparison',
+                    quote: 'Quote',
+                    learning_objectives: 'Learning Objectives',
+                    problem: 'Problem',
+                    solution: 'Solution',
+                    checkpoint: 'Checkpoint',
+                    quiz: 'Quiz',
+                    exercise: 'Exercise'
+                };
+                return names[type] || type;
+            },
+
+            async generateVideo() {
+                if (this.scenes.length === 0) return;
+
+                this.generating = true;
+                this.progress = { progress: 0, message: 'Preparing...' };
+
+                // Transform scenes to API format
+                const transformedScenes = this.scenes.map(scene => {
+                    const transformed = { ...scene };
+
+                    // Convert string arrays to actual arrays
+                    if (scene.commands && typeof scene.commands === 'string') {
+                        transformed.commands = scene.commands.split('\n').filter(c => c.trim());
+                    }
+                    if (scene.items && typeof scene.items === 'string') {
+                        transformed.items = scene.items.split('\n').filter(i => i.trim());
+                    }
+                    if (scene.content && typeof scene.content === 'string') {
+                        transformed.content = scene.content.split('\n').filter(c => c.trim());
+                    }
+
+                    return transformed;
+                });
+
+                const payload = {
+                    set_id: this.videoSet.set_id,
+                    set_name: this.videoSet.set_name,
+                    accent_color: this.videoSet.accent_color,
+                    videos: [{
+                        video_id: this.videoSet.set_id,
+                        title: this.videoSet.set_name,
+                        scenes: transformedScenes
+                    }]
+                };
+
+                try {
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (data.task_id) {
+                        // Start SSE connection
+                        const eventSource = new EventSource(`/api/tasks/${data.task_id}/stream`);
+
+                        eventSource.onmessage = (event) => {
+                            const progress = JSON.parse(event.data);
+                            this.progress = progress;
+
+                            if (progress.status === 'complete') {
+                                eventSource.close();
+                                setTimeout(() => {
+                                    alert('Video generated successfully!');
+                                    this.generating = false;
+                                }, 1000);
+                            } else if (progress.status === 'failed') {
+                                eventSource.close();
+                                alert('Generation failed: ' + progress.message);
+                                this.generating = false;
+                            }
+                        };
+                    }
+                } catch (error) {
+                    // Handle both string and object errors
+                    let errorMessage = error.message || 'Unknown error';
+                    if (error.detail) {
+                        if (Array.isArray(error.detail)) {
+                            errorMessage = error.detail.map(err => err.msg || JSON.stringify(err)).join(', ');
+                        } else if (typeof error.detail === 'string') {
+                            errorMessage = error.detail;
+                        } else {
+                            errorMessage = JSON.stringify(error.detail);
+                        }
+                    }
+                    alert('Error: ' + errorMessage);
+                    this.generating = false;
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}

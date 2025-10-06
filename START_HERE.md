@@ -12,6 +12,64 @@ All integration tests passing ✅
 
 ---
 
+## 🚀 NEW: Modern Pipeline v2.0 (Production Ready!)
+
+### **Three Ways to Generate Videos:**
+
+#### 1. Auto-Orchestrator (Simple CLI)
+```bash
+cd scripts
+
+# From your documentation
+python create_video_auto.py --from ../README.md --type document
+
+# From YouTube
+python create_video_auto.py --from "python tutorial" --type youtube
+
+# Interactive wizard
+python create_video_auto.py --type wizard
+
+# With options
+python create_video_auto.py --from ../README.md --type document \
+    --voice male --color blue --duration 120 --use-ai --verbose
+```
+
+#### 2. Template-Based Generation
+```bash
+cd scripts
+
+# Use built-in template
+python create_from_template.py --template tutorial
+
+# List available templates
+python create_from_template.py --list
+
+# From custom template script
+python create_from_template.py --script my_template.py
+```
+
+#### 3. Programmatic Builder (Python Code)
+```python
+from scripts.python_set_builder import VideoSetBuilder, SceneConfig
+
+builder = VideoSetBuilder("my_videos", "My Video Series")
+builder.add_video(
+    video_id="intro",
+    title="Introduction",
+    scenes=[...]
+)
+builder.export_to_yaml("sets/my_videos")
+```
+
+**Features:**
+- ✅ Modern pipeline architecture with 6 stages
+- ✅ Template system with scene types
+- ✅ State management & error recovery
+- ✅ Progress tracking & event system
+- ✅ Multilingual support built-in
+
+---
+
 ## 🚀 Try It Right Now
 
 ### **Quick Test (30 seconds):**

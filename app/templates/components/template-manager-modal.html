@@ -1,0 +1,125 @@
+<!-- Template Manager Modal -->
+<div x-show="showTemplateManager"
+     x-cloak
+     @keydown.escape.window="showTemplateManager = false"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+         @click="showTemplateManager = false"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full p-6 transform transition-all max-h-[90vh] overflow-y-auto">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6 sticky top-0 bg-white pb-4 border-b">
+                <h3 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <span class="text-3xl">📚</span>
+                    Template Manager
+                </h3>
+                <div class="flex items-center gap-2">
+                    <!-- Export All -->
+                    <button @click="exportAllTemplates()"
+                            :disabled="userTemplates.length === 0"
+                            class="text-sm px-3 py-1.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white rounded-lg transition-colors font-medium">
+                        📥 Export All
+                    </button>
+                    <!-- Import -->
+                    <button @click="$refs.importInput.click()"
+                            class="text-sm px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium">
+                        📤 Import
+                    </button>
+                    <!-- Close -->
+                    <button @click="showTemplateManager = false"
+                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Import Input (Hidden) -->
+            <input type="file"
+                   x-ref="importInput"
+                   @change="importTemplates($event)"
+                   accept=".json"
+                   class="hidden">
+
+            <!-- Templates List -->
+            <div x-show="userTemplates.length === 0" class="text-center py-12">
+                <div class="text-6xl mb-4">📭</div>
+                <p class="text-lg text-gray-600 mb-2">No templates saved yet</p>
+                <p class="text-sm text-gray-500">Configure your settings and click "Save as Template" to create one</p>
+            </div>
+
+            <div x-show="userTemplates.length > 0" class="space-y-3">
+                <template x-for="template in userTemplates" :key="template.id">
+                    <div class="border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 transition-colors">
+                        <div class="flex items-start justify-between">
+                            <!-- Template Info -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h4 class="text-lg font-bold text-gray-900" x-text="template.name"></h4>
+                                    <span class="text-xs px-2 py-1 rounded-full font-medium"
+                                          :class="template.mode === 'single' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'"
+                                          x-text="template.mode === 'single' ? '🎥 Single' : '📚 Set'"></span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-3" x-text="template.description"></p>
+
+                                <!-- Template Details -->
+                                <div class="grid grid-cols-4 gap-3 text-xs">
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <div class="text-gray-500">Videos</div>
+                                        <div class="font-semibold text-gray-900"
+                                             x-text="template.config.videos ? template.config.videos.length : 1"></div>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <div class="text-gray-500">Input</div>
+                                        <div class="font-semibold text-gray-900" x-text="template.config.inputMethod || 'manual'"></div>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <div class="text-gray-500">Multilingual</div>
+                                        <div class="font-semibold text-gray-900"
+                                             x-text="template.config.multilingual ? 'Yes' : 'No'"></div>
+                                    </div>
+                                    <div class="bg-gray-50 p-2 rounded">
+                                        <div class="text-gray-500">Created</div>
+                                        <div class="font-semibold text-gray-900"
+                                             x-text="new Date(template.createdAt).toLocaleDateString()"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="flex flex-col gap-2 ml-4">
+                                <button @click="loadUserTemplate(template); showTemplateManager = false"
+                                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                    Load
+                                </button>
+                                <button @click="exportTemplate(template.id)"
+                                        class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                    Export
+                                </button>
+                                <button @click="deleteTemplate(template.id)"
+                                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Clear All (Bottom) -->
+            <div x-show="userTemplates.length > 0" class="mt-6 pt-4 border-t">
+                <button @click="clearAllTemplates()"
+                        class="text-sm text-red-600 hover:text-red-700 font-medium">
+                    🗑️ Clear All Templates
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

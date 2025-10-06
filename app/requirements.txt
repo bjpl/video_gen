@@ -1,0 +1,8 @@
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+jinja2==3.1.3
+python-multipart==0.0.6
+pydantic==2.5.3
+python-dotenv==1.0.0
+anthropic>=0.20.0
+# googletrans==4.0.0-rc1  # Optional: Conflicts with other dependencies, use Claude API instead

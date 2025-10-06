@@ -26,12 +26,15 @@ try:
     HAS_ANTHROPIC = True
 except ImportError:
     HAS_ANTHROPIC = False
+    print("⚠️  anthropic not installed: pip install anthropic")
 
 try:
     from googletrans import Translator
     HAS_GOOGLE_TRANS = True
-except ImportError:
+except (ImportError, AttributeError) as e:
     HAS_GOOGLE_TRANS = False
+    # AttributeError happens when googletrans is installed but incompatible with httpcore
+    # This is expected - we'll use Claude API instead
 
 
 class TranslationService:
@@ -58,14 +61,17 @@ class TranslationService:
             if api_key:
                 self.anthropic_client = Anthropic(api_key=api_key)
             else:
-                print("⚠️  ANTHROPIC_API_KEY not set, falling back to Google Translate")
+                print("⚠️  ANTHROPIC_API_KEY not set")
+                if not HAS_GOOGLE_TRANS:
+                    raise ValueError("No translation method available. Set ANTHROPIC_API_KEY or install googletrans.")
                 self.preferred_method = 'google'
 
         if self.preferred_method == 'google' or not self.anthropic_client:
             if HAS_GOOGLE_TRANS:
                 self.google_translator = Translator()
             else:
-                print("⚠️  googletrans not installed: pip install googletrans==4.0.0-rc1")
+                if not self.anthropic_client:
+                    raise ValueError("No translation method available. Install googletrans or set ANTHROPIC_API_KEY for Claude API.")
 
     def _get_cache_key(self, text, source_lang, target_lang):
         """Generate cache key"""

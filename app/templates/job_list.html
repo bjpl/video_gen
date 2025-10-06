@@ -1,0 +1,47 @@
+<!-- Job List Template (used by HTMX) -->
+{% if jobs %}
+    {% for job in jobs %}
+    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition">
+        <div class="flex items-center justify-between mb-2">
+            <div>
+                <span class="font-semibold text-gray-900">{{ job.input_method | title }}</span>
+                <span class="text-sm text-gray-500 ml-2">{{ job.job_id[:8] }}</span>
+            </div>
+            <span class="status-badge status-{{ job.status }}">
+                {{ job.status | upper }}
+            </span>
+        </div>
+
+        <!-- Progress Bar -->
+        {% if job.status == 'processing' %}
+        <div class="mb-2">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div
+                    class="bg-blue-600 h-2 rounded-full progress-bar"
+                    style="width: {{ job.progress }}%"
+                ></div>
+            </div>
+            <p class="text-xs text-gray-600 mt-1">{{ job.progress }}% complete</p>
+        </div>
+        {% endif %}
+
+        <p class="text-sm text-gray-600">{{ job.created_at }}</p>
+
+        <!-- SSE Connection for Real-time Updates -->
+        {% if job.status == 'processing' %}
+        <div
+            hx-ext="sse"
+            sse-connect="/api/videos/jobs/{{ job.job_id }}/events"
+            sse-swap="message"
+            hx-target="this"
+            hx-swap="outerHTML"
+        >
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center text-gray-500 py-8">
+        No jobs yet. Create your first video!
+    </div>
+{% endif %}

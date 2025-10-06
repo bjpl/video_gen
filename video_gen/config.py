@@ -1,0 +1,146 @@
+"""Configuration management for the video_gen package.
+
+This module handles all configuration loading, validation, and access for
+the video generation system. It supports environment variables, config files,
+and programmatic configuration.
+"""
+
+from typing import Optional, Any
+from pathlib import Path
+from dataclasses import dataclass, field
+import os
+
+
+@dataclass
+class Config:
+    """Central configuration for the video generation system.
+
+    Attributes:
+        api_keys: API keys for external services
+        output_dir: Directory for generated outputs
+        temp_dir: Directory for temporary files
+        max_workers: Maximum number of concurrent workers
+        audio_settings: Audio generation settings
+        video_settings: Video rendering settings
+    """
+
+    # API Configuration
+    api_keys: dict[str, str] = field(default_factory=dict)
+
+    # Directory Configuration
+    output_dir: Path = field(default_factory=lambda: Path("outputs"))
+    temp_dir: Path = field(default_factory=lambda: Path("temp"))
+
+    # Performance Configuration
+    max_workers: int = 4
+
+    # Audio Configuration
+    audio_settings: dict[str, Any] = field(default_factory=lambda: {
+        "sample_rate": 44100,
+        "channels": 2,
+        "format": "mp3"
+    })
+
+    # Video Configuration
+    video_settings: dict[str, Any] = field(default_factory=lambda: {
+        "resolution": "1920x1080",
+        "fps": 30,
+        "codec": "libx264",
+        "format": "mp4"
+    })
+
+    def __post_init__(self):
+        """Initialize configuration from environment variables."""
+        self._load_from_env()
+        self._ensure_directories()
+
+    def _load_from_env(self) -> None:
+        """Load configuration from environment variables."""
+        # Load API keys
+        if claude_key := os.getenv("ANTHROPIC_API_KEY"):
+            self.api_keys["anthropic"] = claude_key
+        if openai_key := os.getenv("OPENAI_API_KEY"):
+            self.api_keys["openai"] = openai_key
+
+        # Load directory settings
+        if output_dir := os.getenv("VIDEO_GEN_OUTPUT_DIR"):
+            self.output_dir = Path(output_dir)
+        if temp_dir := os.getenv("VIDEO_GEN_TEMP_DIR"):
+            self.temp_dir = Path(temp_dir)
+
+        # Load performance settings
+        if max_workers := os.getenv("VIDEO_GEN_MAX_WORKERS"):
+            self.max_workers = int(max_workers)
+
+    def _ensure_directories(self) -> None:
+        """Ensure required directories exist."""
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.temp_dir.mkdir(parents=True, exist_ok=True)
+
+    @classmethod
+    def from_file(cls, config_path: Path) -> "Config":
+        """Load configuration from a YAML or JSON file.
+
+        Args:
+            config_path: Path to configuration file
+
+        Returns:
+            Configured Config instance
+        """
+        # TODO: Implement file-based configuration loading
+        raise NotImplementedError("File-based configuration loading not yet implemented")
+
+    def get_api_key(self, service: str) -> Optional[str]:
+        """Get API key for a specific service.
+
+        Args:
+            service: Service name (e.g., "anthropic", "openai")
+
+        Returns:
+            API key if available, None otherwise
+        """
+        return self.api_keys.get(service)
+
+    def validate(self) -> None:
+        """Validate the configuration.
+
+        Raises:
+            ConfigurationError: If configuration is invalid
+        """
+        from .exceptions import ConfigurationError
+
+        # Validate directories
+        if not self.output_dir.exists():
+            raise ConfigurationError(f"Output directory does not exist: {self.output_dir}")
+        if not self.temp_dir.exists():
+            raise ConfigurationError(f"Temp directory does not exist: {self.temp_dir}")
+
+        # Validate workers
+        if self.max_workers < 1:
+            raise ConfigurationError(f"max_workers must be >= 1, got {self.max_workers}")
+
+
+# Global configuration instance
+_config: Optional[Config] = None
+
+
+def get_config() -> Config:
+    """Get the global configuration instance.
+
+    Returns:
+        Global Config instance
+    """
+    global _config
+    if _config is None:
+        _config = Config()
+    return _config
+
+
+def set_config(config: Config) -> None:
+    """Set the global configuration instance.
+
+    Args:
+        config: New configuration instance
+    """
+    global _config
+    _config = config

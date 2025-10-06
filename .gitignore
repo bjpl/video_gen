@@ -53,3 +53,19 @@ desktop.ini
 # Keep example outputs (if any)
 !examples/**/*.mp4
 !examples/**/*.mp3
+
+# Environment and sensitive files
+.env
+.env.local
+.env.*.local
+
+# Project-specific output directories
+output/state/
+output/logs/
+.translation_cache/
+
+# Test outputs
+.coverage
+coverage.json
+htmlcov/
+.pytest_cache/
