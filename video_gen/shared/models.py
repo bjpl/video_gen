@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Literal, Any
 from pathlib import Path
 from datetime import datetime
 
-
 @dataclass
 class SceneConfig:
     """Configuration for a single scene."""
@@ -105,6 +104,10 @@ class InputConfig:
     video_count: Optional[int] = 1  # Number of videos to split document into
     split_by_h2: bool = False  # Split document by level 2 headings
 
+    # Backward compatibility fields (deprecated, for old tests)
+    config: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -129,6 +132,11 @@ class VideoSet:
     description: str = ""
     videos: List[VideoConfig] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def languages(self) -> List[str]:
+        """Get languages from metadata."""
+        return self.metadata.get("languages", ["en"])
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -180,3 +188,16 @@ class PipelineResult:
             "errors": self.errors,
             "warnings": self.warnings,
         }
+
+
+# Backward compatibility exports
+Scene = SceneConfig  # Alias for old code using 'Scene' instead of 'SceneConfig'
+
+__all__ = [
+    'SceneConfig',
+    'Scene',  # Backward compat
+    'VideoConfig',
+    'InputConfig',
+    'VideoSet',
+    'PipelineResult',
+]
