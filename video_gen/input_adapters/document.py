@@ -489,18 +489,31 @@ class DocumentAdapter(InputAdapter):
                     # Flatten nested lists
                     for item in lst:
                         if isinstance(item, dict) and 'text' in item:
-                            items.append(item['text'])
+                            clean_item = item['text']
                         else:
-                            items.append(str(item))
+                            clean_item = str(item)
+
+                        # Clean markdown formatting
+                        clean_item = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', clean_item)  # [text](url) → text
+                        clean_item = re.sub(r'\*\*([^*]+)\*\*', r'\1', clean_item)  # **bold** → text
+                        clean_item = re.sub(r'\*([^*]+)\*', r'\1', clean_item)  # *italic* → text
+                        clean_item = re.sub(r'`([^`]+)`', r'\1', clean_item)  # `code` → code
+                        items.append(clean_item)
+
+                # Create narration that describes the list content
+                items_preview = items[:3] if len(items) > 3 else items
+                narration = f"This section covers {heading.lower()}: {', '.join(items_preview)}"
+                if len(items) > 3:
+                    narration += f", and {len(items) - 3} more topics"
 
                 scenes.append(SceneConfig(
                     scene_id=f"{video_id}_list_{i}",
                     scene_type="list",
-                    narration=f"Let's explore {heading.lower()}",
+                    narration=narration,
                     visual_content={
                         'header': heading,
                         'description': section['text'][:100] if section['text'] else '',
-                        'items': items[:5]
+                        'items': items[:5]  # Limit to 5 items
                     },
                     voice=voice
                 ))
