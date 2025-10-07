@@ -37,8 +37,9 @@ class ScriptGenerationStage(Stage):
         self.validate_context(context, ["video_config"])
         video_config: VideoConfig = context["video_config"]
 
-        # Check if AI narration is enabled
-        use_ai = context.get("use_ai_narration", False)
+        # Check if AI narration is enabled (from input_config object in context)
+        input_config = context.get("input_config")
+        use_ai = input_config.use_ai_narration if input_config and hasattr(input_config, 'use_ai_narration') else False
 
         if use_ai:
             self.logger.info(f"✨ Generating AI-enhanced scripts for {len(video_config.scenes)} scenes")
@@ -63,8 +64,9 @@ class ScriptGenerationStage(Stage):
                 )
 
                 # Optionally enhance with AI
-                # Check both new context flag and old config flag for backward compatibility
-                use_ai = context.get("use_ai_narration", False) or getattr(config, "enhance_scripts", False)
+                # Check input_config for use_ai_narration flag, or old config for backward compatibility
+                input_config = context.get("input_config")
+                use_ai = (input_config.use_ai_narration if input_config and hasattr(input_config, 'use_ai_narration') else False) or getattr(config, "enhance_scripts", False)
 
                 if use_ai and self.ai_enhancer:
                     self.logger.debug(f"✨ Enhancing narration with AI for scene {scene.scene_id}")
