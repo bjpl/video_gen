@@ -153,10 +153,7 @@ async def generate_bilingual_internet_guide():
                     languages=[lang],  # One language at a time
                     accent_color="blue",
                     auto_generate=True,
-                    metadata={
-                        "use_ai_narration": True,
-                        "target_duration": 90
-                    }
+                    use_ai_narration=True  # ✨ AI-enhanced narration (proper parameter!)
                 )
 
                 result = await pipeline.execute(input_config)

@@ -1549,3 +1549,64 @@ InputConfig(source=course, languages=["en", "es", "fr", "de"])
 Use with PROGRAMMATIC_GUIDE.md for complete programmatic API coverage.
 
 *Last Updated: 2025-10-06*
+
+---
+
+## 🤖 AI Narration vs Template Narration
+
+### Comparison
+
+| Aspect | Template Narration | AI Narration |
+|--------|-------------------|--------------|
+| **Quality** | Professional, functional | Natural, engaging |
+| **Speed** | Instant | ~3-5 seconds per scene |
+| **Cost** | FREE | ~$0.01-0.05 per video |
+| **API Key** | Not required | Requires ANTHROPIC_API_KEY |
+| **Consistency** | Predictable | More varied, natural |
+| **Best For** | Batch processing, testing | Final production, high-quality content |
+
+### Usage
+
+**Template Narration (Default):**
+```python
+result = await pipeline.execute(InputConfig(
+    input_type="programmatic",
+    source=video
+    # use_ai_narration defaults to False
+))
+```
+
+**AI-Enhanced Narration:**
+```python
+result = await pipeline.execute(InputConfig(
+    input_type="programmatic",
+    source=video,
+    use_ai_narration=True  # ✨ Enables AI narration
+))
+```
+
+**Requirements for AI Narration:**
+1. Set environment variable: `ANTHROPIC_API_KEY="sk-ant-api03-..."`
+2. Or add to .env file
+3. Set `use_ai_narration=True` in InputConfig
+
+**Fallback Behavior:**
+- If `use_ai_narration=True` but no API key → Falls back to template with warning
+- Template narration is high quality - don't feel you must use AI
+
+### When to Use Each
+
+**Use Template Narration When:**
+- ✅ Generating many videos (faster, free)
+- ✅ Testing and development
+- ✅ Batch automation
+- ✅ Template quality meets your needs (it's good!)
+
+**Use AI Narration When:**
+- ✨ Final production videos
+- ✨ Marketing/sales content
+- ✨ You want maximum natural speech
+- ✨ Willing to pay ~$0.03 per video
+
+**💡 Pro Tip:** Try template first! If it meets your needs, stick with it. Only use AI if you specifically need more natural narration.
+

@@ -99,6 +99,7 @@ class InputConfig:
     auto_generate: bool = True
     skip_review: bool = False
     resume_from: Optional[str] = None
+    use_ai_narration: bool = False  # Enable AI-enhanced narration (requires ANTHROPIC_API_KEY)
 
     # Document splitting options
     video_count: Optional[int] = 1  # Number of videos to split document into
@@ -120,6 +121,7 @@ class InputConfig:
             "auto_generate": self.auto_generate,
             "skip_review": self.skip_review,
             "resume_from": self.resume_from,
+            "use_ai_narration": self.use_ai_narration,  # Include AI flag in context
         }
 
 

@@ -24,7 +24,11 @@ class ScriptGenerationStage(Stage):
     def __init__(self, event_emitter=None):
         super().__init__("script_generation", event_emitter)
         self.narration_generator = NarrationGenerator()
-        self.ai_enhancer = AIScriptEnhancer() if hasattr(config, "openai_api_key") and config.openai_api_key else None
+        # Initialize AI enhancer if ANTHROPIC_API_KEY is available
+        import os
+        has_anthropic_key = os.getenv("ANTHROPIC_API_KEY") or (hasattr(config, "anthropic_api_key") and config.anthropic_api_key)
+        has_openai_key = hasattr(config, "openai_api_key") and config.openai_api_key
+        self.ai_enhancer = AIScriptEnhancer() if (has_anthropic_key or has_openai_key) else None
 
     async def execute(self, context: Dict[str, Any]) -> StageResult:
         """Execute script generation."""
@@ -33,7 +37,13 @@ class ScriptGenerationStage(Stage):
         self.validate_context(context, ["video_config"])
         video_config: VideoConfig = context["video_config"]
 
-        self.logger.info(f"Generating scripts for {len(video_config.scenes)} scenes")
+        # Check if AI narration is enabled
+        use_ai = context.get("use_ai_narration", False)
+
+        if use_ai:
+            self.logger.info(f"✨ Generating AI-enhanced scripts for {len(video_config.scenes)} scenes")
+        else:
+            self.logger.info(f"Generating template scripts for {len(video_config.scenes)} scenes")
 
         # Generate scripts for each scene
         for i, scene in enumerate(video_config.scenes):
@@ -53,12 +63,18 @@ class ScriptGenerationStage(Stage):
                 )
 
                 # Optionally enhance with AI
-                if self.ai_enhancer and config.get("enhance_scripts", False):
+                # Check both new context flag and old config flag for backward compatibility
+                use_ai = context.get("use_ai_narration", False) or getattr(config, "enhance_scripts", False)
+
+                if use_ai and self.ai_enhancer:
+                    self.logger.debug(f"✨ Enhancing narration with AI for scene {scene.scene_id}")
                     narration = await self.ai_enhancer.enhance(
                         narration,
                         scene_type=scene.scene_type,
                         context=scene.parsed_content if hasattr(scene, 'parsed_content') else None
                     )
+                elif use_ai and not self.ai_enhancer:
+                    self.logger.warning(f"⚠️ AI narration requested but API key not found - using template narration")
 
                 # Update scene with narration
                 scene.narration = narration
