@@ -63,7 +63,7 @@ Enhance this to be more natural and conversational while keeping the same key in
 Return ONLY the enhanced narration text, nothing else. No explanations, no quotes, just the enhanced narration."""
 
             response = client.messages.create(
-                model="claude-3-5-sonnet-20241022",  # Latest Sonnet 3.5 (Sonnet 4.5 not yet available)
+                model="claude-sonnet-4-5-20250929",  # Sonnet 4.5
                 max_tokens=500,
                 messages=[{
                     "role": "user",
