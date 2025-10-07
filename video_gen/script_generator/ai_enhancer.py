@@ -51,16 +51,31 @@ class AIScriptEnhancer:
 
             client = anthropic.Anthropic(api_key=self.api_key)
 
-            # Build enhancement prompt
-            prompt = f"""You are enhancing video narration to be more natural and engaging.
+            # Build enhancement prompt - optimized for technical/educational content
+            scene_context = {
+                'title': 'opening/header slide',
+                'list': 'bulleted list of topics/concepts',
+                'command': 'technical commands/code',
+                'outro': 'closing/call-to-action',
+                'quiz': 'educational quiz question',
+                'problem': 'technical problem/challenge'
+            }.get(scene_type or 'general', 'general content')
+
+            prompt = f"""You are a professional narrator for technical educational videos. Enhance this narration to be clear, engaging, and natural-sounding.
 
 Original narration: "{script}"
 
-Scene type: {scene_type or 'general'}
+Context: This is for a {scene_context} in an educational video about technical topics (Internet infrastructure, networking, etc.)
 
-Enhance this to be more natural and conversational while keeping the same key information. Keep it concise (similar length).
+Enhancement guidelines:
+- Make it sound natural when spoken aloud (this will be voice narration)
+- Keep it concise and clear (viewers are watching, not reading)
+- Maintain all technical accuracy and key information
+- Use conversational but professional tone
+- Keep similar length (±30%)
+- Avoid jargon unless necessary for technical content
 
-Return ONLY the enhanced narration text, nothing else. No explanations, no quotes, just the enhanced narration."""
+Return ONLY the enhanced narration text - no explanations, no quotes, just the narration."""
 
             response = client.messages.create(
                 model="claude-sonnet-4-5-20250929",  # Sonnet 4.5

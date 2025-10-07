@@ -121,18 +121,24 @@ class ContentParser:
 
     def _create_analysis_prompt(self, content: str, scene_type: str) -> str:
         """Create prompt for AI content analysis."""
-        return f"""Analyze this content for a video scene of type '{scene_type}'.
+        return f"""You are analyzing content for an educational video about technical topics.
 
-Content:
+Content to analyze:
 {content[:1000]}
 
-Provide analysis in JSON format:
+Scene type: {scene_type}
+
+Extract the following in JSON format:
 {{
-    "topics": ["topic1", "topic2"],
-    "keywords": ["keyword1", "keyword2"],
-    "complexity": "simple|medium|complex",
-    "engagement_level": "low|medium|high"
-}}"""
+    "topics": ["main topic 1", "main topic 2"],  // Core concepts covered
+    "keywords": ["technical term 1", "term 2"],  // Important technical terms
+    "complexity": "simple|medium|complex",  // How complex is this content?
+    "engagement_level": "low|medium|high",  // How engaging/interesting?
+    "key_takeaways": ["takeaway 1", "takeaway 2"],  // What should viewers remember?
+    "suggested_visuals": ["visual idea 1", "visual idea 2"]  // What to show on screen
+}}
+
+Focus on: technical accuracy, educational value, clarity for learners."""
 
     def _parse_analysis(self, analysis_text: str) -> Dict[str, Any]:
         """Parse AI analysis response."""
