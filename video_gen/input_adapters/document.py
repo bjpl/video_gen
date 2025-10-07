@@ -6,13 +6,13 @@ video generation.
 
 from pathlib import Path
 from typing import Any, List
+import re  # For markdown cleaning
 
 from .base import InputAdapter, InputAdapterResult
 from ..shared.models import VideoSet, SceneConfig
 
 
 class DocumentAdapter(InputAdapter):
-import re  # For markdown cleaning
     """Adapter for document files (PDF, DOCX, TXT, Markdown).
 
     This adapter reads document files, extracts text and structure, and
