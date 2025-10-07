@@ -6,6 +6,67 @@
 
 ## 📦 Core Models
 
+### VideoSet
+
+**Purpose:** Collection of multiple related videos (for batch processing and multilingual workflows)
+
+**Required Parameters:**
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `set_id` | `str` | Unique set identifier | `"python_tutorial"` |
+| `name` | `str` | Set display name | `"Python Tutorial Series"` |
+
+**Optional Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `description` | `str` | `""` | Set description |
+| `videos` | `List[VideoConfig]` | `[]` | List of videos in set |
+| `metadata` | `Dict[str, Any]` | `{}` | Metadata (languages, etc.) |
+
+**Special Properties:**
+
+- `languages` (property) - Returns list of languages from metadata
+- `to_dict()` (method) - Serialize to dictionary
+
+**Example - Single Language Set:**
+```python
+from video_gen.shared.models import VideoSet, VideoConfig
+
+video_set = VideoSet(
+    set_id="tutorial_series",
+    name="Python Tutorial Series",
+    description="Complete Python basics course",
+    videos=[
+        VideoConfig(...),  # Video 1
+        VideoConfig(...),  # Video 2
+        VideoConfig(...)   # Video 3
+    ],
+    metadata={"languages": ["en"]}
+)
+```
+
+**Example - Multilingual Set:**
+```python
+video_set = VideoSet(
+    set_id="tutorial_multilingual",
+    name="Python Tutorial (Multi-language)",
+    description="Tutorial in English, Spanish, French",
+    videos=[
+        VideoConfig(video_id="tutorial_en", ...),  # English version
+        VideoConfig(video_id="tutorial_es", ...),  # Spanish version
+        VideoConfig(video_id="tutorial_fr", ...)   # French version
+    ],
+    metadata={
+        "languages": ["en", "es", "fr"],
+        "source_language": "en"
+    }
+)
+```
+
+---
+
 ### VideoConfig
 
 **Purpose:** Configuration for a complete video
@@ -663,21 +724,27 @@ config = InputConfig(
     source=video_config,        # Required: VideoConfig or VideoSet object
     accent_color=(59, 130, 246),  # Optional: RGB tuple or color name
     voice="male",               # Optional: Default voice
+    languages=["en", "es", "fr"],  # Optional: Generate in multiple languages
     video_count=1,              # Optional: For splitting
     split_by_h2=False           # Optional: For document splitting
 )
 ```
 
-**Parameters:**
+**All Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `input_type` | `str` | ✅ Yes | Use `"programmatic"` for Python API |
-| `source` | `VideoConfig` or `VideoSet` | ✅ Yes | Your video configuration |
-| `accent_color` | `tuple` or `str` | No | RGB tuple or color name |
-| `voice` | `str` | No | Default voice (can override per scene) |
-| `video_count` | `int` | No | Number of videos (for splitting) |
-| `split_by_h2` | `bool` | No | Split by H2 headings (documents only) |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `input_type` | `str` | ✅ Yes | - | Use `"programmatic"` for Python API |
+| `source` | `VideoConfig` or `VideoSet` | ✅ Yes | - | Your video configuration |
+| `accent_color` | `tuple` or `str` | No | `"blue"` | RGB tuple or color name |
+| `voice` | `str` | No | `"male"` | Default voice |
+| `languages` | `List[str]` | No | `["en"]` | **Languages to generate** (multilingual) |
+| `output_dir` | `Path` | No | `None` | Custom output directory |
+| `auto_generate` | `bool` | No | `True` | Auto-proceed with generation |
+| `skip_review` | `bool` | No | `False` | Skip review step |
+| `resume_from` | `str` | No | `None` | Resume from specific stage |
+| `video_count` | `int` | No | `1` | Number of videos (document splitting) |
+| `split_by_h2` | `bool` | No | `False` | Split by H2 headings (documents) |
 
 ---
 
@@ -793,6 +860,84 @@ VideoConfig(
 
 ---
 
-**This reference documents all parameters.** Use it alongside PROGRAMMATIC_GUIDE.md for complete coverage.
+---
+
+## 🌍 Multilingual Workflows (Programmatic)
+
+### Single Video → Multiple Languages
+
+```python
+from video_gen.shared.models import VideoConfig, InputConfig
+from video_gen.pipeline import get_pipeline
+
+# Create English video
+video = VideoConfig(
+    video_id="tutorial",
+    title="Python Tutorial",
+    description="Learn Python",
+    scenes=[...]  # English scenes
+)
+
+# Generate in 3 languages
+pipeline = get_pipeline()
+result = await pipeline.execute(InputConfig(
+    input_type="programmatic",
+    source=video,
+    languages=["en", "es", "fr"]  # 🌍 Auto-translates to Spanish, French
+))
+
+# Output: 3 videos (tutorial_en/, tutorial_es/, tutorial_fr/)
+```
+
+### Video Set → Multilingual
+
+```python
+# Create set of 3 videos
+video_set = VideoSet(
+    set_id="course",
+    name="Python Course",
+    videos=[
+        VideoConfig(video_id="lesson_01", ...),
+        VideoConfig(video_id="lesson_02", ...),
+        VideoConfig(video_id="lesson_03", ...)
+    ]
+)
+
+# Generate in 4 languages
+result = await pipeline.execute(InputConfig(
+    input_type="programmatic",
+    source=video_set,
+    languages=["en", "es", "fr", "de"]
+))
+
+# Output: 12 videos (3 lessons × 4 languages)
+```
+
+**languages parameter:** `List[str]` - Language codes (en, es, fr, de, pt, it, ja, zh, etc.)
+
+---
+
+## 📊 Single vs Set Workflow Comparison
+
+| Aspect | Single Video | Video Set |
+|--------|-------------|-----------|
+| **Use** | `VideoConfig` | `VideoSet` |
+| **Best For** | Standalone content | Series, courses, batches |
+| **Output** | 1 directory | Multiple videos organized |
+| **Multilingual** | 1 video × N languages | M videos × N languages |
+| **Example** | Tutorial | 5-part course |
+
+---
+
+**This reference now documents:**
+- ✅ All VideoConfig parameters
+- ✅ All SceneConfig parameters
+- ✅ All 12 scene types with visual_content
+- ✅ VideoSet parameters ✨ NEW
+- ✅ Multilingual workflows ✨ NEW
+- ✅ Single vs Set comparison ✨ NEW
+- ✅ InputConfig.languages parameter ✨ NEW
+
+Use with PROGRAMMATIC_GUIDE.md for complete programmatic API coverage.
 
 *Last Updated: 2025-10-06*
