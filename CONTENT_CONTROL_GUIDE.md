@@ -8,17 +8,76 @@
 
 **Short Answer:** You have **5 levels of control**, from fully automatic to 100% custom!
 
+```
+┌──────────────────────────────────────────────────────────┐
+│          CONTENT CONTROL DECISION TREE                   │
+└──────────────────────────────────────────────────────────┘
+
+    How much control do you need?
+                │
+        ┌───────┴────────┬──────────┬──────────┐
+        ▼                ▼          ▼          ▼
+    ┌───────┐      ┌─────────┐  ┌────────┐  ┌─────┐
+    │ None  │      │  Some   │  │  More  │  │ Full│
+    │(Auto) │      │(Enhance)│  │(Guide) │  │100% │
+    └───────┘      └─────────┘  └────────┘  └─────┘
+        │                │          │          │
+        ▼                ▼          ▼          ▼
+    Level 1          Level 2    Level 3    Level 4
+    Parse →          Parse +    Structure  Custom
+    Auto             Custom     + Auto     Narration
+```
+
 ---
 
 ## 📊 Five Levels of Content Control
 
-| Level | Method | Effort | Control | Use When |
-|-------|--------|--------|---------|----------|
-| **1** | Parse document → auto | ⭐ Lowest | ⭐⭐ Basic | Have existing docs |
-| **2** | Parse + customize | ⭐⭐ Low | ⭐⭐⭐ Medium | Enhance existing docs |
-| **3** | Structure → auto-narrate | ⭐⭐⭐ Medium | ⭐⭐⭐⭐ High | Provide structure |
-| **4** | Structure + custom narration | ⭐⭐⭐⭐ High | ⭐⭐⭐⭐⭐ Full | Exact wording needed |
-| **5** | Load from content files | ⭐⭐ Low | ⭐⭐⭐⭐⭐ Full | Content in DB/files |
+### 🎯 **Visual Comparison: Control vs Effort**
+
+```
+CONTROL LEVEL               EFFORT              USE CASE
+═══════════════════════════════════════════════════════════
+
+Level 1: Parse Auto         ⭐ Lowest           📄 Docs exist
+┌────────────────┐         ┌────────────┐      ✅ Structure OK
+│ Zero work      │  ═══→   │ 1 line code│      ✅ Fast needed
+│ Full auto      │         │            │      ❌ Custom brand
+└────────────────┘         └────────────┘
+
+Level 2: Parse + Enhance    ⭐⭐ Low            📄 Docs + extras
+┌────────────────┐         ┌────────────┐      ✅ 80% auto
+│ Parse first    │  ═══→   │ Add custom │      ✅ Some tweaks
+│ Then customize │         │            │      ✅ Multi-source
+└────────────────┘         └────────────┘
+
+Level 3: Structure + Auto   ⭐⭐⭐ Medium        🔧 Have data
+┌────────────────┐         ┌────────────┐      ✅ Define layout
+│ Define scenes  │  ═══→   │ Auto-narr  │      ✅ Trust AI
+│ Auto narration │         │            │      ✅ Consistency
+└────────────────┘         └────────────┘
+
+Level 4: Full Custom        ⭐⭐⭐⭐ High        🎨 Brand voice
+┌────────────────┐         ┌────────────┐      ✅ Exact words
+│ Every word     │  ═══→   │ 100% yours │      ✅ Marketing
+│ Total control  │         │            │      ✅ Legal/precise
+└────────────────┘         └────────────┘
+
+Level 5: External Content   ⭐⭐ Low            💾 CMS/Database
+┌────────────────┐         ┌────────────┐      ✅ Content mgmt
+│ Load from DB   │  ═══→   │ Generate   │      ✅ Dynamic
+│ Or API/files   │         │            │      ✅ Team-managed
+└────────────────┘         └────────────┘
+```
+
+### 📋 **Detailed Comparison Table**
+
+| Level | Method | Effort | Control | Speed | Use When |
+|-------|--------|--------|---------|-------|----------|
+| **1** | Parse document → auto | ⭐ Lowest | ⭐⭐ Basic | ⚡ Instant | Have existing docs |
+| **2** | Parse + customize | ⭐⭐ Low | ⭐⭐⭐ Medium | ⚡ Fast | Enhance existing docs |
+| **3** | Structure → auto-narrate | ⭐⭐⭐ Medium | ⭐⭐⭐⭐ High | 🏃 Quick | Provide structure |
+| **4** | Structure + custom narration | ⭐⭐⭐⭐ High | ⭐⭐⭐⭐⭐ Full | 🐌 Slower | Exact wording needed |
+| **5** | Load from content files | ⭐⭐ Low | ⭐⭐⭐⭐⭐ Full | ⚡ Fast | Content in DB/files |
 
 ---
 

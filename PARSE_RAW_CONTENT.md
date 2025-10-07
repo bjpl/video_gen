@@ -8,71 +8,238 @@
 
 **You can parse raw content directly - NO manual formatting needed!**
 
+```
+┌──────────────────────────────────────────────────────────┐
+│          INPUT SOURCE DECISION TREE                      │
+└──────────────────────────────────────────────────────────┘
+
+      What content do you have?
+                │
+    ┌───────────┴───────────┬───────────────┐
+    ▼                       ▼               ▼
+┌────────┐             ┌─────────┐      ┌──────────┐
+│ Local  │             │ GitHub  │      │ YouTube  │
+│  File  │             │   URL   │      │   Video  │
+└────────┘             └─────────┘      └──────────┘
+    │                       │               │
+    ▼                       ▼               ▼
+parse_document_to_set   github_readme   parse_youtube
+    │                       │               │
+    ▼                       ▼               ▼
+┌────────────────────────────────────────────────┐
+│        ALL GENERATE VIDEO AUTOMATICALLY        │
+│                                                │
+│  ✅ Zero manual formatting                    │
+│  ✅ Auto-scene creation                       │
+│  ✅ Auto-narration                            │
+│  ✅ Ready to render                           │
+└────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 🚀 Three Ways to Parse Raw Content
 
+### 📊 **Comparison: Which Parser for What?**
+
+| Your Content | Parser to Use | Time | Output |
+|-------------|---------------|------|--------|
+| 📄 **Local README.md** | `parse_document_to_set()` | 1 sec | Video set |
+| 🔗 **GitHub URL** | `github_readme_to_video()` | 2 sec | Video set |
+| 🎥 **YouTube video** | `parse_youtube_to_set()` | 5 sec | Summary video |
+| 📚 **Multiple docs** | Loop + combine | 3 sec | Video series |
+
 ### **1. Local Markdown File**
 
-```python
-from scripts.document_to_programmatic import parse_document_to_set
+```
+┌────────────────────────────────────────────────────────────┐
+│  STEP-BY-STEP: Markdown → Video                           │
+└────────────────────────────────────────────────────────────┘
 
-# Just point to your markdown - that's it!
-parse_document_to_set('README.md')
+Step 1: ONE Line of Code
+┌─────────────────────────────────────────────────────┐
+│ from scripts.document_to_programmatic import \      │
+│     parse_document_to_set                           │
+│                                                     │
+│ parse_document_to_set('README.md')                  │
+└─────────────────────────────────────────────────────┘
+         ↓ (Auto-magic happens!)
 
-# System automatically:
-# ✓ Parses markdown structure
-# ✓ Creates appropriate scenes
-# ✓ Generates narration
-# ✓ Exports to YAML
-# ✓ Ready to generate video!
+Step 2: System Auto-Processes
+┌─────────────────────────────────────────────────────┐
+│ 📖 Reads README.md                                  │
+│    ↓                                                │
+│ 🔍 Finds: # H1 → Title scene                       │
+│          ## H2 → Section scenes                    │
+│          ```code``` → Command scenes               │
+│          - Lists → List scenes                     │
+│    ↓                                                │
+│ 🤖 Generates: Professional narration                │
+│    ↓                                                │
+│ 💾 Exports: sets/readme/*.yaml                      │
+└─────────────────────────────────────────────────────┘
+         ↓
+
+Step 3: Generate Video (2 commands)
+┌─────────────────────────────────────────────────────┐
+│ cd scripts                                          │
+│ python generate_video_set.py ../sets/readme        │
+│ python generate_videos_from_set.py ../output/readme│
+└─────────────────────────────────────────────────────┘
+         ↓
+    🎬 Video Ready!
 ```
 
-**Then:**
-```bash
-cd scripts
-python generate_video_set.py ../sets/readme
-python generate_videos_from_set.py ../output/readme
+#### 📝 **What Gets Parsed:**
+
+```markdown
+INPUT (README.md):
+═══════════════════════════════════════════════════════
+
+# My Project                    →  Title Scene
+                                   "My Project | Documentation Overview"
+
+## Installation                 →  Command Scene
+```bash                            Header: "Installation"
+npm install                        Commands: ["npm install", "npm start"]
+npm start                          Narration: "Installation. Install and start..."
 ```
+
+## Features                      →  List Scene
+- Fast                             Header: "Features"
+- Easy                             Items: ["Fast", "Easy", "Documented"]
+- Documented                       Narration: "Key features include..."
+```
+
+#### 💡 **Use This When:**
+- ✅ You have a local markdown file
+- ✅ Standard markdown format (H1, H2, code blocks, lists)
+- ✅ Content structure is already good
+- ✅ Want instant video with zero work
 
 ---
 
 ### **2. GitHub README (No Download Needed!)**
 
+```
+┌────────────────────────────────────────────────────────────┐
+│  STEP-BY-STEP: GitHub URL → Video                         │
+└────────────────────────────────────────────────────────────┘
+
+Step 1: Provide GitHub URL
+┌─────────────────────────────────────────────────────┐
+│ from scripts.document_to_programmatic import \      │
+│     github_readme_to_video                          │
+│                                                     │
+│ builder = github_readme_to_video(                   │
+│     'https://github.com/django/django'              │
+│ )                                                   │
+└─────────────────────────────────────────────────────┘
+         ↓
+
+Step 2: System Fetches + Parses
+┌─────────────────────────────────────────────────────┐
+│ 🌐 Fetches README.md from GitHub API                │
+│    (No manual download!)                            │
+│    ↓                                                │
+│ 🔍 Parses: Headings, code, lists                    │
+│    ↓                                                │
+│ 🎬 Creates: Video scenes                            │
+│    ↓                                                │
+│ 📝 Generates: Narration                             │
+│    ↓                                                │
+│ 🔧 Returns: VideoSetBuilder (can customize!)        │
+└─────────────────────────────────────────────────────┘
+         ↓
+
+Step 3: Export (Optional: customize first!)
+┌─────────────────────────────────────────────────────┐
+│ # Option A: Export as-is                            │
+│ builder.export_to_yaml('sets/django_video')         │
+│                                                     │
+│ # Option B: Customize then export                   │
+│ builder.add_video(...)  # Add custom video          │
+│ builder.export_to_yaml('sets/django_video')         │
+└─────────────────────────────────────────────────────┘
+         ↓
+    🎬 Ready to Generate!
+```
+
+#### 💡 **Use This When:**
+- ✅ Documentation is on GitHub
+- ✅ Don't want to download/clone repo
+- ✅ Want latest version always
+- ✅ Converting public repos to videos
+
+#### 🎯 **Real Example: FastAPI → Video**
+
 ```python
+# ONE command to video-ify FastAPI docs!
 from scripts.document_to_programmatic import github_readme_to_video
 
-# Just the GitHub URL - system handles everything!
-builder = github_readme_to_video('https://github.com/django/django')
-builder.export_to_yaml('sets/django_video')
+github_readme_to_video('https://github.com/fastapi/fastapi') \
+    .export_to_yaml('sets/fastapi')
 
-# System automatically:
-# ✓ Fetches README from GitHub
-# ✓ Parses structure
-# ✓ Creates scenes
-# ✓ Generates narration
-# ✓ Ready to go!
+# Then: python generate_video_set.py ../sets/fastapi
+# Result: FastAPI intro video in ~5 minutes!
 ```
 
 ---
 
 ### **3. YouTube Video Transcript**
 
-```python
-from scripts.youtube_to_programmatic import parse_youtube_to_set
+```
+┌────────────────────────────────────────────────────────────┐
+│  STEP-BY-STEP: YouTube → Summary Video                    │
+└────────────────────────────────────────────────────────────┘
 
-# Just the YouTube URL!
+Step 1: Provide YouTube URL + Options
+┌─────────────────────────────────────────────────────┐
+│ from scripts.youtube_to_programmatic import \       │
+│     parse_youtube_to_set                            │
+│                                                     │
+│ parse_youtube_to_set(                               │
+│     'https://youtube.com/watch?v=VIDEO_ID',         │
+│     target_duration=60  # Condense 30min → 60sec!  │
+│ )                                                   │
+└─────────────────────────────────────────────────────┘
+         ↓
+
+Step 2: System Fetches + Summarizes
+┌─────────────────────────────────────────────────────┐
+│ 🎥 Fetches: Video transcript from YouTube           │
+│    ↓                                                │
+│ 🧠 Analyzes: 30-minute transcript                   │
+│    ↓                                                │
+│ 📊 Extracts: 5-7 key points                         │
+│    ↓                                                │
+│ ✂️ Condenses: To target duration (60 sec)           │
+│    ↓                                                │
+│ 🎬 Creates: Title + List scenes + Outro             │
+│    ↓                                                │
+│ 💾 Exports: sets/youtube_summary/*.yaml             │
+└─────────────────────────────────────────────────────┘
+         ↓
+    🎬 60-Second Summary Ready!
+```
+
+#### 💡 **Use This When:**
+- ✅ Converting long videos to shorts
+- ✅ Creating video summaries
+- ✅ Repurposing YouTube content
+- ✅ Quick video previews
+
+#### 🎯 **Example: 30-Min Tutorial → 60-Sec Summary**
+
+```python
+# Input: 30-minute Python tutorial
 parse_youtube_to_set(
-    'https://youtube.com/watch?v=VIDEO_ID',
-    target_duration=60  # Condense to 60 seconds
+    'https://youtube.com/watch?v=PYTHON_TUTORIAL_ID',
+    target_duration=60
 )
 
-# System automatically:
-# ✓ Fetches transcript
-# ✓ Extracts key points
-# ✓ Creates summary scenes
-# ✓ Generates narration
-# ✓ Ready to render!
+# Output: 60-second summary video with key points!
+# Perfect for: Social media, previews, quick learning
 ```
 
 ---

@@ -84,31 +84,255 @@ video_gen/
 
 ---
 
-## Data Flow
+## Data Flow with Detailed Transformations
 
 ```
-User Input (document/URL/YAML)
-    ↓
-InputAdapter → VideoConfig
-    ↓
-ContentParser → Structured Content
-    ↓
-ScriptGenerator → Narration Text
-    ↓
-AudioGenerator → MP3 files + Timing Report
-    ↓
-VideoGenerator → Video Segments
-    ↓
-OutputHandler → Final Video (MP4)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         DATA TRANSFORMATION FLOW                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+USER INPUT
+  │
+  │ Various formats:
+  │ • Document (PDF, DOCX, MD, TXT)
+  │ • YouTube URL
+  │ • YAML configuration
+  │ • Python dictionary (programmatic)
+  │ • Interactive wizard input
+  │
+  ▼
+┌─────────────────────────────┐
+│ Stage 1: InputAdapter       │  WHY: Normalize diverse inputs to common format
+│                             │
+│ Input: Raw source           │  HOW: Strategy pattern with 5 adapters
+│ Output: VideoConfig         │
+│                             │  DESIGN DECISION: Adapter pattern chosen for:
+│ Transformation:             │  • Easy to add new input types
+│ • Parse source format       │  • Encapsulates format-specific logic
+│ • Extract structure         │  • Consistent output (VideoConfig)
+│ • Apply defaults            │
+│ • Create scenes             │  TRADE-OFF: Some duplication across adapters,
+│                             │             but better separation of concerns
+└─────────────────────────────┘
+  │
+  │ VideoConfig {
+  │   video_id: str
+  │   title: str
+  │   scenes: [SceneConfig, ...]
+  │   accent_color: str
+  │   voices: [str, ...]
+  │ }
+  │
+  ▼
+┌─────────────────────────────┐
+│ Stage 2: ContentParser      │  WHY: Structure raw content for scene generation
+│                             │
+│ Input: VideoConfig          │  HOW: Markdown/HTML parsing + structure detection
+│ Output: ParsedContent       │
+│                             │  DESIGN DECISION: Parser extracts:
+│ Transformation:             │  • Headings → Title scenes
+│ • Extract sections          │  • Lists → List scenes
+│ • Identify headings         │  • Code blocks → Code comparison scenes
+│ • Detect lists              │  • Quotes → Quote scenes
+│ • Extract code blocks       │
+│                             │  PERFORMANCE: ~1-5s for typical document
+└─────────────────────────────┘
+  │
+  │ ParsedContent {
+  │   sections: [Section, ...]
+  │   templates: [SceneTemplate, ...]
+  │   metadata: {pages, words, ...}
+  │ }
+  │
+  ▼
+┌─────────────────────────────┐
+│ Stage 3: ScriptGenerator    │  WHY: Create engaging narration for each scene
+│                             │
+│ Input: ParsedContent        │  HOW: Template-based + optional AI enhancement
+│ Output: VideoConfig+Scripts │
+│                             │  DESIGN DECISION: Two-tier approach:
+│ Transformation:             │  1. Base: Template-based (fast, predictable)
+│ • Generate narration        │  2. Enhanced: AI-powered (slower, better quality)
+│ • AI enhance (optional)     │
+│ • Validate timing           │  TRADE-OFF: AI enhancement adds 2-10s per scene
+│ • Check min/max duration    │             but significantly improves quality
+│                             │
+│                             │  PERFORMANCE: 10-30s total (without AI)
+└─────────────────────────────┘
+  │
+  │ VideoConfig {
+  │   scenes: [
+  │     SceneConfig {
+  │       narration: "Welcome to...",  ← NEW
+  │       visual_content: {...},
+  │       voice: "male",
+  │       min_duration: 3.0,
+  │       max_duration: 15.0
+  │     }
+  │   ]
+  │ }
+  │
+  ▼
+┌─────────────────────────────┐
+│ Stage 4: AudioGenerator     │  WHY: Convert text to speech with timing data
+│                             │
+│ Input: VideoConfig+Scripts  │  HOW: Edge TTS API + FFmpeg duration probe
+│ Output: Audio Files+Timing  │
+│                             │  DESIGN DECISION: Edge TTS chosen because:
+│ Transformation:             │  • Free, unlimited usage
+│ For each scene:             │  • 27+ high-quality voices
+│   • Call TTS API            │  • Multi-language support
+│   • Save MP3                │  • Async API for parallelization
+│   • Measure duration        │
+│   • Update scene.audio_file │  TRADE-OFF: Network dependency (requires internet)
+│   • Check constraints       │             vs. Offline TTS (lower quality)
+│                             │
+│                             │  PERFORMANCE: 30s-2min for 10 scenes
+│                             │               (2-5s per scene)
+└─────────────────────────────┘
+  │
+  │ AudioAssets {
+  │   audio_dir: Path("audio/video_xyz_audio/")
+  │   files: [
+  │     scene_1.mp3 (4.2s),
+  │     scene_2.mp3 (6.8s),
+  │     ...
+  │   ]
+  │   timing_report: {
+  │     total_duration: 120.5,
+  │     warnings: ["Scene 3 truncated"],
+  │     scenes: [...]
+  │   }
+  │ }
+  │
+  ▼
+┌─────────────────────────────┐
+│ Stage 5: VideoGenerator     │  WHY: Create visual representation of scenes
+│                             │
+│ Input: AudioAssets+Config   │  HOW: PIL rendering + NumPy + FFmpeg encoding
+│ Output: Video Segments      │
+│                             │  DESIGN DECISION: NumPy acceleration chosen for:
+│ Transformation:             │  • 10x faster frame blending vs. pure PIL
+│ For each scene:             │  • Smooth transitions (crossfade, slide)
+│   • Render keyframes (PIL)  │  • Memory-efficient batch processing
+│   • Apply transitions       │
+│   • Encode (FFmpeg+NVENC)   │  DESIGN DECISION: NVENC GPU encoding chosen:
+│   • Mux audio               │  • 3-5x faster than CPU encoding
+│   • Save MP4                │  • Lower quality loss
+│                             │  • Hardware acceleration
+│                             │
+│                             │  TRADE-OFF: Requires NVIDIA GPU
+│                             │             Falls back to CPU if unavailable
+│                             │
+│                             │  PERFORMANCE: 1-5min for 10 scenes
+│                             │               (varies by resolution/complexity)
+└─────────────────────────────┘
+  │
+  │ VideoAssets {
+  │   video_segments: [
+  │     Path("video/scene_1.mp4"),
+  │     Path("video/scene_2.mp4"),
+  │     ...
+  │   ]
+  │   metadata: {
+  │     total_frames: 3600,
+  │     avg_bitrate: "2000k"
+  │   }
+  │ }
+  │
+  ▼
+┌─────────────────────────────┐
+│ Stage 6: OutputHandler      │  WHY: Finalize and organize deliverables
+│                             │
+│ Input: Video Segments       │  HOW: FFmpeg concat + file organization
+│ Output: Final Video+Metadata│
+│                             │  DESIGN DECISION: Concat protocol chosen:
+│ Transformation:             │  • Lossless merging (no re-encoding)
+│ • Concatenate segments      │  • Fast (1-2s for 10 segments)
+│ • Organize files            │  • Preserves quality
+│ • Generate metadata         │
+│ • Create timing report      │  ALTERNATIVE: Re-encode entire video
+│ • Optional upload/notify    │              (slower but more control)
+│                             │
+│                             │  PERFORMANCE: 10-30s
+└─────────────────────────────┘
+  │
+  │ PipelineResult {
+  │   success: true
+  │   video_path: Path("output/final_video.mp4")
+  │   total_duration: 120.5
+  │   scene_count: 10
+  │   timing_report: Path("output/timing_report.json")
+  │   metadata: {
+  │     total_size: "15.2 MB",
+  │     resolution: "1920x1080",
+  │     fps: 30,
+  │     codec: "h264 (NVENC)"
+  │   }
+  │   warnings: ["Scene 3: Narration truncated to fit max_duration"]
+  │   errors: []
+  │ }
+  │
+  ▼
+FINAL OUTPUT
+
+TOTAL PIPELINE TIME: 2-8 minutes
+TOTAL STAGES: 6 (7 with validation)
+CHECKPOINTS: 6 (one per stage)
+RESUME CAPABILITY: Yes, from any checkpoint
 ```
 
-**Context Accumulates:**
-- Stage 1: `video_config`
-- Stage 2: `parsed_content`
-- Stage 3: `video_config` (updated with scripts)
-- Stage 4: `audio_dir`, `timing_report`
-- Stage 5: `video_segments`
-- Stage 6: `final_video_path`
+**Context Dictionary Accumulation:**
+```python
+# Initial context (Stage 0)
+context = {
+    "task_id": "task_abc123",
+    "input_config": InputConfig(...)
+}
+
+# After Stage 1 (Input Adaptation)
+context["video_config"] = VideoConfig(
+    video_id="abc",
+    scenes=[SceneConfig(...), ...]
+)
+context["input_metadata"] = {
+    "source_type": "document",
+    "pages": 5
+}
+
+# After Stage 2 (Content Parsing)
+context["parsed_content"] = {
+    "sections": [...],
+    "templates": [...]
+}
+
+# After Stage 3 (Script Generation)
+context["video_config"]  # Updated with narration scripts
+# video_config.scenes[0].narration = "Welcome to..."
+
+# After Stage 4 (Audio Generation)
+context["audio_dir"] = Path("audio/video_abc_audio/")
+context["timing_report"] = Path("audio/.../timing_report.json")
+# video_config.scenes[0].audio_file = Path("scene_1.mp3")
+# video_config.scenes[0].final_duration = 4.2
+
+# After Stage 5 (Video Generation)
+context["video_segments"] = [
+    Path("video/scene_1.mp4"),
+    Path("video/scene_2.mp4"),
+    ...
+]
+
+# After Stage 6 (Output Handling)
+context["final_video_path"] = Path("output/final_video.mp4")
+context["metadata"] = {...}
+```
+
+**Design Pattern: Context Accumulation**
+- **Why:** Allows stages to access outputs from previous stages
+- **How:** Each stage adds to shared context dictionary
+- **Benefit:** Loose coupling between stages
+- **Trade-off:** Less type-safe than explicit parameters (mitigated with validation)
 
 ---
 

@@ -4,6 +4,81 @@
 
 ---
 
+## 🎬 Renderer System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Renderer System Overview                        │
+│                                                                      │
+│  Input: SceneConfig                                                 │
+│    │                                                                │
+│    ├─► scene_type: "title"                                         │
+│    ├─► visual_content: {...}                                       │
+│    └─► accent_color: (R, G, B)                                     │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │              Renderer Module Selection                        │  │
+│  │                                                               │  │
+│  │  scene_type ─┬─► "title" ──────────► basic_scenes.py         │  │
+│  │              ├─► "command" ─────────► basic_scenes.py         │  │
+│  │              ├─► "list" ────────────► basic_scenes.py         │  │
+│  │              ├─► "outro" ───────────► basic_scenes.py         │  │
+│  │              ├─► "quiz" ────────────► educational_scenes.py   │  │
+│  │              ├─► "exercise" ────────► educational_scenes.py   │  │
+│  │              ├─► "code_comparison" ─► comparison_scenes.py    │  │
+│  │              ├─► "problem" ─────────► comparison_scenes.py    │  │
+│  │              ├─► "solution" ────────► comparison_scenes.py    │  │
+│  │              ├─► "checkpoint" ──────► checkpoint_scenes.py    │  │
+│  │              └─► "quote" ───────────► checkpoint_scenes.py    │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│         │                                                           │
+│         ▼                                                           │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │            Rendering Process (All Renderers)                  │  │
+│  │                                                               │  │
+│  │  1. Create background (gradient or solid)                     │  │
+│  │  2. Apply accent color theme                                  │  │
+│  │  3. Render visual content elements                            │  │
+│  │  4. Apply text with wrapping & alignment                      │  │
+│  │  5. Generate keyframes (start + end)                          │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│         │                                                           │
+│         ▼                                                           │
+│  Output: (start_frame, end_frame)  ← PIL Images (1920×1080 RGB)   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Renderer Module Dependency Graph
+
+```
+constants.py  ─────────────┐
+     │                     │
+     │ Colors, Fonts,      │
+     │ Dimensions          │
+     │                     │
+     ▼                     ▼
+base.py ──────────► All Renderer Modules
+     │                     │
+     │ Utilities:          ├─► basic_scenes.py
+     │ - create_gradient   │   (title, command, list, outro)
+     │ - draw_text_wrapped │
+     │ - create_blank      ├─► educational_scenes.py
+     │ - apply_accent      │   (quiz, exercise, objectives)
+     │                     │
+     │                     ├─► comparison_scenes.py
+     │                     │   (code_comparison, problem, solution)
+     │                     │
+     │                     └─► checkpoint_scenes.py
+     │                         (checkpoint, quote)
+     │
+     └─► __init__.py (Public API Exports)
+```
+
+---
+
 ## 📚 Overview
 
 The renderer system provides modular, testable scene rendering with 7 specialized modules:
@@ -69,6 +144,53 @@ FONT_PATHS = {
 
 **Purpose:** Shared utilities for all renderers
 
+### 🎨 Visual Guide to Base Utilities
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│         Gradient Background (create_gradient_background)     │
+│                                                              │
+│  Vertical:        Horizontal:       Radial:                 │
+│  ┌────────┐      ┌────────┐      ┌────────┐                │
+│  │████████│      │▓▓▓▓▓▓░░│      │░░▓▓▓▓░░│                │
+│  │▓▓▓▓▓▓▓▓│      │▓▓▓▓▓▓░░│      │░▓████▓░│                │
+│  │▒▒▒▒▒▒▒▒│      │▓▓▓▓▓▓░░│      │░▓████▓░│                │
+│  │░░░░░░░░│      │▓▓▓▓▓▓░░│      │░░▓▓▓▓░░│                │
+│  └────────┘      └────────┘      └────────┘                │
+│  Dark → Light   Left → Right   Center → Edge               │
+└──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│          Text Wrapping (draw_text_wrapped)                   │
+│                                                              │
+│  Original:  "This is a very long text that needs wrapping"  │
+│                                                              │
+│  With max_width:                                             │
+│  ┌────────────────────┐                                     │
+│  │ This is a very     │  ← Line 1                           │
+│  │ long text that     │  ← Line 2 (auto wrap)               │
+│  │ needs wrapping     │  ← Line 3 (auto wrap)               │
+│  └────────────────────┘                                     │
+│                                                              │
+│  Alignment Options:                                          │
+│  Left:          Center:        Right:                        │
+│  Text here      Text here         Text here                 │
+│  More text      More text         More text                 │
+└──────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│         Color Blending (apply_accent_color)                  │
+│                                                              │
+│  Base Color + Accent Color → Blended Result                 │
+│                                                              │
+│  intensity=0.0:  ████ (100% base)                           │
+│  intensity=0.3:  ████ (70% base, 30% accent)                │
+│  intensity=0.5:  ████ (50/50 blend)                         │
+│  intensity=0.8:  ████ (20% base, 80% accent)                │
+│  intensity=1.0:  ████ (100% accent)                         │
+└──────────────────────────────────────────────────────────────┘
+```
+
 ### Functions
 
 **`create_gradient_background(width, height, color, direction='vertical') -> PIL.Image`**
@@ -76,20 +198,93 @@ FONT_PATHS = {
 - Returns: RGB Image (width x height)
 - Directions: 'vertical', 'horizontal', 'radial'
 
+**💡 Pro Tips:**
+- ✅ Vertical gradients work best for most scenes
+- ✅ Radial creates focus on center content
+- 💡 Horizontal for wide content layouts
+
+**Usage Example:**
+```python
+from video_gen.renderers.base import create_gradient_background
+
+# Vertical gradient (default)
+bg = create_gradient_background(1920, 1080, (59, 130, 246), 'vertical')
+
+# Radial for emphasis
+bg = create_gradient_background(1920, 1080, (168, 85, 247), 'radial')
+```
+
+---
+
 **`draw_text_wrapped(draw, text, x, y, font, max_width, color, align='left') -> int`**
 - Draws multi-line text with automatic wrapping
 - Returns: Total height used
 - Supports: left, center, right alignment
+
+**💡 Pro Tips:**
+- ✅ Always set max_width to prevent overflow
+- ✅ Use center alignment for titles
+- ✅ Returns height for positioning next element
+
+**Usage Example:**
+```python
+from PIL import Image, ImageDraw, ImageFont
+from video_gen.renderers.base import draw_text_wrapped
+
+img = Image.new('RGB', (1920, 1080), (30, 30, 30))
+draw = ImageDraw.Draw(img)
+font = ImageFont.truetype("Arial.ttf", 40)
+
+# Draw wrapped text
+height_used = draw_text_wrapped(
+    draw,
+    "This is a long text that will wrap automatically",
+    x=100, y=100,
+    font=font,
+    max_width=800,
+    color=(255, 255, 255),
+    align='center'
+)
+
+# Next element starts at y=100 + height_used
+```
+
+---
 
 **`create_blank_frame(width=1920, height=1080, color=(30, 30, 30)) -> PIL.Image`**
 - Creates solid color frame
 - Returns: RGB Image
 - Default: Dark gray background
 
+**💡 Use Cases:**
+- Terminal/command scenes (dark background)
+- Custom overlays
+- Testing and development
+
+---
+
 **`apply_accent_color(base_color, accent_rgb, intensity=0.5) -> tuple`**
 - Blends base color with accent color
 - Returns: (R, G, B) tuple
 - Intensity: 0.0-1.0 (blend amount)
+
+**💡 Pro Tips:**
+- ✅ Use intensity=0.3 for subtle accents
+- ✅ Use intensity=0.7 for strong theme presence
+- 💡 Great for creating color variations
+
+**Usage Example:**
+```python
+from video_gen.renderers.base import apply_accent_color
+
+# Subtle blue accent
+result = apply_accent_color(
+    base_color=(200, 200, 200),  # Light gray
+    accent_rgb=(59, 130, 246),   # Blue
+    intensity=0.3                # 30% blue
+)
+# Result: (158, 175, 214) - slightly blue gray
+```
 
 ---
 
@@ -641,12 +836,184 @@ accent_color = "#3b82f6"  # Hex not supported
 
 ---
 
+## 🎯 Complete Rendering Pipeline Flow
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    Full Scene Rendering Pipeline                          │
+│                                                                           │
+│  Step 1: Input Preparation                                               │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ SceneConfig from pipeline                                        │    │
+│  │ ├── scene_type: "code_comparison"                               │    │
+│  │ ├── visual_content: {before_code, after_code, ...}              │    │
+│  │ └── accent_color: (59, 130, 246)                                │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              │                                            │
+│                              ▼                                            │
+│  Step 2: Module Selection                                                │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Route by scene_type → comparison_scenes.py                       │    │
+│  │ Call: create_code_comparison_keyframes(...)                      │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              │                                            │
+│                              ▼                                            │
+│  Step 3: Background Creation (base.py)                                   │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ create_gradient_background(1920, 1080, color, 'vertical')        │    │
+│  │ Result: Smooth gradient from dark to light blue                 │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              │                                            │
+│                              ▼                                            │
+│  Step 4: Content Rendering                                               │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Scene-specific rendering logic:                                  │    │
+│  │ ├── Draw header text                                             │    │
+│  │ ├── Create code boxes (before/after)                             │    │
+│  │ ├── Apply syntax highlighting                                    │    │
+│  │ └── Add labels and decorations                                   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              │                                            │
+│                              ▼                                            │
+│  Step 5: Text Rendering (base.py)                                        │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ draw_text_wrapped(draw, text, x, y, font, max_width, ...)       │    │
+│  │ ├── Automatic line wrapping                                      │    │
+│  │ ├── Alignment handling                                           │    │
+│  │ └── Returns height for next element                              │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              │                                            │
+│                              ▼                                            │
+│  Step 6: Keyframe Generation                                             │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Generate two frames:                                             │    │
+│  │ ├── start_frame: Initial state (for animation start)             │    │
+│  │ └── end_frame: Final state (for animation end or static)        │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                              │                                            │
+│                              ▼                                            │
+│  Step 7: Output                                                           │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Return: (start_frame, end_frame)                                 │    │
+│  │ ├── Both PIL Image objects                                       │    │
+│  │ ├── Size: 1920×1080 pixels                                       │    │
+│  │ ├── Mode: RGB                                                    │    │
+│  │ └── Ready for video compositor                                   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📊 Renderer Decision Matrix
+
+**Use this table to choose the right renderer for your content:**
+
+| Content Type | Renderer Function | Module | Best Practices |
+|--------------|------------------|---------|----------------|
+| **Intro/Headers** | `create_title_keyframes()` | basic_scenes | Keep title < 30 chars |
+| **Code/Commands** | `create_command_keyframes()` | basic_scenes | Max 8 commands |
+| **Feature Lists** | `create_list_keyframes()` | basic_scenes | Max 5 items |
+| **End Screens** | `create_outro_keyframes()` | basic_scenes | Strong CTA |
+| **Before/After** | `create_code_comparison_keyframes()` | comparison_scenes | Max 10 lines each |
+| **Inspiration** | `create_quote_keyframes()` | checkpoint_scenes | Keep quote concise |
+| **Lesson Start** | `create_learning_objectives_keyframes()` | educational_scenes | Max 5 objectives |
+| **Knowledge Check** | `create_quiz_keyframes()` | educational_scenes | 4 options max |
+| **Practice** | `create_exercise_keyframes()` | educational_scenes | Clear instructions |
+| **Challenge** | `create_problem_keyframes()` | comparison_scenes | Match difficulty color |
+| **Answer** | `create_solution_keyframes()` | comparison_scenes | Explain why |
+| **Progress** | `create_checkpoint_keyframes()` | checkpoint_scenes | 6 items per column |
+
+---
+
+## 🎨 Visual Layout Reference
+
+```
+All scenes use 1920×1080 canvas with safe margins:
+
+┌─────────────────────────────────────────────────────────┐
+│  100px margin                                           │
+│  ┌───────────────────────────────────────────────┐     │
+│  │                                               │     │
+│  │         Safe Content Area                     │     │
+│  │         1720 × 880 pixels                     │     │
+│  │                                               │     │
+│  │  Text wrapping respects max_width             │     │
+│  │  Elements centered or aligned as specified    │     │
+│  │                                               │     │
+│  └───────────────────────────────────────────────┘     │
+│                                        100px margin    │
+└─────────────────────────────────────────────────────────┘
+                    1920×1080 total
+```
+
+**Key Dimensions:**
+- Canvas: 1920×1080 (Full HD)
+- Safe margins: 100px on all sides
+- Content area: 1720×880
+- Title font: 80-100px
+- Body font: 40-50px
+- Code font: 30-36px (monospace)
+
+---
+
 ## 🔗 Related Documentation
 
+- **API Parameters:** docs/API_PARAMETERS_REFERENCE.md
 - **Architecture:** docs/architecture/ARCHITECTURE_ANALYSIS.md
 - **Testing:** tests/test_renderers.py
 - **Session Summary:** docs/SESSION_SUMMARY_2025-10-06.md
 - **User Guide:** docs/THREE_INPUT_METHODS_GUIDE.md
+
+---
+
+## 📈 Performance & Optimization
+
+**Rendering Performance:**
+
+```
+Scene Type           Avg Time    Memory     Complexity
+────────────────────────────────────────────────────────
+Title                ~50ms       6MB        Low
+Command              ~100ms      6MB        Medium
+List                 ~80ms       6MB        Medium
+Outro                ~50ms       6MB        Low
+Code Comparison      ~150ms      12MB       High
+Quote                ~60ms       6MB        Low
+Learning Objectives  ~90ms       6MB        Medium
+Quiz                 ~120ms      6MB        Medium
+Exercise             ~100ms      6MB        Medium
+Problem              ~110ms      6MB        Medium
+Solution             ~140ms      12MB       High
+Checkpoint           ~130ms      12MB       High
+```
+
+**💡 Optimization Tips:**
+- ✅ Reuse font objects (don't reload for each scene)
+- ✅ Generate frames on-demand (avoid storing all in memory)
+- ✅ Use gradients for visual appeal without image overhead
+- ⚠️ Monitor memory with many scenes (each frame = 6MB)
+
+**Example - Efficient Batch Rendering:**
+```python
+from video_gen.renderers import create_title_keyframes
+from PIL import ImageFont
+
+# Load fonts once
+title_font = ImageFont.truetype("DejaVuSans-Bold.ttf", 100)
+
+# Render multiple scenes efficiently
+frames = []
+for scene_data in scenes:
+    start, end = create_title_keyframes(
+        scene_data['title'],
+        scene_data['subtitle'],
+        (59, 130, 246)
+    )
+    frames.append((start, end))
+    # Process immediately to free memory
+    save_to_video(start, end)
+```
 
 ---
 

@@ -4,6 +4,73 @@
 
 ---
 
+## 📊 Visual API Structure Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Video Generation API                         │
+│                                                                      │
+│  Input: VideoConfig or VideoSet                                     │
+│    ↓                                                                │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ VideoConfig (Single Video)                                    │  │
+│  │ ├── video_id (required)                                       │  │
+│  │ ├── title (required)                                          │  │
+│  │ ├── description (required)                                    │  │
+│  │ ├── scenes[] (required) ──────────────┐                       │  │
+│  │ ├── accent_color (optional)           │                       │  │
+│  │ └── voices[] (optional)               │                       │  │
+│  └───────────────────────────────────────┼───────────────────────┘  │
+│                                          │                          │
+│  ┌───────────────────────────────────────▼──────────────────────┐  │
+│  │ SceneConfig (Individual Scene)                                │  │
+│  │ ├── scene_id (required)                                       │  │
+│  │ ├── scene_type (required) ─────┐                              │  │
+│  │ ├── narration (required)       │                              │  │
+│  │ ├── visual_content (required) ─┼─────┐                        │  │
+│  │ ├── voice (optional)           │     │                        │  │
+│  │ ├── min_duration (optional)    │     │                        │  │
+│  │ └── max_duration (optional)    │     │                        │  │
+│  └────────────────────────────────┼─────┼────────────────────────┘  │
+│                                   │     │                           │
+│         12 Scene Types ◄──────────┘     └──► Type-specific content  │
+│         ├── title                              (see below)          │
+│         ├── command                                                 │
+│         ├── list                                                    │
+│         ├── outro                                                   │
+│         ├── code_comparison                                         │
+│         ├── quote                                                   │
+│         ├── learning_objectives                                     │
+│         ├── quiz                                                    │
+│         ├── exercise                                                │
+│         ├── problem                                                 │
+│         ├── solution                                                │
+│         └── checkpoint                                              │
+│                                                                      │
+│  Output: Generated video with audio + visuals                       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎯 Parameter Hierarchy Diagram
+
+```
+InputConfig (Pipeline Entry)
+    │
+    ├─► input_type: "programmatic"
+    ├─► source: VideoConfig | VideoSet
+    ├─► languages: ["en", "es", ...]  ← Multilingual expansion
+    └─► accent_color, voice (optional overrides)
+         │
+         └─► Pipeline Processing
+              │
+              ├─► 1 video × N languages → N outputs
+              └─► M videos × N languages → M×N outputs
+```
+
+---
+
 ## 📦 Core Models
 
 ### VideoSet
@@ -142,7 +209,102 @@ video = VideoConfig(
 
 ## 🎨 Scene Types & visual_content Requirements
 
+### 🎬 Scene Type Visual Gallery
+
+**Quick visual reference for all 12 scene types:**
+
+```
+┌─────────────────────┬─────────────────────┬─────────────────────┐
+│    TITLE SCENE      │   COMMAND SCENE     │    LIST SCENE       │
+│ ┌─────────────────┐ │ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │                 │ │ │  Installation   │ │ │  Key Features   │ │
+│ │   PYTHON        │ │ │  ════════════   │ │ │  ────────────   │ │
+│ │   TUTORIAL      │ │ │                 │ │ │                 │ │
+│ │                 │ │ │ $ pip install X │ │ │ 1. Feature one  │ │
+│ │ Learn Basics    │ │ │ $ npm run dev   │ │ │ 2. Feature two  │ │
+│ │                 │ │ │ $ make build    │ │ │ 3. Feature thr  │ │
+│ └─────────────────┘ │ └─────────────────┘ │ └─────────────────┘ │
+│   Center aligned    │  Terminal style     │  Numbered bullets   │
+├─────────────────────┼─────────────────────┼─────────────────────┤
+│   QUIZ SCENE        │  CODE COMPARISON    │  LEARNING OBJECTIVES│
+│ ┌─────────────────┐ │ ┌────────┬────────┐ │ ┌─────────────────┐ │
+│ │ What is 2+2?    │ │ │ Before │ After  │ │ │ 🎯 Lesson Goals │ │
+│ │                 │ │ │ ────── │ ────── │ │ │                 │ │
+│ │ A) 3            │ │ │ code1  │ code1  │ │ │ ▸ Understand X  │ │
+│ │ B) 4   ✓        │ │ │ code2  │ better │ │ │ ▸ Use Y         │ │
+│ │ C) 5            │ │ │ code3  │ code2  │ │ │ ▸ Create Z      │ │
+│ │ D) 6            │ │ │        │        │ │ │                 │ │
+│ └─────────────────┘ │ └────────┴────────┘ │ └─────────────────┘ │
+│  Multiple choice    │  Side-by-side       │  Bulleted goals     │
+├─────────────────────┼─────────────────────┼─────────────────────┤
+│  EXERCISE SCENE     │  PROBLEM SCENE      │  SOLUTION SCENE     │
+│ ┌─────────────────┐ │ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │ ✏️ Practice      │ │ │ ⚠️ Challenge     │ │ │ ✓ Solution      │ │
+│ │                 │ │ │                 │ │ │                 │ │
+│ │ Create 3 vars:  │ │ │ Reverse string  │ │ │ def reverse():  │ │
+│ │ name, age, city │ │ │ without using   │ │ │   return s[::-1]│ │
+│ │                 │ │ │ built-in funcs  │ │ │                 │ │
+│ │ 💡 Hint: Use    │ │ │                 │ │ │ We use slicing  │ │
+│ │    descriptive  │ │ │ Difficulty: MED │ │ │ with step -1    │ │
+│ └─────────────────┘ │ └─────────────────┘ │ └─────────────────┘ │
+│  Task + hints       │  Challenge prompt   │  Code + explanation │
+├─────────────────────┼─────────────────────┼─────────────────────┤
+│  CHECKPOINT SCENE   │    QUOTE SCENE      │    OUTRO SCENE      │
+│ ┌────────┬────────┐ │ ┌─────────────────┐ │ ┌─────────────────┐ │
+│ │ Learned│ Next   │ │ │                 │ │ │                 │ │
+│ │ ────── │ ────── │ │ │   "Code is      │ │ │       ✓         │ │
+│ │ ✓ Vars │ → OOP  │ │ │    like humor"  │ │ │                 │ │
+│ │ ✓ Funcs│ → Files│ │ │                 │ │ │  Thanks for     │ │
+│ │ ✓ Loops│ → Tests│ │ │   - Anonymous   │ │ │   Watching!     │ │
+│ └────────┴────────┘ │ └─────────────────┘ │ │                 │ │
+│  Two-column review  │  Centered quote     │  Call to action     │
+└─────────────────────┴─────────────────────┴─────────────────────┘
+```
+
+---
+
+### 📋 Scene Type Comparison Matrix
+
+| Scene Type | Best For | Visual Style | Content Density | Animation |
+|------------|----------|--------------|-----------------|-----------|
+| **title** | Intro, section headers | Large centered text | Low | Fade in |
+| **command** | Code, terminal commands | Dark terminal | Medium | Line-by-line |
+| **list** | Features, steps | Numbered bullets | Medium | Sequential |
+| **outro** | End screens, CTA | Centered + icon | Low | Checkmark |
+| **code_comparison** | Before/after code | Split screen | High | Side fade |
+| **quote** | Inspiration, wisdom | Large centered | Low | Fade in |
+| **learning_objectives** | Lesson goals | Bulleted list | Medium | Sequential |
+| **quiz** | Knowledge checks | Multiple choice | Medium | Reveal answer |
+| **exercise** | Practice tasks | Task + hints | Medium | Fade in |
+| **problem** | Coding challenges | Problem statement | Medium | Difficulty color |
+| **solution** | Problem solutions | Code + explanation | High | Two-phase |
+| **checkpoint** | Progress review | Two-column | Medium | Column fade |
+
+---
+
 ### 1. Title Scene (`scene_type="title"`)
+
+**Layout Diagram:**
+```
+┌────────────────────────────────────────────────────┐
+│                                                    │
+│                                                    │
+│                                                    │
+│               ┌──────────────────┐                 │
+│               │                  │                 │
+│               │   PYTHON         │  ← Large title  │
+│               │   TUTORIAL       │    (100px font) │
+│               │                  │                 │
+│               └──────────────────┘                 │
+│                                                    │
+│                  Learn the Basics  ← Subtitle      │
+│                                      (50px font)   │
+│                                                    │
+│                                                    │
+│                                                    │
+└────────────────────────────────────────────────────┘
+       1920×1080px, gradient background
+```
 
 **visual_content Required:**
 ```python
@@ -150,6 +312,39 @@ video = VideoConfig(
     "title": str,      # Main title text
     "subtitle": str    # Subtitle text
 }
+```
+
+**📝 Pro Tips:**
+- ✅ Keep title under 30 characters for best readability
+- ✅ Subtitle complements title, not duplicates it
+- ✅ Use title case for professional look
+- ⚠️ Avoid ALL CAPS unless intentional emphasis
+
+**💡 Best Practices:**
+- Title should be concise, impactful statement
+- Subtitle provides context or preview
+- Works great for: Intros, section dividers, chapter headers
+
+**❌ Common Mistakes:**
+```python
+# Too long - will truncate or overflow
+"title": "Complete Beginner's Guide to Advanced Python Programming Techniques"
+
+# Too similar to subtitle
+"title": "Python Tutorial"
+"subtitle": "A Tutorial on Python"  # ❌ Redundant!
+```
+
+**✅ Good Examples:**
+```python
+# Professional course intro
+{"title": "Python Mastery", "subtitle": "From Zero to Hero"}
+
+# Section header
+{"title": "Variables & Types", "subtitle": "Lesson 1"}
+
+# Topic intro
+{"title": "API Development", "subtitle": "Build RESTful Services"}
 ```
 
 **Example:**
@@ -169,12 +364,82 @@ SceneConfig(
 
 ### 2. Command Scene (`scene_type="command"`)
 
+**Layout Diagram:**
+```
+┌────────────────────────────────────────────────────┐
+│  Installation                        ← Header      │
+│  ═══════════════════════════════════               │
+│                                                    │
+│  Setup                                ← Label      │
+│  ┌──────────────────────────────────────────────┐ │
+│  │ $ pip install fastapi               ← Line 1 │ │
+│  │ $ pip install uvicorn               ← Line 2 │ │
+│  │ $ uvicorn main:app --reload         ← Line 3 │ │
+│  └──────────────────────────────────────────────┘ │
+│                                                    │
+│         Dark terminal background (35, 35, 35)     │
+│         Monospace font, syntax highlighting       │
+└────────────────────────────────────────────────────┘
+```
+
 **visual_content Required:**
 ```python
 {
     "header": str,           # Section header
     "label": str,            # Command label (e.g., "Setup")
-    "commands": List[str]    # List of command strings
+    "commands": List[str]    # List of command strings (max 8)
+}
+```
+
+**📝 Pro Tips:**
+- ✅ Max 8 commands per scene for readability
+- ✅ Use actual executable commands
+- ✅ Include $ or > prompt symbols for clarity
+- 💡 Break long commands across scenes if needed
+
+**💡 Best Practices:**
+- Each command should be copy-paste ready
+- Show real-world usage patterns
+- Include comments with # for complex commands
+- Works great for: Installation, setup, deployment
+
+**✨ Advanced Features:**
+- Automatic syntax highlighting for common shells
+- Line numbering for multi-step processes
+- Terminal-style dark background for contrast
+
+**✅ Good Examples:**
+```python
+# Installation sequence
+{
+    "header": "Getting Started",
+    "label": "Install Dependencies",
+    "commands": [
+        "pip install -r requirements.txt",
+        "python manage.py migrate",
+        "python manage.py createsuperuser"
+    ]
+}
+
+# Docker workflow
+{
+    "header": "Docker Deployment",
+    "label": "Build and Run",
+    "commands": [
+        "docker build -t myapp .",
+        "docker run -p 8000:8000 myapp"
+    ]
+}
+
+# Git workflow
+{
+    "header": "Version Control",
+    "label": "Commit Changes",
+    "commands": [
+        "git add .",
+        "git commit -m 'Add feature'",
+        "git push origin main"
+    ]
 }
 ```
 
@@ -525,50 +790,191 @@ SceneConfig(
 
 ## 🔊 Voice Options
 
+### Voice Characteristics Comparison
+
+```
+┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+│ Characteristic  │   "male"     │ "male_warm"  │  "female"    │"female_      │
+│                 │  (Andrew)    │  (Brandon)   │   (Aria)     │ friendly"    │
+│                 │              │              │              │   (Ava)      │
+├─────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+│ Tone            │ Professional │ Engaging     │ Professional │ Friendly     │
+│ Pace            │ Medium       │ Relaxed      │ Crisp        │ Warm         │
+│ Best For        │ Technical    │ Tutorials    │ Business     │ Educational  │
+│ Authority Level │ High         │ Medium       │ High         │ Medium       │
+│ Approachability │ Medium       │ High         │ Medium       │ High         │
+│ Energy          │ Steady       │ Enthusiastic │ Clear        │ Pleasant     │
+└─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+```
+
 **Available Voices:**
 
-| Voice ID | Description | Gender | Tone |
-|----------|-------------|--------|------|
-| `"male"` | Andrew - Professional | Male | Confident, clear |
-| `"male_warm"` | Brandon - Engaging | Male | Warm, friendly |
-| `"female"` | Aria - Clear | Female | Professional, crisp |
-| `"female_friendly"` | Ava - Pleasant | Female | Friendly, approachable |
+| Voice ID | Description | Gender | Tone | Use Cases |
+|----------|-------------|--------|------|-----------|
+| `"male"` | Andrew - Professional | Male | Confident, clear | Corporate, technical docs, formal content |
+| `"male_warm"` | Brandon - Engaging | Male | Warm, friendly | Tutorials, guides, casual explainers |
+| `"female"` | Aria - Clear | Female | Professional, crisp | Business, presentations, announcements |
+| `"female_friendly"` | Ava - Pleasant | Female | Friendly, approachable | Educational, onboarding, how-tos |
 
-**Voice Rotation:**
-```python
-# Single voice for all scenes
-VideoConfig(..., voices=["male"])
+**💡 Voice Selection Guide:**
 
-# Rotate between two voices
-VideoConfig(..., voices=["male", "female"])
-
-# Use all four voices
-VideoConfig(..., voices=["male", "male_warm", "female", "female_friendly"])
 ```
+Content Type                    Recommended Voice(s)
+────────────────────────────────────────────────────
+Technical Documentation    →    "male" or "female"
+Tutorial / Course          →    "male_warm" or "female_friendly"
+Product Demo               →    "male" or "female"
+Educational Kids Content   →    "female_friendly"
+Corporate Training         →    "female" or "male"
+Casual How-To              →    "male_warm"
+Formal Presentation        →    "male" or "female"
+Storytelling               →    "male_warm" or "female_friendly"
+```
+
+**Voice Rotation Patterns:**
+
+```python
+# Pattern 1: Single voice for consistency
+VideoConfig(..., voices=["male"])
+# All scenes: male → male → male → male
+
+# Pattern 2: Alternating for variety (recommended)
+VideoConfig(..., voices=["male", "female"])
+# Scenes: male → female → male → female → ...
+
+# Pattern 3: Two similar tones
+VideoConfig(..., voices=["male", "male_warm"])
+# Scenes: male → male_warm → male → male_warm → ...
+
+# Pattern 4: Full rotation for maximum variety
+VideoConfig(..., voices=["male", "male_warm", "female", "female_friendly"])
+# Scenes: male → male_warm → female → female_friendly → male → ...
+```
+
+**📝 Pro Tips:**
+- ✅ Use rotation to distinguish between speakers/topics
+- ✅ Keep 1 voice for short videos (< 5 scenes)
+- ✅ Use 2 voices for dialog-style or contrasting sections
+- 💡 Match voice energy to content tone
 
 **Per-scene override:**
 ```python
-SceneConfig(..., voice="female")  # Overrides video default
+SceneConfig(..., voice="female")  # Overrides video default for this scene
+```
+
+**✨ Advanced: Contextual Voice Usage**
+```python
+video = VideoConfig(
+    voices=["male", "female"],  # Default rotation
+    scenes=[
+        SceneConfig(..., voice="male"),          # Intro - authoritative
+        SceneConfig(...),                        # Auto: female (rotation)
+        SceneConfig(...),                        # Auto: male (rotation)
+        SceneConfig(..., voice="female_friendly") # Exercise - friendly tone
+    ]
+)
 ```
 
 ---
 
 ## 🎨 Color Options
 
+### Color Psychology & Visual Guide
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Color Palette Preview                          │
+│                                                                       │
+│  BLUE     ████████  (59, 130, 246)   Professional • Trustworthy     │
+│  ORANGE   ████████  (255, 107, 53)   Energetic • Creative           │
+│  PURPLE   ████████  (168, 85, 247)   Premium • Sophisticated        │
+│  GREEN    ████████  (16, 185, 129)   Success • Growth               │
+│  PINK     ████████  (236, 72, 153)   Playful • Modern               │
+│  CYAN     ████████  (6, 182, 212)    Tech • Innovation              │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
 **Available Colors:**
 
-| Color | RGB | Use Case |
-|-------|-----|----------|
-| `"blue"` | (59, 130, 246) | Professional, trustworthy |
-| `"orange"` | (255, 107, 53) | Energetic, creative |
-| `"purple"` | (168, 85, 247) | Premium, sophisticated |
-| `"green"` | (16, 185, 129) | Success, growth |
-| `"pink"` | (236, 72, 153) | Playful, modern |
-| `"cyan"` | (6, 182, 212) | Tech, innovation |
+| Color | RGB | Psychology | Best For | Avoid For |
+|-------|-----|------------|----------|-----------|
+| `"blue"` | (59, 130, 246) | Professional, trustworthy, calm | Corporate, finance, healthcare, education | Food, entertainment |
+| `"orange"` | (255, 107, 53) | Energetic, creative, enthusiastic | Creative, marketing, youth content | Serious, professional |
+| `"purple"` | (168, 85, 247) | Premium, sophisticated, luxury | High-end products, creative, spiritual | Budget content |
+| `"green"` | (16, 185, 129) | Success, growth, nature | Environmental, health, finance | Warning content |
+| `"pink"` | (236, 72, 153) | Playful, modern, friendly | Youth, creative, lifestyle | Corporate, technical |
+| `"cyan"` | (6, 182, 212) | Tech, innovation, clarity | Technology, science, modern | Traditional, classic |
+
+**💡 Color Selection Decision Tree:**
+
+```
+What's your content focus?
+│
+├─ Business/Corporate?      → BLUE (trustworthy)
+├─ Creative/Marketing?      → ORANGE (energetic)
+├─ Premium/Luxury?          → PURPLE (sophisticated)
+├─ Environmental/Health?    → GREEN (growth)
+├─ Youth/Lifestyle?         → PINK (playful)
+└─ Technology/Innovation?   → CYAN (modern)
+```
+
+**📝 Pro Tips:**
+- ✅ Stick to one color per video for brand consistency
+- ✅ Match color to audience expectations (tech → cyan/blue)
+- ✅ Consider cultural color meanings for global audiences
+- ⚠️ Avoid red/yellow (reserved for warnings/errors in UI)
+
+**✨ Color Combinations for Video Sets:**
+```python
+# Series with consistent theme (all blue)
+VideoSet(videos=[
+    VideoConfig(..., accent_color="blue"),   # Part 1
+    VideoConfig(..., accent_color="blue"),   # Part 2
+    VideoConfig(..., accent_color="blue")    # Part 3
+])
+
+# Series with progressive theme
+VideoSet(videos=[
+    VideoConfig(..., accent_color="green"),  # Beginner - growth
+    VideoConfig(..., accent_color="orange"), # Intermediate - energy
+    VideoConfig(..., accent_color="purple")  # Advanced - premium
+])
+
+# Topic-based coloring
+VideoSet(videos=[
+    VideoConfig(..., accent_color="blue"),   # Intro/Theory
+    VideoConfig(..., accent_color="cyan"),   # Code/Technical
+    VideoConfig(..., accent_color="green")   # Results/Success
+])
+```
 
 **Usage:**
 ```python
+# Using color name (recommended)
 VideoConfig(..., accent_color="purple")
+
+# Using RGB tuple (advanced)
+VideoConfig(..., accent_color=(168, 85, 247))
+
+# Override via InputConfig
+InputConfig(
+    source=video,
+    accent_color=(59, 130, 246)  # Overrides video's color
+)
+```
+
+**🎨 Visual Impact Examples:**
+
+```
+Title Scene with Different Colors:
+┌────────────┬────────────┬────────────┐
+│   BLUE     │  ORANGE    │  PURPLE    │
+│            │            │            │
+│  Python    │  Python    │  Python    │
+│  Tutorial  │  Tutorial  │  Tutorial  │
+│            │            │            │
+│ Trustworthy│ Energetic  │ Premium    │
+└────────────┴────────────┴────────────┘
 ```
 
 ---
@@ -864,6 +1270,82 @@ VideoConfig(
 
 ## 🌍 Multilingual Workflows (Programmatic)
 
+### 🔄 Multilingual Expansion Flow Diagram
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│              Multilingual Video Generation Pipeline                │
+│                                                                    │
+│  Input: VideoConfig + languages=["en", "es", "fr"]                │
+│    │                                                               │
+│    ▼                                                               │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │ Original Video (English)                                      │ │
+│  │ ├── Scene 1: "Welcome to Python"                             │ │
+│  │ ├── Scene 2: "Variables store data"                          │ │
+│  │ └── Scene 3: "Functions are reusable"                        │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+│         │                                                          │
+│         ├──────────┬──────────┬──────────┐                        │
+│         ▼          ▼          ▼          ▼                        │
+│    ┌────────┐ ┌────────┐ ┌────────┐                              │
+│    │   EN   │ │   ES   │ │   FR   │  ← Translation Layer         │
+│    └────────┘ └────────┘ └────────┘                              │
+│         │          │          │                                   │
+│         ▼          ▼          ▼                                   │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                             │
+│  │tutorial_│ │tutorial_│ │tutorial_│  ← Generated Videos          │
+│  │   en/   │ │   es/   │ │   fr/   │                             │
+│  │         │ │         │ │         │                             │
+│  │ Scene1  │ │ Scene1  │ │ Scene1  │  ← Same visuals,            │
+│  │ Scene2  │ │ Scene2  │ │ Scene2  │    translated narration     │
+│  │ Scene3  │ │ Scene3  │ │ Scene3  │                             │
+│  └─────────┘ └─────────┘ └─────────┘                             │
+│                                                                    │
+│  Output: 3 complete videos with localized audio                   │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+### 📊 Multilingual Expansion Matrix
+
+```
+Input Scenarios:
+┌──────────────────────┬─────────────┬─────────────┬──────────────┐
+│ Input Type           │ Videos (M)  │ Languages(N)│ Output Count │
+├──────────────────────┼─────────────┼─────────────┼──────────────┤
+│ Single VideoConfig   │      1      │      3      │   1 × 3 = 3  │
+│ VideoSet (3 videos)  │      3      │      3      │   3 × 3 = 9  │
+│ VideoSet (5 videos)  │      5      │      4      │   5 × 4 = 20 │
+│ Single VideoConfig   │      1      │      1      │   1 × 1 = 1  │
+└──────────────────────┴─────────────┴─────────────┴──────────────┘
+
+Formula: Total Videos = M (videos) × N (languages)
+```
+
+### 🌐 Translation Workflow Visualization
+
+```
+Original (English)                    Translations
+─────────────────                    ──────────────
+narration: "Welcome"     ┌─────►  "Bienvenido" (ES)
+   │                     │
+   ├─────────────────────┼─────►  "Bienvenue" (FR)
+   │                     │
+   └─────────────────────┴─────►  "Willkommen" (DE)
+
+visual_content stays same:
+{
+  "title": "Python Tutorial"  ──►  Same for all languages
+  "subtitle": "Learn Basics"  ──►  (not translated by default)
+}
+```
+
+**💡 Translation Best Practices:**
+- ✅ Narration is auto-translated
+- ✅ Visual text (titles, subtitles) stays in source language
+- ✅ For fully localized visuals, create separate VideoConfigs
+- ⚠️ Translation quality depends on source clarity
+
 ### Single Video → Multiple Languages
 
 ```python
@@ -919,13 +1401,139 @@ result = await pipeline.execute(InputConfig(
 
 ## 📊 Single vs Set Workflow Comparison
 
+### 🤔 Decision Tree: VideoConfig vs VideoSet
+
+```
+What are you creating?
+│
+├─ Single topic/video?
+│  │
+│  ├─ One language only?
+│  │  └─► Use: VideoConfig
+│  │      Output: 1 video
+│  │
+│  └─ Multiple languages?
+│     └─► Use: VideoConfig + languages=["en", "es", ...]
+│         Output: N videos (1 per language)
+│
+└─ Multiple videos/series?
+   │
+   ├─ Same language for all?
+   │  └─► Use: VideoSet with M videos
+   │      Output: M videos
+   │
+   └─ Multiple languages for all?
+      └─► Use: VideoSet + languages=["en", "es", ...]
+          Output: M × N videos (M videos × N languages)
+```
+
+### 📈 Comparison Matrix
+
 | Aspect | Single Video | Video Set |
 |--------|-------------|-----------|
 | **Use** | `VideoConfig` | `VideoSet` |
 | **Best For** | Standalone content | Series, courses, batches |
-| **Output** | 1 directory | Multiple videos organized |
+| **Structure** | Single video_id | set_id + multiple videos |
+| **Output** | 1 directory | Multiple directories organized |
 | **Multilingual** | 1 video × N languages | M videos × N languages |
-| **Example** | Tutorial | 5-part course |
+| **Use Cases** | Tutorial, demo, explainer | Course, series, batch processing |
+| **Complexity** | Simple | Moderate |
+| **Organization** | Flat | Hierarchical |
+
+### 📊 Output Structure Visualization
+
+```
+Single VideoConfig:
+└── tutorial/
+    ├── tutorial_final.mp4
+    ├── audio/
+    └── frames/
+
+Single VideoConfig + languages=["en", "es", "fr"]:
+├── tutorial_en/
+│   ├── tutorial_en_final.mp4
+│   └── audio/
+├── tutorial_es/
+│   ├── tutorial_es_final.mp4
+│   └── audio/
+└── tutorial_fr/
+    ├── tutorial_fr_final.mp4
+    └── audio/
+
+VideoSet (3 videos):
+└── course_series/
+    ├── lesson_01/
+    │   ├── lesson_01_final.mp4
+    │   └── audio/
+    ├── lesson_02/
+    │   ├── lesson_02_final.mp4
+    │   └── audio/
+    └── lesson_03/
+        ├── lesson_03_final.mp4
+        └── audio/
+
+VideoSet + languages=["en", "es"] (3 videos × 2 languages = 6 outputs):
+└── course_series/
+    ├── lesson_01_en/
+    ├── lesson_01_es/
+    ├── lesson_02_en/
+    ├── lesson_02_es/
+    ├── lesson_03_en/
+    └── lesson_03_es/
+```
+
+### 💡 Real-World Scenarios
+
+**Scenario 1: Single Tutorial Video**
+```python
+# Use: Single VideoConfig
+video = VideoConfig(
+    video_id="python_intro",
+    title="Python Introduction",
+    scenes=[...]
+)
+# Output: 1 video
+```
+
+**Scenario 2: Tutorial in 3 Languages**
+```python
+# Use: VideoConfig + languages
+video = VideoConfig(
+    video_id="python_intro",
+    title="Python Introduction",
+    scenes=[...]
+)
+InputConfig(source=video, languages=["en", "es", "fr"])
+# Output: 3 videos (en, es, fr)
+```
+
+**Scenario 3: 5-Part Course Series**
+```python
+# Use: VideoSet
+course = VideoSet(
+    set_id="python_course",
+    name="Complete Python Course",
+    videos=[
+        VideoConfig(video_id="lesson_01", ...),
+        VideoConfig(video_id="lesson_02", ...),
+        VideoConfig(video_id="lesson_03", ...),
+        VideoConfig(video_id="lesson_04", ...),
+        VideoConfig(video_id="lesson_05", ...)
+    ]
+)
+# Output: 5 videos
+```
+
+**Scenario 4: 5-Part Course in 4 Languages**
+```python
+# Use: VideoSet + languages
+course = VideoSet(
+    set_id="python_course",
+    videos=[...5 videos...]
+)
+InputConfig(source=course, languages=["en", "es", "fr", "de"])
+# Output: 20 videos (5 lessons × 4 languages)
+```
 
 ---
 

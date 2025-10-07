@@ -4,12 +4,66 @@
 
 ---
 
+## 📊 Visual Decision Tree: Choose Your Approach
+
+```
+┌─────────────────────────────────────────────────────┐
+│          WHAT CONTENT DO YOU HAVE?                  │
+└─────────────────────────────────────────────────────┘
+                         │
+         ┌───────────────┴───────────────┐
+         ▼                               ▼
+    ┌─────────┐                     ┌─────────┐
+    │ Existing│                     │   No    │
+    │ Content │                     │ Content │
+    └─────────┘                     └─────────┘
+         │                               │
+         ▼                               ▼
+    ┌─────────────────────┐         ┌─────────────────────┐
+    │ OPTION A:           │         │ OPTION B:           │
+    │ Parse Raw Content   │         │ Build from Scratch  │
+    │                     │         │                     │
+    │ ✅ README.md        │         │ ✅ Database data    │
+    │ ✅ GitHub repo      │         │ ✅ API response     │
+    │ ✅ YouTube video    │         │ ✅ Custom structure │
+    │                     │         │ ✅ Templates        │
+    │ 📦 Zero setup       │         │ 🎨 Full control     │
+    │ ⚡ 1-line code      │         │ 🔧 Programmatic     │
+    └─────────────────────┘         └─────────────────────┘
+```
+
+---
+
 ## 🎯 Two Approaches
 
-1. **Parse raw content** (markdown, GitHub, YouTube) → auto-generate
-2. **Build from scratch** - full programmatic control
+### 📋 **Comparison: Parse vs Build**
 
-**Both work! Choose based on your needs.**
+| Feature | 🔍 Parse Raw Content | 🛠️ Build from Scratch |
+|---------|---------------------|----------------------|
+| **Setup Time** | ⚡ Instant | ⏱️ Minutes |
+| **Code Lines** | 1-3 lines | 10-50 lines |
+| **Content Source** | Files/URLs | Your data |
+| **Control Level** | ⭐⭐⭐ Medium | ⭐⭐⭐⭐⭐ Full |
+| **Best For** | Docs → Videos | Data → Videos |
+| **Learning Curve** | Easy | Moderate |
+
+### 🔄 **Visual Workflow Comparison**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    PARSE APPROACH                               │
+└─────────────────────────────────────────────────────────────────┘
+
+📄 README.md  →  🤖 Parser  →  📋 YAML  →  🎬 Video
+   (1 sec)        (instant)      (auto)      (5 min)
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    BUILD APPROACH                               │
+└─────────────────────────────────────────────────────────────────┘
+
+💾 Your Data  →  📝 Builder  →  📋 YAML  →  🎬 Video
+   (you have)     (you write)    (export)    (5 min)
+```
 
 ---
 
@@ -17,18 +71,91 @@
 
 ### **Option A: Parse Raw Content (Easiest!)**
 
+```
+┌────────────────────────────────────────────────────────────┐
+│  STEP-BY-STEP: Parse Markdown → Video                     │
+└────────────────────────────────────────────────────────────┘
+
+Step 1: Write ONE line of Python
+┌─────────────────────────────────────────────────────┐
+│ from scripts.document_to_programmatic import \      │
+│     parse_document_to_set                           │
+│ parse_document_to_set('README.md')                  │
+└─────────────────────────────────────────────────────┘
+                           ↓
+Step 2: System Auto-Generates Everything
+┌─────────────────────────────────────────────────────┐
+│ ✅ Parses markdown structure                        │
+│ ✅ Creates title/command/list scenes                │
+│ ✅ Generates professional narration                 │
+│ ✅ Exports to sets/readme/                          │
+└─────────────────────────────────────────────────────┘
+                           ↓
+Step 3: Generate Video (standard commands)
+┌─────────────────────────────────────────────────────┐
+│ cd scripts                                          │
+│ python generate_video_set.py ../sets/readme        │
+│ python generate_videos_from_set.py ../output/readme│
+└─────────────────────────────────────────────────────┘
+                           ↓
+                    🎬 Video Ready!
+```
+
+#### 💡 **Context: When to Use Parse Approach**
+
+| ✅ **Use When** | ❌ **Don't Use When** |
+|----------------|----------------------|
+| You have existing markdown/README | Content is in database |
+| Content structure is good | Need highly custom layout |
+| Want video in 5 minutes | Need specific narration style |
+| GitHub repo documentation | Generating from API data |
+
+#### 📝 **Annotated Code Example:**
+
 ```python
-# From markdown
+# 1️⃣ FROM MARKDOWN FILE
 from scripts.document_to_programmatic import parse_document_to_set
-parse_document_to_set('README.md')  # Done!
 
-# From GitHub
+parse_document_to_set('README.md')
+# ↑ What this does:
+#   - Reads README.md
+#   - Parses H1/H2/code blocks/lists
+#   - Creates appropriate scene types
+#   - Auto-generates narration
+#   - Exports to sets/readme/
+# ↑ Why we do this:
+#   - Zero manual work
+#   - Consistent structure
+#   - Professional narration
+
+# 2️⃣ FROM GITHUB REPO
 from scripts.document_to_programmatic import github_readme_to_video
-github_readme_to_video('https://github.com/user/repo').export_to_yaml('sets/demo')
 
-# From YouTube
+github_readme_to_video('https://github.com/user/repo') \
+    .export_to_yaml('sets/demo')
+# ↑ What this does:
+#   - Fetches README from GitHub API
+#   - Parses content
+#   - Returns VideoSetBuilder (can customize!)
+#   - Exports to sets/demo/
+# ↑ Why we do this:
+#   - No manual download needed
+#   - Always gets latest README
+#   - Can enhance before exporting
+
+# 3️⃣ FROM YOUTUBE VIDEO
 from scripts.youtube_to_programmatic import parse_youtube_to_set
+
 parse_youtube_to_set('https://youtube.com/watch?v=VIDEO_ID')
+# ↑ What this does:
+#   - Fetches video transcript
+#   - Extracts key points
+#   - Condenses to 60-90 seconds
+#   - Creates summary video
+# ↑ Why we do this:
+#   - Turn long videos into shorts
+#   - Auto-summarization
+#   - Repurpose content
 ```
 
 **See:** [PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md) for complete parsing guide.
@@ -37,32 +164,99 @@ parse_youtube_to_set('https://youtube.com/watch?v=VIDEO_ID')
 
 ### **Option B: Build from Scratch**
 
+```
+┌────────────────────────────────────────────────────────────┐
+│  STEP-BY-STEP: Build Custom Video from Data               │
+└────────────────────────────────────────────────────────────┘
+
+Step 1: Create Builder
+┌─────────────────────────────────────────────────────┐
+│ builder = VideoSetBuilder(                          │
+│     set_id="my_videos",      # Unique identifier   │
+│     set_name="My Collection" # Display name        │
+│ )                                                   │
+└─────────────────────────────────────────────────────┘
+                           ↓
+Step 2: Add Video(s) Programmatically
+┌─────────────────────────────────────────────────────┐
+│ builder.add_video(                                  │
+│     video_id="intro",                               │
+│     title="Introduction",                           │
+│     scenes=[                                        │
+│         builder.create_title_scene(...),            │
+│         builder.create_outro_scene(...)             │
+│     ]                                               │
+│ )                                                   │
+└─────────────────────────────────────────────────────┘
+                           ↓
+Step 3: Export to YAML
+┌─────────────────────────────────────────────────────┐
+│ builder.export_to_yaml("sets/my_videos")           │
+│ # Creates: sets/my_videos/*.yaml                    │
+└─────────────────────────────────────────────────────┘
+                           ↓
+Step 4: Generate Video (same as parse approach)
+┌─────────────────────────────────────────────────────┐
+│ cd scripts                                          │
+│ python generate_video_set.py ../sets/my_videos     │
+│ python generate_videos_from_set.py \                │
+│        ../output/my_videos                          │
+└─────────────────────────────────────────────────────┘
+                           ↓
+                    🎬 Video Ready!
+```
+
+#### 💡 **Context: When to Use Build Approach**
+
+| ✅ **Use When** | ❌ **Don't Use When** |
+|----------------|----------------------|
+| Content in database/API | Have markdown files |
+| Need custom structure | Simple doc → video |
+| Generating many variations | One-off video needed |
+| Template-based content | Content already structured |
+
+#### 📝 **Annotated Code Example:**
+
 ```python
 from scripts.python_set_builder import VideoSetBuilder
 
-# Create builder
+# 1️⃣ CREATE BUILDER
 builder = VideoSetBuilder(
-    set_id="my_videos",
-    set_name="My Video Collection"
+    set_id="my_videos",      # ← Used for file/folder names
+    set_name="My Collection" # ← Used in video metadata
 )
+# ↑ What this does: Initializes empty video set
+# ↑ Why we do this: Container for all videos
 
-# Add a video
+# 2️⃣ ADD VIDEO
 builder.add_video(
-    video_id="intro",
-    title="Introduction",
-    scenes=[
-        builder.create_title_scene("Hello", "World"),
-        builder.create_outro_scene("Done", "Easy!")
+    video_id="intro",       # ← Unique ID for this video
+    title="Introduction",   # ← Display title
+    scenes=[                # ← List of scenes
+        builder.create_title_scene(
+            "Hello",        # ← Main title text
+            "World"         # ← Subtitle text
+        ),
+        # ↑ What this does: Creates title card
+        # ↑ Why we do this: Professional intro
+
+        builder.create_outro_scene(
+            "Done",         # ← Main outro text
+            "Easy!"         # ← Sub text
+        )
+        # ↑ What this does: Creates closing card
+        # ↑ Why we do this: Clear ending
     ]
 )
 
-# Export to YAML
+# 3️⃣ EXPORT
 builder.export_to_yaml("sets/my_videos")
+# ↑ What this does: Writes YAML files to disk
+# ↑ Why we do this: Standard format for generator
 
-# Then generate:
-# cd scripts
-# python generate_video_set.py ../sets/my_videos
-# python generate_videos_from_set.py ../output/my_videos
+# ↓ VARIATION: Export returns path for chaining
+set_path = builder.export_to_yaml("sets/my_videos")
+print(f"Exported to: {set_path}")
 ```
 
 ---
@@ -487,6 +681,171 @@ python generate_videos_from_set.py ../output/tutorial_series_example
 ✅ **Export to YAML** then use standard pipeline
 ✅ **Mix methods** - start with wizard, add programmatically
 ✅ **Track in git** - sets/ folder, ignore output/
+
+---
+
+## 🔧 Troubleshooting Guide
+
+### 📊 **Common Issues Decision Tree**
+
+```
+┌──────────────────────────────────────────────────────────┐
+│              TROUBLESHOOTING FLOWCHART                   │
+└──────────────────────────────────────────────────────────┘
+
+        Video generation fails?
+                │
+        ┌───────┴───────┐
+        ▼               ▼
+    Parse error?    Generation error?
+        │               │
+        ▼               ▼
+    Check input     Check YAML
+        │               │
+        ▼               ▼
+    ┌─────────┐     ┌─────────┐
+    │ Is file │     │ Valid   │
+    │ valid?  │     │ format? │
+    └─────────┘     └─────────┘
+```
+
+### 🐛 **Common Problems & Solutions**
+
+#### **Problem 1: Parse fails on README**
+
+```
+❌ Error: "Failed to parse document"
+
+✅ Solution:
+1. Check file exists:
+   ls README.md
+
+2. Check encoding (must be UTF-8):
+   file README.md
+
+3. Check markdown syntax:
+   # Must have H1
+   ## Must have H2
+   ``` code blocks must close ```
+
+4. Try with simple test:
+   echo "# Test\n## Section\nContent" > test.md
+   parse_document_to_set('test.md')
+```
+
+#### **Problem 2: GitHub URL doesn't work**
+
+```
+❌ Error: "Failed to fetch from GitHub"
+
+✅ Solutions:
+1. Check URL format:
+   ✅ https://github.com/user/repo
+   ✅ https://github.com/user/repo/blob/main/README.md
+   ❌ github.com/user/repo (missing https://)
+
+2. Check repo is public:
+   - Open URL in browser
+   - Should not require login
+
+3. Try with known working repo:
+   github_readme_to_video('https://github.com/fastapi/fastapi')
+```
+
+#### **Problem 3: Videos have no narration**
+
+```
+❌ Issue: Video generates but silent
+
+✅ Solutions:
+1. Check scene has narration:
+   builder.create_title_scene(
+       "Title",
+       "Subtitle",
+       narration="Must provide narration!"  # ← Add this!
+   )
+
+2. Or use auto-narration (don't provide narration param):
+   builder.create_title_scene("Title", "Subtitle")
+   # System auto-generates narration
+
+3. Check TTS setup:
+   - Azure key configured?
+   - Voice name valid?
+```
+
+#### **Problem 4: Export path not found**
+
+```
+❌ Error: "Directory not found: sets/my_set"
+
+✅ Solutions:
+1. Use absolute paths:
+   import os
+   set_path = os.path.abspath('sets/my_set')
+   builder.export_to_yaml(set_path)
+
+2. Or ensure directory exists:
+   os.makedirs('sets/my_set', exist_ok=True)
+   builder.export_to_yaml('sets/my_set')
+
+3. Check working directory:
+   import os
+   print(os.getcwd())  # Should be video_gen/
+```
+
+### 📝 **Validation Checklist**
+
+```
+BEFORE GENERATING:
+□ File/URL is accessible
+□ Markdown has H1, H2 headers
+□ Code blocks properly closed (```)
+□ Export directory exists
+□ YAML files generated in sets/
+
+AFTER PARSING:
+□ Check sets/{name}/set_config.yaml exists
+□ Check sets/{name}/*.yaml video files exist
+□ Validate YAML structure:
+  cd scripts
+  python -c "import yaml; yaml.safe_load(open('../sets/name/file.yaml'))"
+
+BEFORE VIDEO GENERATION:
+□ TTS credentials configured
+□ Dependencies installed (pip install -r requirements.txt)
+□ Sufficient disk space (1GB+ per video set)
+```
+
+### 🎯 **Quick Debugging Commands**
+
+```bash
+# Test parsing
+python -c "
+from scripts.document_to_programmatic import parse_document_to_set
+parse_document_to_set('README.md')
+print('✅ Parsing works!')
+"
+
+# Validate YAML
+python -c "
+import yaml, glob
+for f in glob.glob('sets/*/set_config.yaml'):
+    yaml.safe_load(open(f))
+    print(f'✅ {f} valid')
+"
+
+# Test builder
+python -c "
+from scripts.python_set_builder import VideoSetBuilder
+b = VideoSetBuilder('test', 'Test')
+b.add_video('v1', 'Video 1', scenes=[
+    b.create_title_scene('Hello', 'World')
+])
+path = b.export_to_yaml('sets/test')
+print(f'✅ Exported to {path}')
+"
+```
 
 ---
 

@@ -30,47 +30,188 @@ The video_gen project implements a **Pipeline-based Architecture** with clear se
 
 ## 1. Component Architecture
 
-### 1.1 High-Level Component Diagram (Text-Based)
+### 1.1 High-Level System Architecture Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        VIDEO_GEN SYSTEM                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                   │
-│  ┌────────────────┐         ┌──────────────────┐                │
-│  │  Input Adapters│────────▶│ Pipeline         │                │
-│  │  (5 types)     │         │ Orchestrator     │                │
-│  └────────────────┘         └────────┬─────────┘                │
-│         │                             │                          │
-│         │                             ▼                          │
-│         │                    ┌─────────────────┐                │
-│         │                    │  Stage Manager  │                │
-│         │                    │  (7 stages)     │                │
-│         │                    └────────┬────────┘                │
-│         │                             │                          │
-│         └─────────────────────────────┼──────────────┐          │
-│                                       │              │          │
-│  ┌──────────────┐  ┌──────────────┐  │  ┌──────────▼────────┐ │
-│  │   Shared/    │  │   Pipeline/  │  │  │     Stages/       │ │
-│  │   Models     │  │   Events     │  │  │  - Input          │ │
-│  │   Config     │  │   State Mgr  │  │  │  - Parsing        │ │
-│  │   Exceptions │  │              │  │  │  - Script Gen     │ │
-│  └──────────────┘  └──────────────┘  │  │  - Audio Gen      │ │
-│                                       │  │  - Video Gen      │ │
-│  ┌──────────────┐  ┌──────────────┐  │  │  - Output         │ │
-│  │  Generators/ │  │   Content    │  │  │  - Validation     │ │
-│  │  - Audio     │  │   Parser     │  │  └───────────────────┘ │
-│  │  - Video     │  │              │  │                         │
-│  └──────────────┘  └──────────────┘  │                         │
-│                                       │                         │
-│                    External Dependencies                        │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  scripts/generate_documentation_videos.py (scene render) │   │
-│  │  Edge TTS (audio generation)                             │   │
-│  │  FFmpeg (video encoding)                                 │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                            VIDEO_GEN SYSTEM                                     │
+│                        Multi-Stage Video Generation Pipeline                    │
+├────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  ┌──────────────────────────── ENTRY POINTS ──────────────────────────────┐   │
+│  │                                                                          │   │
+│  │   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐       │   │
+│  │   │   CLI    │    │   Web    │    │  Python  │    │  FastAPI │       │   │
+│  │   │Interface │    │   UI     │    │   API    │    │ REST API │       │   │
+│  │   └─────┬────┘    └─────┬────┘    └─────┬────┘    └─────┬────┘       │   │
+│  │         │               │               │               │              │   │
+│  │         └───────────────┴───────────────┴───────────────┘              │   │
+│  │                             │                                           │   │
+│  │                             ▼                                           │   │
+│  │                      ┌──────────────┐                                  │   │
+│  │                      │ InputConfig  │  (Normalized Input)              │   │
+│  │                      └──────┬───────┘                                  │   │
+│  └─────────────────────────────┼──────────────────────────────────────────┘   │
+│                                │                                                │
+│  ┌─────────────────────────────▼──────────────────────────────────────────┐   │
+│  │                     ORCHESTRATION LAYER                                 │   │
+│  │                                                                          │   │
+│  │  ┌────────────────────────────────────────────────────────────────┐    │   │
+│  │  │              PipelineOrchestrator (411 LOC)                    │    │   │
+│  │  │                                                                 │    │   │
+│  │  │  Responsibilities:                                             │    │   │
+│  │  │  • Register and coordinate pipeline stages                     │    │   │
+│  │  │  • Execute stages sequentially with state persistence         │    │   │
+│  │  │  • Handle errors with retry logic (exponential backoff)        │    │   │
+│  │  │  • Emit real-time progress events                             │    │   │
+│  │  │  • Support resume from checkpoint (task_id)                    │    │   │
+│  │  │  • Manage context dictionary propagation                       │    │   │
+│  │  └────────────────────────────────────────────────────────────────┘    │   │
+│  │                                                                          │   │
+│  │  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐                  │   │
+│  │  │StateManager │  │ EventEmitter │  │    Stage     │                  │   │
+│  │  │             │  │              │  │   Registry   │                  │   │
+│  │  │• Persist    │  │• Pub/Sub     │  │              │                  │   │
+│  │  │• Restore    │  │• Progress    │  │[Stage1] →    │                  │   │
+│  │  │• Checkpoint │  │• Errors      │  │[Stage2] → ..│                  │   │
+│  │  └─────────────┘  └──────────────┘  └──────────────┘                  │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                │                                              │
+│  ┌─────────────────────────────▼──────────────────────────────────────────┐   │
+│  │                      PROCESSING STAGES                                  │   │
+│  │                   (Sequential Execution Flow)                           │   │
+│  │                                                                          │   │
+│  │  Stage 1: INPUT ADAPTATION                                              │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ InputStage (119 LOC)                                             │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Adapters (Strategy Pattern):                                     │  │   │
+│  │  │  ├─ DocumentAdapter    (PDF, DOCX, MD, TXT) → 567 LOC          │  │   │
+│  │  │  ├─ YouTubeAdapter     (Video transcripts) → 413 LOC           │  │   │
+│  │  │  ├─ YAMLFileAdapter    (YAML configs)                          │  │   │
+│  │  │  ├─ ProgrammaticAdapter (Python dicts)                         │  │   │
+│  │  │  └─ InteractiveWizard  (CLI prompts)                           │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Output: VideoConfig (normalized structure)                       │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  │                                │                                         │   │
+│  │  Stage 2: CONTENT PARSING      ▼                                        │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ ParsingStage                                                     │  │   │
+│  │  │  • Extract sections, headings, lists, code blocks               │  │   │
+│  │  │  • Identify structure and hierarchy                             │  │   │
+│  │  │  • Create scene templates                                       │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Output: ParsedContent                                            │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  │                                │                                         │   │
+│  │  Stage 3: SCRIPT GENERATION    ▼                                        │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ ScriptGenerationStage                                            │  │   │
+│  │  │  • Generate narration text for each scene                       │  │   │
+│  │  │  • Optional AI enhancement (Claude, GPT)                        │  │   │
+│  │  │  • Validate timing constraints (min/max duration)               │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Output: VideoConfig with narration scripts                       │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  │                                │                                         │   │
+│  │  Stage 4: AUDIO GENERATION     ▼                                        │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ AudioGenerationStage (208 LOC)                                   │  │   │
+│  │  │  • Text-to-Speech via Edge TTS (async, 27+ voices)              │  │   │
+│  │  │  • Voice rotation support (multiple voices per video)           │  │   │
+│  │  │  • Measure actual audio duration (FFmpeg probe)                 │  │   │
+│  │  │  • Generate timing reports (JSON)                               │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Output: MP3 files + timing_report.json                           │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  │                                │                                         │   │
+│  │  Stage 5: VIDEO GENERATION     ▼                                        │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ VideoGenerationStage (198 LOC)                                   │  │   │
+│  │  │  • Render keyframes (PIL + NumPy acceleration, 10x faster)      │  │   │
+│  │  │  • Apply transitions (crossfade, slide, fade)                   │  │   │
+│  │  │  • Encode video (FFmpeg with NVENC GPU encoding)                │  │   │
+│  │  │  • Mux audio tracks                                             │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Uses: Renderers module (12 scene types)                         │  │   │
+│  │  │ Output: MP4 video segments                                       │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  │                                │                                         │   │
+│  │  Stage 6: OUTPUT HANDLING      ▼                                        │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ OutputStage (315 LOC)                                            │  │   │
+│  │  │  • Concatenate video segments (FFmpeg concat)                   │  │   │
+│  │  │  • Organize output files (output/ directory)                    │  │   │
+│  │  │  • Generate metadata (JSON, timing reports)                     │  │   │
+│  │  │  • Optional delivery (upload, notification)                     │  │   │
+│  │  │                                                                   │  │   │
+│  │  │ Output: PipelineResult (final video + metadata)                  │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  │                                                                          │   │
+│  │  Stage 7: VALIDATION (Optional, pre-execution)                          │   │
+│  │  ┌──────────────────────────────────────────────────────────────────┐  │   │
+│  │  │ ValidationStage (130 LOC)                                        │  │   │
+│  │  │  • Validate input configuration schema                          │  │   │
+│  │  │  • Check file paths and permissions                             │  │   │
+│  │  │  • Verify external dependencies (FFmpeg, Edge TTS)              │  │   │
+│  │  └──────────────────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+│  ┌───────────────────────── SHARED COMPONENTS ─────────────────────────────┐   │
+│  │                                                                          │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │   │
+│  │  │  Models  │  │  Config  │  │Exception │  │Constants │  │  Utils  │ │   │
+│  │  │          │  │(Singleton)│  │Hierarchy │  │          │  │         │ │   │
+│  │  │• Video   │  │          │  │          │  │• Paths   │  │• File   │ │   │
+│  │  │• Scene   │  │• FFmpeg  │  │• Video   │  │• Colors  │  │  I/O    │ │   │
+│  │  │• Input   │  │• Voices  │  │  GenError│  │• Voices  │  │• Timing │ │   │
+│  │  │• Pipeline│  │• Dirs    │  │• Stage   │  │          │  │         │ │   │
+│  │  │  Result  │  │          │  │  Error   │  │          │  │         │ │   │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └─────────┘ │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                                  │
+│  ┌───────────────────── EXTERNAL DEPENDENCIES ─────────────────────────────┐   │
+│  │                                                                          │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │   │
+│  │  │  Edge TTS    │  │    FFmpeg    │  │    NumPy     │  │  Pillow    │ │   │
+│  │  │              │  │              │  │              │  │   (PIL)    │ │   │
+│  │  │• Async API   │  │• Video Enc   │  │• Fast Math   │  │• Image     │ │   │
+│  │  │• 27+ Voices  │  │• NVENC GPU   │  │• Frame Ops   │  │  Render    │ │   │
+│  │  │• Multi-lang  │  │• Concat      │  │• Blending    │  │• Drawing   │ │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │   │
+│  │                                                                          │   │
+│  │  ⚠️ Issue: video_generator/unified.py imports from scripts/ directory   │   │
+│  │  → Should internalize scene rendering to video_gen/renderers/ ✅ DONE   │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────────────────────┘
+
+LEGEND:
+  → : Data flow direction
+  • : Feature or responsibility
+  ⚠️ : Issue or warning
+  ✅ : Resolved or implemented
 ```
+
+### 1.2 Component Responsibility Matrix
+
+| Component | Primary Responsibility | Secondary Responsibilities | LOC | Coupling | Cohesion |
+|-----------|----------------------|---------------------------|-----|----------|----------|
+| **PipelineOrchestrator** | Coordinate stage execution | State management, error recovery, event emission | 411 | Medium | High ✅ |
+| **StateManager** | Persist task state | Checkpoint creation, resume capability | 364 | Low | High ✅ |
+| **EventEmitter** | Progress tracking | Real-time event streaming, async notifications | 206 | Low | High ✅ |
+| **InputStage** | Input normalization | Adapter selection, source validation | 119 | Medium | High ✅ |
+| **DocumentAdapter** | Document parsing | Content extraction (PDF, DOCX, MD, TXT) | 567 | Low | High ✅ |
+| **YouTubeAdapter** | Transcript fetching | Video ID extraction, subtitle parsing | 413 | Low | High ✅ |
+| **ParsingStage** | Content structuring | Section extraction, scene template creation | - | Low | High ✅ |
+| **ScriptGenerationStage** | Narration generation | AI enhancement, timing validation | - | Medium | High ✅ |
+| **AudioGenerationStage** | TTS audio synthesis | Duration measurement, timing reports | 208 | Medium | High ✅ |
+| **VideoGenerationStage** | Video rendering | Keyframe rendering, transition effects, encoding | 198 | Medium | Medium ⚠️ |
+| **OutputStage** | Output organization | File management, metadata generation, delivery | 315 | Low | High ✅ |
+| **ValidationStage** | Input validation | Schema checking, dependency verification | 130 | Low | High ✅ |
+| **Shared Models** | Data structures | Type safety, serialization | - | None | High ✅ |
+| **Config Singleton** | Global configuration | Environment variables, path resolution | 108 | None | High ✅ |
+| **Exception Hierarchy** | Error handling | Custom exceptions, error categorization | 49 | None | High ✅ |
 
 ### 1.2 Directory Structure
 
