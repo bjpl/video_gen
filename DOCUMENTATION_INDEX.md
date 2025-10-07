@@ -155,10 +155,11 @@
 
 ## 🗂️ File Count
 
-**Total documentation:** 49 markdown files
-- Root directory: 18 files
-- docs/ directory: 23 files
-- docs/architecture/: 8 files
+**Total documentation:** 92 markdown files (after cleanup)
+- Root directory: 19 files
+- docs/ directory: ~55 files
+- docs/architecture/: 9 files
+- Other directories: ~9 files
 
 **Recent cleanup:** Deleted 78 outdated files (Oct 6, 2025)
 - Removed: Agent reports, duplicate summaries, completed implementation plans
@@ -173,9 +174,9 @@
 - See: [app/input_adapters/DEPRECATED.md](app/input_adapters/DEPRECATED.md)
 
 ### Known Issues (See PRODUCTION_READINESS.md)
-- H2 document splitting feature incomplete
-- Wizard adapter needs more testing (22% → 87% coverage)
-- 129 skipped tests require review
+- ~~H2 document splitting feature incomplete~~ ✅ **FIXED Oct 6, 2025**
+- 128 skipped tests (70% legitimate, 30% need review)
+- 1 failing test (import issue, marked for refactoring)
 
 ### Maintenance
 - Session summaries: Check docs/SESSION_SUMMARY_*.md for recent changes

@@ -381,8 +381,8 @@ This System: Create audio → Measure → Build video to match ✅
 
 ```
 Total: 4,432 statements, 3,493 covered
-Tests: 449 passing, 6 failing, 129 skipped
-Speed: 20 seconds execution time
+Tests: 474 passing, 1 failing, 128 skipped
+Speed: 18 seconds execution time
 ```
 
 **Coverage by Component:**
@@ -663,4 +663,4 @@ python scripts/document_to_programmatic.py README.md
 
 **From idea to video in minutes.**
 
-*Last Updated: 2025-10-06 | Test Coverage: 79% | 449 Tests Passing*
+*Last Updated: 2025-10-06 | Test Coverage: 79% | 474 Tests Passing*

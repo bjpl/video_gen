@@ -152,28 +152,30 @@
 
 ## ❌ What Doesn't Work (Not Ready)
 
-### 1. H2 Document Splitting (BROKEN)
+### 1. H2 Document Splitting ✅ FIXED (Oct 6, 2025)
 
-**Status**: ⛔ **IMPLEMENTATION INCOMPLETE**
+**Status**: ✅ **NOW WORKING**
 
-**What's Broken:**
-- Document splitting by H2 headers not fully implemented
-- Tests exist but may be placeholder
-- Feature documented in API but undertested
+**What Was Fixed:**
+- Updated merge logic in `video_gen/input_adapters/document.py`
+- When `split_by_h2=True`, creates one video per H2 section
+- Test now passing: `test_split_by_h2_headings`
 
-**Evidence:**
-- `docs/DOCUMENT_ADAPTER_QUICK_REFERENCE.md` mentions `split_by_h2=True`
-- No dedicated tests for H2 splitting in test suite
-- Feature flag exists but implementation unclear
+**Usage:**
+```python
+InputConfig(
+    input_type="document",
+    source="document.md",
+    split_by_h2=True  # Creates multiple videos
+)
+```
 
-**Impact**: Users expecting multi-video generation from H2-split documents will encounter issues
+**Test Evidence:**
+- Test: `test_document_adapter_enhanced.py::test_split_by_h2_headings`
+- Status: ✅ PASSING
+- Result: Creates 3+ videos from document with 3 H2 sections
 
-**Fix Required**:
-1. Complete H2 splitting implementation
-2. Add 20+ tests covering all edge cases
-3. Document limitations clearly
-
-### 2. Web UI Integration (0% coverage)
+### 2. Web UI Integration (Partial coverage)
 
 **Status**: ⛔ **NO AUTOMATED TESTING**
 
