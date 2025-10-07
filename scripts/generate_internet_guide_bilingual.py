@@ -122,57 +122,66 @@ async def generate_bilingual_internet_guide():
     logger.info(f"   Videos: {len(bilingual_set.videos)}")
     logger.info(f"   Languages: {bilingual_set.metadata['languages']}")
 
-    # Step 5: Execute pipeline for bilingual generation
-    logger.info(f"\n🚀 Step 3: Generating videos (this will take a few minutes)...")
-    logger.info("   Pipeline will:")
-    logger.info("   1. Generate English versions (5 videos)")
-    logger.info("   2. Auto-translate to Spanish (5 videos)")
-    logger.info("   3. Generate audio with appropriate voices")
-    logger.info("   4. Render all 10 videos")
+    # Step 5: Execute pipeline for EACH video in EACH language
+    logger.info(f"\n🚀 Step 3: Generating all videos...")
+    logger.info(f"   Processing: {len(videos)} videos × 2 languages = {len(videos) * 2} total")
+    logger.info("")
 
     pipeline = get_pipeline()
+    languages = ["en", "es"]
 
-    input_config = InputConfig(
-        input_type="programmatic",
-        source=bilingual_set,
-        languages=["en", "es"],  # 🌍 Bilingual generation
-        accent_color="blue",
-        auto_generate=True,  # Auto-proceed without review
-        metadata={
-            "use_ai_narration": True  # ✨ Use AI narration for natural speech
-        }
-    )
+    total_videos = len(videos) * len(languages)
+    current = 0
+    success_count = 0
+    failed_count = 0
 
-    try:
-        result = await pipeline.execute(input_config)
+    for lang in languages:
+        logger.info(f"\n{'='*60}")
+        logger.info(f"🌍 Generating {lang.upper()} videos ({len(videos)} videos)")
+        logger.info(f"{'='*60}")
 
-        if result.success:
-            logger.info("\n" + "=" * 60)
-            logger.info("🎉 SUCCESS!")
-            logger.info("=" * 60)
-            logger.info(f"✅ Videos generated: 10 total (5 EN + 5 ES)")
-            logger.info(f"✅ Output directory: output/internet_guide_vol1/")
-            logger.info(f"✅ Generation time: {result.generation_time:.1f} seconds")
-            logger.info("\n📂 Output structure:")
-            logger.info("   output/internet_guide_vol1_en/")
-            logger.info("   ├── video_01.mp4 (Voice: male)")
-            logger.info("   ├── video_02.mp4 (Voice: female)")
-            logger.info("   ├── video_03.mp4 (Voice: male_warm)")
-            logger.info("   ├── video_04.mp4 (Voice: male)")
-            logger.info("   └── video_05.mp4 (Voice: female)")
-            logger.info("")
-            logger.info("   output/internet_guide_vol1_es/")
-            logger.info("   ├── video_01.mp4 (Voice: es-ES-AlvaroNeural)")
-            logger.info("   ├── video_02.mp4 (Voice: es-ES-ElviraNeural)")
-            logger.info("   ├── video_03.mp4 (Voice: es-ES-AlvaroNeural)")
-            logger.info("   ├── video_04.mp4 (Voice: es-ES-AlvaroNeural)")
-            logger.info("   └── video_05.mp4 (Voice: es-ES-ElviraNeural)")
-        else:
-            logger.error("\n❌ Generation failed")
-            logger.error(f"   Errors: {result.errors}")
+        for i, video in enumerate(videos, 1):
+            current += 1
+            logger.info(f"\n[{current}/{total_videos}] Video {i}: {video.title[:60]}...")
+            logger.info(f"   Language: {lang}")
+            logger.info(f"   Voice: {video.voices[0]}")
 
-    except Exception as e:
-        logger.error(f"\n❌ Pipeline execution failed: {e}", exc_info=True)
+            try:
+                input_config = InputConfig(
+                    input_type="programmatic",
+                    source=video,  # Single video at a time
+                    languages=[lang],  # One language at a time
+                    accent_color="blue",
+                    auto_generate=True,
+                    metadata={
+                        "use_ai_narration": True,
+                        "target_duration": 90
+                    }
+                )
+
+                result = await pipeline.execute(input_config)
+
+                if result.success:
+                    success_count += 1
+                    logger.info(f"   ✅ Generated successfully ({result.generation_time:.1f}s)")
+                    if result.video_path:
+                        logger.info(f"   📂 Output: {result.video_path}")
+                else:
+                    failed_count += 1
+                    logger.error(f"   ❌ Failed: {result.errors}")
+
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"   ❌ Error: {e}")
+
+    # Final summary
+    logger.info("\n" + "=" * 60)
+    logger.info("🎉 GENERATION COMPLETE!")
+    logger.info("=" * 60)
+    logger.info(f"✅ Successful: {success_count}/{total_videos}")
+    logger.info(f"❌ Failed: {failed_count}/{total_videos}")
+    logger.info(f"\n📂 Find your videos in:")
+    logger.info(f"   output/ directory (organized by video ID)")
 
 
 if __name__ == "__main__":
