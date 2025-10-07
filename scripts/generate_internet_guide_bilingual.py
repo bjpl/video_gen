@@ -60,13 +60,15 @@ async def generate_bilingual_internet_guide():
 
     # Parse with H2 splitting to get multiple videos
     # The document will be split by H2 sections
+    # Target: 90 seconds per video = need ~6-8 scenes per video (each scene ~12-15s)
     result = await adapter.adapt(
         source=str(source_doc),
         accent_color="blue",
         voice="male",
         video_count=5,  # Request 5 videos
         split_by_h2=True,  # Split by H2 sections
-        max_scenes_per_video=8  # Limit scenes per video for 90s target
+        max_scenes_per_video=8,  # 8 scenes × ~12s = ~96 seconds ≈ 90s target
+        target_duration=90  # Target 90 seconds per video
     )
 
     if not result.success:
