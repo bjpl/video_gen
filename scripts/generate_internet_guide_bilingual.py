@@ -66,8 +66,8 @@ async def generate_bilingual_internet_guide():
         accent_color="blue",
         voice="male",
         video_count=5,  # Request 5 videos
-        split_by_h2=True,  # Split by H2 sections
-        max_scenes_per_video=8,  # 8 scenes × ~12s = ~96 seconds ≈ 90s target
+        split_by_h2=False,  # Split by H2 sections
+        max_scenes_per_video=12,  # 8 scenes × ~12s = ~96 seconds ≈ 90s target
         target_duration=90  # Target 90 seconds per video
     )
 
