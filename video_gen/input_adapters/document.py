@@ -447,9 +447,15 @@ class DocumentAdapter(InputAdapter):
                     for row in table[1:5]:  # Skip header, take up to 4 rows
                         if row:
                             if len(row) > 1:
-                                items.append(f"{row[0]}: {' | '.join(row[1:])}")
+                                item = f"{row[0]}: {' | '.join(row[1:])}"
                             else:
-                                items.append(row[0])
+                                item = row[0]
+                            # Clean markdown formatting
+                            item = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', item)  # [text](url) → text
+                            item = re.sub(r'\*\*([^*]+)\*\*', r'\1', item)  # **bold** → text
+                            item = re.sub(r'\*([^*]+)\*', r'\1', item)  # *italic* → text
+                            item = re.sub(r'`([^`]+)`', r'\1', item)  # `code` → code
+                            items.append(item)
 
                     scenes.append(SceneConfig(
                         scene_id=f"{video_id}_list_{i}",
@@ -522,14 +528,23 @@ class DocumentAdapter(InputAdapter):
             elif section['text']:
                 # Text to list scene
                 sentences = [s.strip() for s in section['text'].split('.') if s.strip()]
+                # Clean markdown from sentences
+                clean_sentences = []
+                for sent in sentences:
+                    clean = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', sent)
+                    clean = re.sub(r'\*\*([^*]+)\*\*', r'\1', clean)
+                    clean = re.sub(r'\*([^*]+)\*', r'\1', clean)
+                    clean = re.sub(r'`([^`]+)`', r'\1', clean)
+                    clean_sentences.append(clean)
+
                 scenes.append(SceneConfig(
                     scene_id=f"{video_id}_list_{i}",
                     scene_type="list",
                     narration=f"About {heading.lower()}",
                     visual_content={
                         'header': heading,
-                        'description': sentences[0] if sentences else '',
-                        'items': sentences[1:4] if len(sentences) > 1 else [section['text'][:100]]
+                        'description': clean_sentences[0] if clean_sentences else '',
+                        'items': clean_sentences[1:4] if len(clean_sentences) > 1 else [section['text'][:100]]
                     },
                     voice=voice
                 ))
