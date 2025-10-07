@@ -311,11 +311,11 @@ class DocumentAdapter(InputAdapter):
         voice = kwargs.get('voice', 'male')
         max_scenes_per_video = kwargs.get('max_scenes_per_video', 20)  # Increased from 8 to 20 for comprehensive videos
         split_by_h2 = kwargs.get('split_by_h2', True)  # Split by H2 headings by default to create multiple videos
-        video_count = kwargs.get('video_count', 1)  # User-specified number of videos
+        video_count = kwargs.get('video_count', None)  # User-specified number of videos (optional)
 
         # Group sections by level 2 headings if split_by_h2 is enabled OR if video_count > 1
         video_groups = []
-        should_split = (split_by_h2 or video_count > 1) and any(s.get('level') == 2 for s in structure['sections'])
+        should_split = (split_by_h2 or (video_count and video_count > 1)) and any(s.get('level') == 2 for s in structure['sections'])
 
         if should_split:
             current_group = []
@@ -340,8 +340,9 @@ class DocumentAdapter(InputAdapter):
                     'sections': current_group
                 })
 
-            # If user specified exact video count, merge groups to match
-            if video_count and len(video_groups) > video_count:
+            # If user specified exact video count AND split_by_h2 is False, merge groups to match
+            # When split_by_h2=True, always create one video per H2 section (ignore video_count)
+            if not split_by_h2 and video_count and len(video_groups) > video_count:
                 # Merge excess groups into video_count groups
                 groups_per_video = len(video_groups) // video_count
                 merged_groups = []

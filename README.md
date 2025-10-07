@@ -3,6 +3,9 @@
 **Professional Video Production from Any Source - Complete Automated Workflow**
 
 [![Status](https://img.shields.io/badge/status-production--ready-brightgreen)]()
+[![Tests](https://github.com/yourusername/video_gen/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/video_gen/actions/workflows/test.yml)
+[![Coverage](https://github.com/yourusername/video_gen/actions/workflows/coverage.yml/badge.svg)](https://github.com/yourusername/video_gen/actions/workflows/coverage.yml)
+[![Lint](https://github.com/yourusername/video_gen/actions/workflows/lint.yml/badge.svg)](https://github.com/yourusername/video_gen/actions/workflows/lint.yml)
 [![Python](https://img.shields.io/badge/python-3.10+-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 

@@ -1,0 +1,57 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+
+    - name: Check code formatting with Black
+      run: |
+        black --check --diff video_gen/ app/ scripts/ || echo "::warning::Code formatting issues found. Run 'black .' to fix."
+
+    - name: Check import ordering with isort
+      run: |
+        isort --check-only --diff video_gen/ app/ scripts/ || echo "::warning::Import ordering issues found. Run 'isort .' to fix."
+
+    - name: Lint with flake8
+      run: |
+        # Stop build if there are Python syntax errors or undefined names
+        flake8 video_gen/ app/ scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 video_gen/ app/ scripts/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Type checking with mypy (non-blocking)
+      continue-on-error: true
+      run: |
+        mypy video_gen/ app/ --ignore-missing-imports || echo "::warning::Type checking issues found"
+
+    - name: Lint summary
+      if: always()
+      run: |
+        echo "## Linting Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- Black: Code formatting check" >> $GITHUB_STEP_SUMMARY
+        echo "- isort: Import ordering check" >> $GITHUB_STEP_SUMMARY
+        echo "- flake8: Code quality and syntax" >> $GITHUB_STEP_SUMMARY
+        echo "- mypy: Type checking (advisory)" >> $GITHUB_STEP_SUMMARY

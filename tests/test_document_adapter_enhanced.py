@@ -183,7 +183,6 @@ class TestDocumentAdapterMultipleVideos:
         return DocumentAdapter()
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="H2 splitting incomplete - merges sections back when video_count < sections. Needs implementation fix.")
     async def test_split_by_h2_headings(self, adapter):
         """Test splitting document into multiple videos by ## headings"""
         content = """# Main Title
