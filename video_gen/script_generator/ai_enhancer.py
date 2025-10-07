@@ -31,6 +31,7 @@ class AIScriptEnhancer:
     async def enhance_script(
         self,
         script: str,
+        scene_type: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None,
         **kwargs
     ) -> str:
@@ -38,19 +39,52 @@ class AIScriptEnhancer:
 
         Args:
             script: Original narration script
+            scene_type: Type of scene (for context)
             context: Optional context (topic, audience, etc.)
             **kwargs: Additional enhancement parameters
 
         Returns:
             Enhanced narration script
         """
-        # TODO: Implement Claude API integration
-        # 1. Prepare prompt with script and context
-        # 2. Call Claude API
-        # 3. Parse and validate response
-        # 4. Return enhanced script
+        try:
+            import anthropic
 
-        raise NotImplementedError("AI enhancement not yet implemented")
+            client = anthropic.Anthropic(api_key=self.api_key)
+
+            # Build enhancement prompt
+            prompt = f"""You are enhancing video narration to be more natural and engaging.
+
+Original narration: "{script}"
+
+Scene type: {scene_type or 'general'}
+
+Enhance this to be more natural and conversational while keeping the same key information. Keep it concise (similar length).
+
+Return ONLY the enhanced narration text, nothing else. No explanations, no quotes, just the enhanced narration."""
+
+            response = client.messages.create(
+                model="claude-3-5-sonnet-20241022",  # Latest Sonnet 3.5
+                max_tokens=500,
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }]
+            )
+
+            enhanced = response.content[0].text.strip()
+            return enhanced
+
+        except Exception as e:
+            # If AI enhancement fails, return original
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"AI enhancement failed: {e}, using original narration")
+            return script
+
+    # Alias method for backward compatibility
+    async def enhance(self, script: str, scene_type: Optional[str] = None, context: Optional[Dict[str, Any]] = None, **kwargs) -> str:
+        """Alias for enhance_script (backward compatibility)."""
+        return await self.enhance_script(script, scene_type, context, **kwargs)
 
     async def translate_script(
         self,
