@@ -65,7 +65,7 @@ class ModernPipelineOrchestrator:
         self.task_id = None
 
         # Setup logging
-        log_level = logging.DEBUG if args.verbose else logging.INFO
+        log_level = logging.DEBUG if getattr(args, 'verbose', False) else logging.INFO
         logging.basicConfig(
             level=log_level,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -263,6 +263,10 @@ class ModernPipelineOrchestrator:
                 self.logger.info(f"\n{Colors.YELLOW}Tip: You can resume from the last successful stage{Colors.END}")
 
         self.logger.info("")
+
+
+# Backwards compatibility alias for old imports
+PipelineOrchestrator = ModernPipelineOrchestrator
 
 
 def main():
