@@ -39,7 +39,7 @@
 - **[docs/architecture/COMPONENT_DIAGRAM.md](docs/architecture/COMPONENT_DIAGRAM.md)** - Component relationships
 
 ### API Documentation
-- **[docs/RENDERER_API.md](docs/RENDERER_API.md)** - Renderer module API (18 functions)
+- **[docs/api/RENDERER_API.md](docs/api/RENDERER_API.md)** - Renderer module API (18 functions)
 - **[docs/API_DESIGN.md](docs/API_DESIGN.md)** - API design principles
 - **[docs/architecture/API_CONTRACTS.md](docs/architecture/API_CONTRACTS.md)** - API contracts
 - **[docs/architecture/STATE_MANAGEMENT_SPEC.md](docs/architecture/STATE_MANAGEMENT_SPEC.md)** - State management
@@ -49,13 +49,13 @@
 ## 🧪 Testing & Development
 
 ### Testing
-- **[docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)** - Testing best practices
+- **[docs/testing/TESTING_GUIDE.md](docs/testing/TESTING_GUIDE.md)** - Testing best practices
 - **[docs/VISUAL_TEST_GUIDE.md](docs/VISUAL_TEST_GUIDE.md)** - Visual testing guide
 - **[tests/README.md](tests/README.md)** - Test suite overview
 - **[tests/README_BACKEND_TESTS.md](tests/README_BACKEND_TESTS.md)** - Backend testing
 
 ### Session Reports (Recent Changes)
-- **[docs/SESSION_SUMMARY_2025-10-06.md](docs/SESSION_SUMMARY_2025-10-06.md)** - Oct 6: Coverage expansion, test fixes
+- **[docs/session-reports/SESSION_SUMMARY_2025-10-06.md](docs/session-reports/SESSION_SUMMARY_2025-10-06.md)** - Oct 6: Coverage expansion, test fixes
 - **[scripts/LOGGING_MIGRATION_REPORT.md](scripts/LOGGING_MIGRATION_REPORT.md)** - Logging migration (1,020 statements)
 
 ---
@@ -125,7 +125,7 @@
 | **Multiple languages** | MULTILINGUAL_GUIDE.md | 12 min |
 | **AI narration** | AI_NARRATION_QUICKSTART.md | 3 min |
 | **Architecture** | docs/architecture/QUICK_SUMMARY.md | 8 min |
-| **API reference** | docs/RENDERER_API.md | 15 min |
+| **API reference** | docs/api/RENDERER_API.md | 15 min |
 | **Troubleshooting** | docs/TROUBLESHOOTING.md | As needed |
 | **What works?** | docs/PRODUCTION_READINESS.md | 10 min |
 
@@ -141,9 +141,9 @@
 
 **For Developers:**
 - docs/architecture/ (all files)
-- docs/RENDERER_API.md
-- docs/TESTING_GUIDE.md
-- docs/SESSION_SUMMARY_2025-10-06.md
+- docs/api/RENDERER_API.md
+- docs/testing/TESTING_GUIDE.md
+- docs/session-reports/SESSION_SUMMARY_2025-10-06.md
 - tests/README.md
 
 **For DevOps/QA:**

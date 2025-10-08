@@ -1,0 +1,33 @@
+{
+  "video_id": "internet_guide_vol1_core_infrastructure_video_2",
+  "title": "Understanding What the Internet Actually Is",
+  "description": "Generated from C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\inputs\\Internet_Guide_Vol1_Core_Infrastructure.md",
+  "language": "es",
+  "total_duration": 38.25,
+  "scene_count": 3,
+  "generated_at": "2025-10-07T00:36:53.349055",
+  "pipeline": {
+    "task_id": "task_39dd096e8e97",
+    "input_type": "programmatic"
+  },
+  "scenes": [
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_2_title",
+      "type": "title",
+      "title": "How the Internet Works",
+      "duration": 15.04
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_2_list_0",
+      "type": "list",
+      "title": "internet_guide_vol1_core_infrastructure_video_2_list_0",
+      "duration": 4.74
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_2_outro",
+      "type": "outro",
+      "title": "internet_guide_vol1_core_infrastructure_video_2_outro",
+      "duration": 18.47
+    }
+  ]
+}

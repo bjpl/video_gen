@@ -354,7 +354,7 @@ Mix voices per scene for maximum engagement!
 
 | Guide | Purpose | Read Time |
 |-------|---------|-----------|
-| [**THREE_INPUT_METHODS_GUIDE.md**](docs/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods (START HERE) | 10 min |
+| [**THREE_INPUT_METHODS_GUIDE.md**](docs/guides/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods (START HERE) | 10 min |
 | **[EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md)** 🆕 | 6 educational scene types | 10 min |
 | **[EDUCATIONAL_SCENES_QUICKREF.md](EDUCATIONAL_SCENES_QUICKREF.md)** 🆕 | Educational quick reference | 5 min |
 | **[MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)** 🆕 | Generate in 28+ languages | 12 min |
@@ -1208,7 +1208,7 @@ python generate_video_set.py ../sets/tutorial_series_example
 python generate_videos_from_set.py ../output/tutorial_series_example
 
 # 6. Read the guides
-cat docs/THREE_INPUT_METHODS_GUIDE.md   # All 4 input methods
+cat docs/guides/THREE_INPUT_METHODS_GUIDE.md   # All 4 input methods
 cat PARSE_RAW_CONTENT.md                 # Parse markdown/GitHub/YouTube (NEW!)
 cat PROGRAMMATIC_GUIDE.md                # Python API (NEW!)
 cat AI_NARRATION_QUICKSTART.md          # AI setup
