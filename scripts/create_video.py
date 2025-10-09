@@ -18,6 +18,7 @@ This is the MASTER COMMAND - one entry point for all input methods!
 
 import os
 import sys
+import subprocess
 import argparse
 from datetime import datetime
 import logging
@@ -123,22 +124,29 @@ Examples:
         elif args.youtube or args.youtube_url or args.youtube_id:
             logger.info(f"{Colors.BOLD}INPUT METHOD:{Colors.END} YouTube Transcript\n")
 
-            # Determine video ID/query
+            # Determine video arguments (use list for safety)
+            cmd = [sys.executable, "generate_script_from_youtube.py"]
+
             if args.youtube_id:
-                video_ref = f"--video-id {args.youtube_id}"
+                cmd.extend(["--video-id", args.youtube_id])
             elif args.youtube_url:
-                video_ref = f"--url {args.youtube_url}"
+                cmd.extend(["--url", args.youtube_url])
             else:
-                video_ref = f"--search \"{args.youtube}\""
+                cmd.extend(["--search", args.youtube])
+
+            cmd.extend([
+                "--accent-color", args.accent_color,
+                "--voice", args.voice,
+                "--duration", str(args.duration)
+            ])
 
             logger.warning(f"⚠️  Running YouTube generator...\n")
-            os.system(f"python generate_script_from_youtube.py {video_ref} "
-                     f"--accent-color {args.accent_color} --voice {args.voice} --duration {args.duration}")
+            subprocess.run(cmd, check=True)
             return
 
         elif args.wizard:
             logger.info(f"{Colors.BOLD}INPUT METHOD:{Colors.END} Interactive Wizard\n")
-            os.system("python generate_script_wizard.py")
+            subprocess.run([sys.executable, "generate_script_wizard.py"], check=True)
             return
 
         elif args.yaml:
@@ -159,8 +167,10 @@ Examples:
 
             # Generate script
             logger.info(f"\n{Colors.BOLD}Generating script from YAML...{Colors.END}\n")
-            ai_flag = '--use-ai' if args.use_ai else ''
-            os.system(f"python generate_script_from_yaml.py {yaml_file} {ai_flag}")
+            cmd = [sys.executable, "generate_script_from_yaml.py", yaml_file]
+            if args.use_ai:
+                cmd.append('--use-ai')
+            subprocess.run(cmd, check=True)
 
     except Exception as e:
         logger.error(f"\n{Colors.RED}❌ Error: {e}{Colors.END}\n")

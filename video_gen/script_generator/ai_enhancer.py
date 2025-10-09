@@ -173,21 +173,26 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
 
             enhanced = response.content[0].text.strip()
 
-            # Track usage metrics (NEW - Plan B enhancement)
+            # Quality validation FIRST (NEW - Plan B enhancement)
+            validation_result = self._validate_enhanced_script(enhanced, script)
+            if not validation_result['valid']:
+                logger.warning(f"Enhanced script failed validation: {validation_result['reason']}, using original")
+                # Record as failed call
+                usage = response.usage
+                self.metrics.record_call(
+                    input_tokens=usage.input_tokens,
+                    output_tokens=usage.output_tokens,
+                    success=False
+                )
+                return script
+
+            # Track usage metrics AFTER validation passes
             usage = response.usage
             self.metrics.record_call(
                 input_tokens=usage.input_tokens,
                 output_tokens=usage.output_tokens,
                 success=True
             )
-
-            # Quality validation (NEW - Plan B enhancement)
-            validation_result = self._validate_enhanced_script(enhanced, script)
-            if not validation_result['valid']:
-                logger.warning(f"Enhanced script failed validation: {validation_result['reason']}, using original")
-                self.metrics.failed_enhancements += 1  # Adjust count
-                self.metrics.successful_enhancements -= 1
-                return script
 
             logger.debug(f"AI enhancement successful: {len(enhanced)} chars (original: {len(script)} chars)")
 
@@ -225,9 +230,10 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
         if not enhanced.strip():
             return {'valid': False, 'reason': 'Empty or whitespace only'}
 
-        # Format validation (should not contain markdown or special formatting)
-        if any(marker in enhanced for marker in ['**', '__', '##', '```', '[', ']', '(', ')']):
-            return {'valid': False, 'reason': 'Contains markdown or special formatting'}
+        # Format validation (should not contain markdown formatting)
+        # Note: Allow parentheses and brackets - they're normal in speech
+        if any(marker in enhanced for marker in ['**', '__', '##', '```', '](', '[!', '```']):
+            return {'valid': False, 'reason': 'Contains markdown formatting'}
 
         return {'valid': True, 'reason': 'Passed all checks'}
 

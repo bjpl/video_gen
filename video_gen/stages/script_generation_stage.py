@@ -71,7 +71,8 @@ class ScriptGenerationStage(Stage):
                     enhanced_context = {
                         'scene_position': i,
                         'total_scenes': len(video_config.scenes),
-                        **(scene.parsed_content if hasattr(scene, 'parsed_content') else {})
+                        # Include visual content for AI context
+                        'visual_content': scene.visual_content if hasattr(scene, 'visual_content') else {}
                     }
 
                     narration = await self.ai_enhancer.enhance(
