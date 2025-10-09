@@ -39,7 +39,7 @@ class ScriptGenerationStage(Stage):
 
         # Check if AI narration is enabled (from input_config object in context)
         input_config = context.get("input_config")
-        use_ai = input_config.use_ai_narration if input_config and hasattr(input_config, 'use_ai_narration') else False
+        use_ai = (input_config.use_ai_narration if input_config and hasattr(input_config, 'use_ai_narration') else False) or getattr(config, "enhance_scripts", False)
 
         if use_ai:
             self.logger.info(f"✨ Generating AI-enhanced scripts for {len(video_config.scenes)} scenes")
@@ -63,17 +63,21 @@ class ScriptGenerationStage(Stage):
                     language="en"  # Default to English
                 )
 
-                # Optionally enhance with AI
-                # Check input_config for use_ai_narration flag, or old config for backward compatibility
-                input_config = context.get("input_config")
-                use_ai = (input_config.use_ai_narration if input_config and hasattr(input_config, 'use_ai_narration') else False) or getattr(config, "enhance_scripts", False)
-
+                # Optionally enhance with AI (use_ai defined at stage start)
                 if use_ai and self.ai_enhancer:
                     self.logger.debug(f"✨ Enhancing narration with AI for scene {scene.scene_id}")
+
+                    # Build enhanced context with scene position (NEW - Plan B)
+                    enhanced_context = {
+                        'scene_position': i,
+                        'total_scenes': len(video_config.scenes),
+                        **(scene.parsed_content if hasattr(scene, 'parsed_content') else {})
+                    }
+
                     narration = await self.ai_enhancer.enhance(
                         narration,
                         scene_type=scene.scene_type,
-                        context=scene.parsed_content if hasattr(scene, 'parsed_content') else None
+                        context=enhanced_context
                     )
                 elif use_ai and not self.ai_enhancer:
                     self.logger.warning(f"⚠️ AI narration requested but API key not found - using template narration")
@@ -95,6 +99,21 @@ class ScriptGenerationStage(Stage):
 
         self.logger.info(f"Script generation complete: {len(video_config.scenes)} scripts created")
 
+        # Get AI usage metrics if AI was used (NEW - Plan B)
+        ai_metrics = None
+        if use_ai and self.ai_enhancer and hasattr(self.ai_enhancer, 'metrics'):
+            try:
+                summary = self.ai_enhancer.metrics.get_summary()
+                # Handle both real summary dicts and mock objects
+                if isinstance(summary, dict):
+                    ai_metrics = summary
+                    self.logger.info(f"💰 AI Usage: {ai_metrics['api_calls']} calls, "
+                                   f"${ai_metrics['estimated_cost_usd']:.4f} estimated cost, "
+                                   f"{ai_metrics['success_rate']:.1f}% success rate")
+            except (AttributeError, TypeError):
+                # Metrics not available (e.g., in tests with mocks)
+                pass
+
         return StageResult(
             success=True,
             stage_name=self.name,
@@ -103,6 +122,7 @@ class ScriptGenerationStage(Stage):
             },
             metadata={
                 "scripts_generated": len(video_config.scenes),
-                "ai_enhanced": self.ai_enhancer is not None,
+                "ai_enhanced": self.ai_enhancer is not None and use_ai,
+                "ai_usage_metrics": ai_metrics if ai_metrics else None,
             }
         )
