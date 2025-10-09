@@ -128,20 +128,6 @@ Summary of the test video content.
         finally:
             Path(test_doc).unlink()
 
-    @pytest.mark.skip(reason="PipelineOrchestrator API changed - needs refactoring to use new pipeline architecture")
-    def test_document_end_to_end_dry_run(self):
-        """Test document processing without actual video generation"""
-        test_doc = self.create_test_document()
-
-        try:
-            # This test needs to be updated to use the new pipeline architecture
-            # The new PipelineOrchestrator uses InputConfig and register_stages()
-            # instead of the old args + stage_1_parse_input() API
-            pass
-
-        finally:
-            Path(test_doc).unlink()
-
 
 class TestYAMLInput:
     """Test YAML input processing"""
@@ -198,20 +184,6 @@ scenes:
             assert 'scenes' in data
             assert len(data['scenes']) == 2
             assert data['scenes'][0]['scene_type'] == 'title_intro'
-
-        finally:
-            Path(test_yaml).unlink()
-
-    @pytest.mark.skip(reason="PipelineOrchestrator API changed - needs refactoring to use new pipeline architecture")
-    def test_yaml_stage_1_processing(self):
-        """Test YAML input through stage 1"""
-        test_yaml = self.create_test_yaml()
-
-        try:
-            # This test needs to be updated to use the new pipeline architecture
-            # The new PipelineOrchestrator uses InputConfig and register_stages()
-            # instead of the old args + stage_1_parse_input() API
-            pass
 
         finally:
             Path(test_yaml).unlink()
@@ -298,34 +270,6 @@ class TestOutputGeneration:
 
             # Cleanup
             yaml_path.unlink()
-
-        finally:
-            Path(test_doc.name).unlink()
-
-
-class TestIntegrationWorkflow:
-    """Test complete integration workflows"""
-
-    @pytest.mark.skip(reason="PipelineOrchestrator API changed - needs refactoring to use new pipeline architecture")
-    def test_minimal_workflow_validation(self):
-        """Test minimal workflow completes without errors"""
-        # This test validates the workflow structure without
-        # actually generating audio/video (which takes time)
-
-        test_doc = tempfile.NamedTemporaryFile(
-            mode='w',
-            suffix='.md',
-            delete=False,
-            encoding='utf-8'
-        )
-        test_doc.write("# Test Video\n\n## Section 1\nContent here.\n\n## Section 2\nMore content.")
-        test_doc.close()
-
-        try:
-            # This test needs to be updated to use the new pipeline architecture
-            # The new PipelineOrchestrator uses InputConfig and register_stages()
-            # instead of the old args + stage_1_parse_input() API
-            pass
 
         finally:
             Path(test_doc.name).unlink()

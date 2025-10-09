@@ -259,21 +259,6 @@ class TestYouTubeAdapterIntegration:
         """Create YouTubeAdapter instance."""
         return YouTubeAdapter()
 
-    @pytest.mark.skip(reason="YouTube adapter uses youtube_transcript_api not requests - test needs refactoring")
-    def test_youtube_adapter_with_valid_url(self, youtube_adapter):
-        """Test YouTubeAdapter processes YouTube URL."""
-        pass
-
-    @pytest.mark.skip(reason="Adapter uses sync parse() not async adapt() - test needs refactoring")
-    def test_youtube_adapter_with_invalid_url(self, youtube_adapter):
-        """Test YouTubeAdapter handles invalid URLs."""
-        pass
-
-    @pytest.mark.skip(reason="YouTube adapter uses youtube_transcript_api not requests - test needs refactoring")
-    def test_youtube_adapter_handles_api_error(self, youtube_adapter):
-        """Test YouTubeAdapter handles API errors gracefully."""
-        pass
-
 
 class TestProgrammaticAdapterIntegration:
     """Integration tests for ProgrammaticAdapter."""
@@ -282,18 +267,6 @@ class TestProgrammaticAdapterIntegration:
     def programmatic_adapter(self):
         """Create ProgrammaticAdapter instance."""
         return ProgrammaticAdapter()
-
-    def test_programmatic_adapter_with_video_config(self, programmatic_adapter):
-        """Test ProgrammaticAdapter with VideoConfig object."""
-        # Note: ProgrammaticAdapter expects string source, not VideoConfig
-        # Marking this test as needing refactoring
-        pytest.skip("ProgrammaticAdapter expects string source - test needs refactoring")
-
-    def test_programmatic_adapter_with_dict(self, programmatic_adapter):
-        """Test ProgrammaticAdapter with dictionary."""
-        # Note: ProgrammaticAdapter expects string source, not dict
-        # Marking this test as needing refactoring
-        pytest.skip("ProgrammaticAdapter expects string source - test needs refactoring")
 
     def test_programmatic_adapter_with_invalid_source(self, programmatic_adapter):
         """Test ProgrammaticAdapter handles invalid source types."""
