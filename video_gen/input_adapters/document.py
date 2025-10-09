@@ -74,7 +74,7 @@ class DocumentAdapter(InputAdapter):
             )
 
     async def _read_document_content(self, source: Any) -> str:
-        """Read document from file or URL."""
+        """Read document from file or URL with security validation."""
         # Clean the source path - strip quotes and whitespace
         source_str = str(source).strip().strip('"').strip("'")
 
@@ -83,31 +83,85 @@ class DocumentAdapter(InputAdapter):
             # Try to import requests
             try:
                 import requests
+                from urllib.parse import urlparse
+                import socket
+
+                # URL validation - only http/https allowed
+                parsed = urlparse(source_str)
+                if parsed.scheme not in ['http', 'https']:
+                    raise ValueError(f"Invalid URL scheme: {parsed.scheme} (only http/https allowed)")
+
+                # SSRF Protection: Block internal/private IP addresses
+                try:
+                    ip = socket.gethostbyname(parsed.hostname)
+                    # Block private IP ranges
+                    if (ip.startswith('127.') or ip.startswith('192.168.') or
+                        ip.startswith('10.') or ip.startswith('172.16.') or
+                        ip.startswith('169.254.') or ip == 'localhost'):
+                        raise ValueError(f"Internal/private URLs not allowed for security: {ip}")
+                except socket.gaierror:
+                    pass  # DNS lookup failed, let requests handle it
+
                 # Convert GitHub URLs to raw
                 url = source_str
                 if 'github.com' in url and '/blob/' in url:
                     url = url.replace('github.com', 'raw.githubusercontent.com')
                     url = url.replace('/blob/', '/')
 
-                response = requests.get(url, timeout=10)
+                # Fetch with size limit check
+                response = requests.get(url, timeout=10, stream=True)
                 response.raise_for_status()
-                return response.text
+
+                # Check content length before reading
+                content_length = int(response.headers.get('content-length', 0))
+                MAX_FILE_SIZE = 10_000_000  # 10MB limit
+                if content_length > MAX_FILE_SIZE:
+                    raise ValueError(f"Document too large: {content_length} bytes (max {MAX_FILE_SIZE})")
+
+                # Read content with size limit
+                content = response.text
+                if len(content) > MAX_FILE_SIZE:
+                    raise ValueError(f"Document too large: {len(content)} bytes (max {MAX_FILE_SIZE})")
+
+                return content
+
             except ImportError:
                 raise Exception("requests library required for URL fetching. Install: pip install requests")
             except Exception as e:
                 raise Exception(f"Failed to fetch URL: {e}")
         else:
-            # Read from file
+            # Read from file with path traversal protection
             file_path = Path(source_str)
 
-            # If path is relative, resolve from project root (not module directory)
-            if not file_path.is_absolute():
-                # Get project root (2 levels up from this file)
-                project_root = Path(__file__).parent.parent.parent
-                file_path = project_root / file_path
+            # Security: Resolve to absolute path to detect traversal attempts
+            try:
+                file_path = file_path.resolve()
+            except (OSError, RuntimeError) as e:
+                raise ValueError(f"Invalid file path: {e}")
 
+            # If original was relative, validate it's within project bounds
+            if not Path(source_str).is_absolute():
+                # Get project root (3 levels up from this file: adapters -> input_adapters -> video_gen -> project)
+                project_root = Path(__file__).parent.parent.parent.resolve()
+
+                # Path traversal protection: Ensure file is under project root
+                try:
+                    file_path.relative_to(project_root)
+                except ValueError:
+                    raise ValueError(f"Path traversal detected: {file_path} is outside project directory")
+
+            # Validate file exists and is actually a file
             if not file_path.exists():
-                raise Exception(f"File not found: {file_path}")
+                raise FileNotFoundError(f"File not found: {file_path}")
+
+            if not file_path.is_file():
+                raise ValueError(f"Not a file: {file_path}")
+
+            # File size limit (10MB)
+            MAX_FILE_SIZE = 10_000_000
+            file_size = file_path.stat().st_size
+            if file_size > MAX_FILE_SIZE:
+                raise ValueError(f"File too large: {file_size} bytes (max {MAX_FILE_SIZE})")
 
             return file_path.read_text(encoding='utf-8')
 

@@ -751,13 +751,24 @@ class TestAudioGenerationStageTimingReport:
             ("unknown", [59, 130, 246])  # default to blue
         ]
 
+        # Create minimal scene for validation (scenes list cannot be empty)
+        test_scene = Scene(
+            scene_id="test_scene",
+            scene_type="title",
+            narration="Test",
+            visual_content={"title": "Test"},
+            voice="male",
+            final_duration=3.0,
+            actual_audio_duration=2.5
+        )
+
         for color_name, expected_rgb in color_tests:
             video_config = VideoConfig(
                 video_id="test",
                 title="Test",
                 description="Test",
                 accent_color=color_name,
-                scenes=[]
+                scenes=[test_scene]
             )
 
             output_dir = tmp_path / "audio"

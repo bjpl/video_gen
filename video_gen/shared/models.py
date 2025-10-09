@@ -28,6 +28,35 @@ class SceneConfig:
     audio_file: Optional[Path] = None
     warnings: List[str] = field(default_factory=list)
 
+    def __post_init__(self):
+        """Validate scene configuration for security and correctness."""
+        # Validate scene_id length (prevent DoS)
+        if len(self.scene_id) > 200:
+            raise ValueError(f"scene_id too long: {len(self.scene_id)} chars (max 200)")
+
+        # Validate narration length (prevent DoS)
+        if len(self.narration) > 50000:
+            raise ValueError(f"narration too long: {len(self.narration)} chars (max 50,000)")
+
+        # Validate voice is in supported list
+        VALID_VOICES = ["male", "female", "male_warm", "female_friendly", "british", "australian", "indian"]
+        if self.voice not in VALID_VOICES:
+            # Don't fail - just warn and use default
+            self.warnings.append(f"Unknown voice '{self.voice}', using 'male'")
+            self.voice = "male"
+
+        # Validate visual_content is a dict
+        if not isinstance(self.visual_content, dict):
+            raise TypeError(f"visual_content must be dict, got {type(self.visual_content)}")
+
+        # Validate duration constraints
+        if self.min_duration < 0 or self.min_duration > 300:
+            raise ValueError(f"min_duration out of range: {self.min_duration} (must be 0-300)")
+        if self.max_duration < 0 or self.max_duration > 300:
+            raise ValueError(f"max_duration out of range: {self.max_duration} (must be 0-300)")
+        if self.min_duration > self.max_duration:
+            raise ValueError(f"min_duration ({self.min_duration}) > max_duration ({self.max_duration})")
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -63,6 +92,36 @@ class VideoConfig:
     video_file: Optional[Path] = None
     final_file: Optional[Path] = None
     generation_timestamp: Optional[str] = None
+
+    def __post_init__(self):
+        """Validate video configuration for security and correctness."""
+        # Validate video_id length
+        if len(self.video_id) > 200:
+            raise ValueError(f"video_id too long: {len(self.video_id)} chars (max 200)")
+
+        # Validate title length
+        if len(self.title) > 500:
+            raise ValueError(f"title too long: {len(self.title)} chars (max 500)")
+
+        # Validate description length
+        if len(self.description) > 5000:
+            raise ValueError(f"description too long: {len(self.description)} chars (max 5,000)")
+
+        # Validate scenes list is not empty
+        if not self.scenes:
+            raise ValueError("scenes list cannot be empty")
+
+        # Validate scene count (reasonable limit)
+        if len(self.scenes) > 100:
+            raise ValueError(f"Too many scenes: {len(self.scenes)} (max 100)")
+
+        # Validate accent_color
+        VALID_COLORS = ["orange", "blue", "purple", "green", "pink", "cyan"]
+        if self.accent_color not in VALID_COLORS:
+            # Warn but don't fail
+            if hasattr(self, 'warnings'):
+                self.warnings = [f"Unknown accent_color '{self.accent_color}', using 'blue'"]
+            self.accent_color = "blue"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
