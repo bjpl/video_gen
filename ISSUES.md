@@ -58,46 +58,74 @@ Web UI has zero automated test coverage. Integration tests fail due to TestClien
 
 ## 🟡 Medium Priority
 
-### #3: Deprecated app/input_adapters Module
-**Status:** Open
+### #3: Deprecated app/input_adapters Module - Test Migration Required
+**Status:** Open (Blocked - requires test migration)
 **Priority:** MEDIUM
-**Effort:** 2-3 hours
+**Effort:** 2-3 days (not 2-3 hours - API is completely different)
 **Category:** Technical Debt
 
 **Description:**
-The `app/input_adapters/` module was deprecated on Oct 6, 2025. Migration guide exists, but old code still present.
+The `app/input_adapters/` module was deprecated on Oct 6, 2025, but cannot be removed yet because 116 test references depend on it.
+
+**Discovery (Oct 9):**
+- Attempted automatic migration - FAILED
+- Canonical adapters have different API:
+  - Deprecated: `.parse()` (sync) → VideoSet
+  - Canonical: `.adapt()` (async) → InputAdapterResult
+- Helper functions missing in canonical (create_title_scene, etc.)
+- Tests would need complete rewrite, not just import changes
 
 **Tasks:**
-- [ ] Verify all references updated to `video_gen/input_adapters/`
-- [ ] Remove deprecated `app/input_adapters/` directory
-- [ ] Update any remaining documentation references
-- [ ] Create deprecation warning for users
+- [x] Add deprecation warnings (Oct 9)
+- [ ] Create API compatibility layer OR
+- [ ] Rewrite 116 test instances to use new adapter API
+- [ ] Verify all tests pass with canonical adapters
+- [ ] Remove deprecated directory
+
+**Current Workaround:**
+- Deprecation warning added to `app/input_adapters/__init__.py`
+- Tests continue using deprecated API
+- New code should use `video_gen.input_adapters`
 
 **References:**
 - `app/input_adapters/DEPRECATED.md` - Migration guide
+- Test files affected: 13 files, 116 instances
 
 ---
 
-### #4: Low Coverage Areas (AI Components)
-**Status:** Open
+### #4: Low Coverage Areas (AI Components) - ✅ COMPLETED Oct 9
+**Status:** ✅ COMPLETED
 **Priority:** MEDIUM
-**Effort:** 2-3 hours
+**Effort:** 2-3 hours (ACTUAL: 2 hours via agent)
 **Category:** Testing
 
 **Description:**
-AI narration components have lower test coverage than rest of system.
+AI narration components had lower test coverage than rest of system.
 
 **Coverage:**
-- `video_gen/script_generator/ai_enhancer.py`: 39%
-- `video_gen/script_generator/narration.py`: 37%
+- Before: `ai_enhancer.py` (39%), `narration.py` (37%)
+- After: `ai_enhancer.py` (93%), `narration.py` (100%)
+- **Overall script_generator module: 95%** ✅
 
-**Tasks:**
-- [ ] Add tests for AI prompt generation
-- [ ] Add tests for error handling and fallbacks
-- [ ] Add tests for edge cases (empty input, special characters)
-- [ ] Target: Increase to 60-65% coverage
+**Completed:**
+- [x] Added tests for AI prompt generation
+- [x] Added tests for error handling and fallbacks
+- [x] Added tests for edge cases (validation, metrics, etc.)
+- [x] Exceeded target (95% vs 60-65% target)
 
-**Note:** Some low coverage is acceptable for AI code (hard to unit test API calls)
+**Tests Added:** 43 comprehensive tests in `tests/test_ai_components.py`
+- AIUsageMetrics class (10 tests)
+- AIScriptEnhancer initialization (3 tests)
+- Validation logic (8 tests)
+- Enhancement with mocked API (7 tests)
+- NarrationGenerator (12 tests)
+- Not-implemented methods (2 tests)
+- Backward compatibility (1 test)
+
+**All 43 tests passing** ✅
+
+**Completed:** October 9, 2025 (via parallel agent)
+**Moved to:** Recently Completed section
 
 ---
 
@@ -380,9 +408,9 @@ Created comprehensive security test suite.
 - Features: 2
 - Architecture: 1
 
-**Recently Completed:** 10 (7 completed today!)
+**Recently Completed:** 11 (8 completed today!)
 
-**Completion Rate (Oct 9):** 10 completed vs 8 remaining = 55% of total issues resolved
+**Completion Rate (Oct 9):** 11 completed vs 7 remaining = 61% of total issues resolved
 
 ---
 
