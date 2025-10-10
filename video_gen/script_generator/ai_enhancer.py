@@ -13,7 +13,7 @@ from typing import Optional, Dict, Any, List
 import logging
 
 from ..shared.config import config
-from ..exceptions import ScriptGenerationError
+from ..shared.exceptions import ScriptGenerationError
 
 
 logger = logging.getLogger(__name__)

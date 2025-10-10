@@ -39,3 +39,19 @@ class AudioGenerationError(StageError):
 
 class VideoGenerationError(StageError):
     """Raised when video generation fails."""
+
+
+class ScriptGenerationError(StageError):
+    """Raised when script generation fails."""
+
+
+class ContentParserError(VideoGenError):
+    """Raised when content parsing fails."""
+
+
+class PipelineError(VideoGenError):
+    """Raised when pipeline execution fails."""
+
+
+class OutputHandlerError(VideoGenError):
+    """Raised when output handling fails."""

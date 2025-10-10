@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from video_gen.script_generator.ai_enhancer import AIUsageMetrics, AIScriptEnhancer
 from video_gen.script_generator.narration import NarrationGenerator
 from video_gen.shared.models import SceneConfig
-from video_gen.exceptions import ScriptGenerationError
+from video_gen.shared.exceptions import ScriptGenerationError
 
 
 # ============================================================================
