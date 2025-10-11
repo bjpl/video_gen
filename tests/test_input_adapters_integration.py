@@ -288,7 +288,7 @@ class TestWizardAdapter:
     def test_wizard_adapter_exists(self):
         """Test WizardAdapter can be imported."""
         try:
-            from app.input_adapters.wizard import WizardAdapter
+            from video_gen.input_adapters.compat import WizardAdapter  # Migrated from app.input_adapters.wizard
             adapter = WizardAdapter()
             assert adapter is not None
         except ImportError:
