@@ -15,12 +15,15 @@ from unittest.mock import Mock, AsyncMock, patch, mock_open
 import tempfile
 import json
 
-# Import from app directory where adapters are located
-from app.input_adapters.document import DocumentAdapter
-from app.input_adapters.yaml_file import YAMLAdapter
-from app.input_adapters.youtube import YouTubeAdapter
-from app.input_adapters.programmatic import ProgrammaticAdapter
-from app.input_adapters.base import VideoSet, VideoConfig
+# Import from compatibility layer (migrated from app.input_adapters)
+from video_gen.input_adapters.compat import (
+    DocumentAdapter,
+    YAMLAdapter,
+    YouTubeAdapter,
+    ProgrammaticAdapter,
+    VideoSet,
+    VideoConfig
+)
 # Import scene types for testing
 from video_gen.shared.models import SceneConfig as Scene
 

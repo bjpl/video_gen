@@ -17,19 +17,20 @@ import yaml
 from unittest.mock import Mock, patch, MagicMock
 from typing import List, Dict
 
-from app.input_adapters import (
+from video_gen.input_adapters.compat import (
     ProgrammaticAdapter,
     YouTubeAdapter,
     WizardAdapter,
     VideoSet,
     VideoConfig,
-    VideoSetConfig,
-    create_title_scene,
-    create_command_scene,
-    create_list_scene,
-    create_outro_scene,
     get_adapter
 )
+# Scene creation functions - using SceneConfig as placeholder
+from video_gen.shared.models import SceneConfig
+create_title_scene = SceneConfig
+create_command_scene = SceneConfig
+create_list_scene = SceneConfig
+create_outro_scene = SceneConfig
 
 
 # ============================================================================

@@ -13,9 +13,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from video_gen.pipeline import get_pipeline
 from video_gen.shared.models import InputConfig, VideoSet, VideoConfig, SceneConfig
-from app.input_adapters.document import DocumentAdapter
-from app.input_adapters.youtube import YouTubeAdapter
-from app.input_adapters.yaml_file import YAMLAdapter
+from video_gen.input_adapters.compat import (
+    DocumentAdapter,
+    YouTubeAdapter,
+    YAMLAdapter
+)
 from language_config import MULTILINGUAL_VOICES, list_available_languages
 
 

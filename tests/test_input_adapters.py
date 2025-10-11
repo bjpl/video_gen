@@ -9,7 +9,7 @@ from pathlib import Path
 import tempfile
 import yaml
 
-from app.input_adapters import (
+from video_gen.input_adapters.compat import (
     DocumentAdapter,
     YouTubeAdapter,
     YAMLAdapter,
