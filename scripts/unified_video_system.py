@@ -43,12 +43,21 @@ CODE_BLUE = (59, 130, 246)
 CARD_BG = (255, 255, 255)
 CARD_SHADOW = (203, 213, 225)
 
-font_title = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 120)
-font_subtitle = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 48)
-font_header = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 64)
-font_desc = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 38)
-font_code = ImageFont.truetype("C:/Windows/Fonts/consola.ttf", 32)
-font_small = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 28)
+try:
+    font_title = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 120)
+    font_subtitle = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 48)
+    font_header = ImageFont.truetype("C:/Windows/Fonts/arialbd.ttf", 64)
+    font_desc = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 38)
+    font_code = ImageFont.truetype("C:/Windows/Fonts/consola.ttf", 32)
+    font_small = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 28)
+except Exception:
+    # Fallback to default font if TrueType fonts not available
+    font_title = ImageFont.load_default()
+    font_subtitle = ImageFont.load_default()
+    font_header = ImageFont.load_default()
+    font_desc = ImageFont.load_default()
+    font_code = ImageFont.load_default()
+    font_small = ImageFont.load_default()
 
 VOICE_CONFIG = {
     "male": "en-US-AndrewMultilingualNeural",        # Professional, confident

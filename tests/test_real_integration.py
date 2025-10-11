@@ -28,7 +28,7 @@ class TestYAMLWorkflow:
         """Test actual YAML file processing with real adapter"""
         from app.input_adapters import YAMLAdapter
 
-        yaml_path = Path("C:/Users/brand/Development/Project_Workspace/active-development/video_gen/inputs/example_simple.yaml")
+        yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
         assert yaml_path.exists(), f"Test file not found: {yaml_path}"
 
         adapter = YAMLAdapter(generate_narration=True)
@@ -57,7 +57,7 @@ class TestYAMLWorkflow:
         """Test YAML → parse → export → validate roundtrip"""
         from app.input_adapters import YAMLAdapter
 
-        yaml_path = Path("C:/Users/brand/Development/Project_Workspace/active-development/video_gen/inputs/example_simple.yaml")
+        yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
         adapter = YAMLAdapter()
         result = adapter.parse(str(yaml_path))
@@ -141,7 +141,7 @@ class TestDocumentWorkflow:
         """Test actual markdown document processing"""
         from app.input_adapters import DocumentAdapter
 
-        md_path = Path("C:/Users/brand/Development/Project_Workspace/active-development/video_gen/inputs/Internet_Guide_Vol1_Core_Infrastructure.md")
+        md_path = Path(__file__).parent.parent / "inputs" / "Internet_Guide_Vol1_Core_Infrastructure.md"
         assert md_path.exists(), f"Test file not found: {md_path}"
 
         adapter = DocumentAdapter(max_scenes=6, target_duration=60)
@@ -333,7 +333,7 @@ class TestMultiStageValidation:
         """Test YAML parsing stage outputs correct structure"""
         from app.input_adapters import YAMLAdapter
 
-        yaml_path = Path("C:/Users/brand/Development/Project_Workspace/active-development/video_gen/inputs/example_simple.yaml")
+        yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
         if not yaml_path.exists():
             pytest.skip(f"Test file not found: {yaml_path}")
@@ -535,7 +535,7 @@ class TestPerformance:
         import time
         from app.input_adapters import YAMLAdapter
 
-        yaml_path = Path("C:/Users/brand/Development/Project_Workspace/active-development/video_gen/inputs/example_simple.yaml")
+        yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
         if not yaml_path.exists():
             pytest.skip(f"Test file not found: {yaml_path}")
@@ -584,7 +584,7 @@ class TestPerformance:
         import time
         from app.input_adapters import YAMLAdapter
 
-        yaml_path = Path("C:/Users/brand/Development/Project_Workspace/active-development/video_gen/inputs/example_simple.yaml")
+        yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
         if not yaml_path.exists():
             pytest.skip(f"Test file not found: {yaml_path}")
