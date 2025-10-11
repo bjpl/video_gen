@@ -15,6 +15,22 @@ The Web UI has been upgraded to use the unified pipeline system, providing enhan
 ✅ **Multilingual** - 28+ languages with AI translation
 ✅ **Backward Compatible** - All existing templates work unchanged
 
+### 🚀 Phase 1+2 UI Alignment (Oct 11, 2025)
+
+✨ **90% API Feature Parity Achieved** (up from 60%)
+
+**Phase 1 Complete:**
+- 🎬 **ALL 12 scene types** with complete parameter forms
+- ⏱️ **Duration controls** (min/max) on every scene
+- 🔊 **Voice rotation** pattern explainer
+
+**Phase 2 Complete:**
+- 🤖 **AI narration clarity** - Renamed toggle, cost disclosure, API key notice
+- 🌍 **Multilingual Builder** - 28 languages with per-language voice assignment
+- 👁️ **Scene preview** - Validate content before generation
+
+See: [WEB_UI_GUIDE.md](../docs/WEB_UI_GUIDE.md) for complete documentation
+
 ## Stack
 
 - **Backend:** FastAPI (Python 3.10+) + Unified Pipeline
@@ -32,7 +48,7 @@ The Web UI has been upgraded to use the unified pipeline system, providing enhan
 4. **Multilingual** - Generate in 28+ languages simultaneously
 5. **Programmatic API** - Full REST API
 
-### Scene Types
+### Scene Types (12 Total - ALL with Complete Forms)
 
 **General (6 types):**
 - Title Slides, Commands/Code, Lists, Outros, Code Comparisons, Quotes
@@ -40,13 +56,28 @@ The Web UI has been upgraded to use the unified pipeline system, providing enhan
 **Educational (6 types):**
 - Learning Objectives, Problems, Solutions, Checkpoints, Quizzes, Exercises
 
-### Multilingual Support
+**NEW in Phase 1:**
+- ✅ Code Comparison form (before/after code with labels)
+- ✅ Quote form (quote text + attribution)
+- ✅ Enhanced Learning Objectives (title + objectives list)
+- ✅ Problem form with difficulty selector (Easy/Medium/Hard)
+- ✅ Solution form (code + explanation separated)
+- ✅ Exercise form (instructions + hints)
+- ✅ Checkpoint form (learned topics vs. next topics grid)
+
+### Multilingual Support (ENHANCED Phase 2)
 
 Generate videos in **28+ languages**:
 - 🇺🇸 English, 🇪🇸 Spanish, 🇫🇷 French, 🇩🇪 German, 🇵🇹 Portuguese
 - 🇮🇹 Italian, 🇯🇵 Japanese, 🇨🇳 Chinese, 🇰🇷 Korean, 🇸🇦 Arabic
 - 🇮🇳 Hindi, 🇷🇺 Russian, 🇳🇱 Dutch, 🇵🇱 Polish, 🇸🇪 Swedish
 - And many more with AI-powered translation!
+
+**NEW in Phase 2:**
+- ✅ Multilingual configuration now available in Scene Builder
+- ✅ Per-language voice assignment (assign different voices per language)
+- ✅ Live language counter ("Selected: X language(s)")
+- ✅ Educational info explaining translation and voice adaptation
 
 ### Voice Options
 - **4 English Voices** - Male, Male Warm, Female, Female Friendly

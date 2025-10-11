@@ -164,6 +164,7 @@ Create videos from ANY source:
 2. **📺 YouTube** - Fetch transcripts, create summaries ✅ **PRODUCTION READY** (94% tested)
 3. **🐍 Programmatic** - Python API for automation ✅ **PRODUCTION READY** (80% tested)
 4. **🧙 Wizard** - Interactive creation ⚠️ **WORKS** (87% tested, recently improved)
+5. **🌐 Web UI** - Zero-code browser interface ✅ **PRODUCTION READY** (90% feature parity)
 
 #### 📋 Input Method Decision Guide
 
@@ -173,8 +174,9 @@ Create videos from ANY source:
 | Video summarization | 📺 YouTube | Extract key points from any video | 3 min |
 | Batch automation (10+ videos) | 🐍 Programmatic | Full control, scriptable, CI/CD ready | 5 min setup |
 | New content from scratch | 🧙 Wizard | Guided prompts, beginner-friendly | 15 min |
+| Visual scene editing | 🌐 Web UI | Browser-based, no code, scene-by-scene control | 10 min |
 
-📝 **Pro tip:** Start with Document or YouTube for fastest results. Use Programmatic for automation at scale.
+📝 **Pro tip:** Start with Document or YouTube for fastest results. Use Programmatic for automation at scale. Use Web UI for maximum visual control.
 
 ### **🌍 Multilingual Support**
 
@@ -341,6 +343,81 @@ Mix voices per scene for maximum engagement!
 | **TOTAL** | **6-8 hours** | **5 minutes** | **~99%** |
 
 ✨ **Success Story:** User generated 15-video tutorial series in 30 minutes (would have taken 90+ hours manually)
+
+---
+
+## 🌐 Web UI (NEW!)
+
+**Zero-Code Video Generation Through Your Browser**
+
+Launch the web interface for visual, browser-based video creation with **90% API feature parity**:
+
+```bash
+cd app
+python main.py
+# Open: http://localhost:8000
+```
+
+### ✨ UI Features (Phase 1+2 Complete - Oct 11, 2025)
+
+**✅ Quick Start (`/create`):**
+- 📝 Document/YouTube parsing with **scene preview**
+- 🎙️ 4 professional voices with **rotation patterns explained**
+- 🤖 **Claude AI Script Enhancement** (with transparent cost disclosure)
+- 🌍 Multilingual support (28+ languages)
+- 👁️ **NEW:** Preview parsed scenes before generation
+
+**✅ Scene Builder (`/builder`):**
+- 🎬 **ALL 12 scene types** with complete parameter forms
+- ⏱️ **Duration controls** (min/max) on every scene
+- 🎨 6 color options with psychology guide
+- 🌐 **NEW:** Multilingual configuration built-in
+- 🎯 **NEW:** Scene-specific forms for educational content
+
+**✅ Real-Time Progress:**
+- 📊 Server-Sent Events for live updates
+- 🔄 Stage-by-stage progress tracking
+- ⚡ Background task processing
+
+### 📋 UI Capabilities
+
+| Feature | Quick Start | Scene Builder | Status |
+|---------|-------------|---------------|--------|
+| 12 Scene Types | ❌ (auto-generated) | ✅ Full forms | ✅ Complete |
+| Duration Controls | ✅ Global | ✅ Per-scene min/max | ✅ Complete |
+| Voice Configuration | ✅ Multi-track | ✅ Per-scene | ✅ Complete |
+| Multilingual | ✅ Built-in | ✅ NEW Phase 2 | ✅ Complete |
+| AI Narration | ✅ With transparency | ⚠️ Coming | 🟡 Partial |
+| Scene Preview | ✅ NEW Phase 2 | ❌ | 🟡 Partial |
+
+### 🚀 Feature Parity Progress
+
+```
+Baseline (Oct 10):  60% ████████████░░░░░░░░
+Phase 1 Complete:   80% ████████████████░░░░
+Phase 2 Complete:   90% ██████████████████░░  ← We are here
+Phase 3 Planned:    95% ███████████████████░
+Phase 4 Planned:   100% ████████████████████
+```
+
+### 📖 UI Documentation
+
+- **[WEB_UI_GUIDE.md](docs/WEB_UI_GUIDE.md)** - Complete UI user guide (400+ lines)
+- **[UI_API_GAP_ANALYSIS.md](docs/UI_API_GAP_ANALYSIS.md)** - Detailed feature comparison
+- **[UI_ALIGNMENT_PHASE_1_COMPLETE.md](docs/UI_ALIGNMENT_PHASE_1_COMPLETE.md)** - Phase 1 summary
+- **[UI_ALIGNMENT_PHASE_2_COMPLETE.md](docs/UI_ALIGNMENT_PHASE_2_COMPLETE.md)** - Phase 2 summary
+- **[app/README.md](app/README.md)** - Technical UI stack details
+
+### 🎯 When to Use the Web UI
+
+| Scenario | Use Web UI | Why |
+|----------|-----------|-----|
+| Visual scene editing | ✅ Yes | Scene-by-scene parameter control |
+| Educational content | ✅ Yes | All 6 educational scene types with proper forms |
+| Multilingual videos | ✅ Yes | Per-language voice assignment UI |
+| Quick prototyping | ✅ Yes | No code, instant feedback |
+| Batch automation | ❌ No | Use Programmatic API instead |
+| CI/CD pipelines | ❌ No | Use Programmatic API instead |
 
 ---
 

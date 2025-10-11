@@ -21,6 +21,7 @@
 - **[PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)** - Parse markdown/GitHub/YouTube
 - **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** - Control content generation
 - **[AI_NARRATION_QUICKSTART.md](AI_NARRATION_QUICKSTART.md)** - Setup AI narration (2 min)
+- **[docs/WEB_UI_GUIDE.md](docs/WEB_UI_GUIDE.md)** - 🆕 Complete Web UI user guide (400+ lines)
 
 ### Advanced Features
 - **[EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md)** - 6 educational scene types
@@ -98,6 +99,9 @@
 **Completed Features:**
 - **[PROGRAMMATIC_COMPLETE.md](PROGRAMMATIC_COMPLETE.md)** - Programmatic API complete
 - **[MULTILINGUAL_FINAL_SUMMARY.md](MULTILINGUAL_FINAL_SUMMARY.md)** - Multilingual feature summary
+- **[docs/UI_ALIGNMENT_PHASE_1_COMPLETE.md](docs/UI_ALIGNMENT_PHASE_1_COMPLETE.md)** - 🆕 UI Phase 1 (60% → 80% parity)
+- **[docs/UI_ALIGNMENT_PHASE_2_COMPLETE.md](docs/UI_ALIGNMENT_PHASE_2_COMPLETE.md)** - 🆕 UI Phase 2 (80% → 90% parity)
+- **[docs/UI_API_GAP_ANALYSIS.md](docs/UI_API_GAP_ANALYSIS.md)** - 🆕 Comprehensive UI/API feature comparison
 
 ---
 
@@ -120,6 +124,7 @@
 | Need | Read This | Time |
 |------|-----------|------|
 | **First video** | README.md → GETTING_STARTED.md | 15 min |
+| **Web UI** 🆕 | docs/WEB_UI_GUIDE.md | 20 min |
 | **Python API** | PROGRAMMATIC_GUIDE.md | 10 min |
 | **Educational content** | EDUCATIONAL_SCENES_GUIDE.md | 10 min |
 | **Multiple languages** | MULTILINGUAL_GUIDE.md | 12 min |
@@ -134,6 +139,7 @@
 **For Users:**
 - README.md
 - GETTING_STARTED.md
+- docs/WEB_UI_GUIDE.md 🆕
 - PROGRAMMATIC_GUIDE.md
 - EDUCATIONAL_SCENES_GUIDE.md
 - MULTILINGUAL_GUIDE.md
@@ -195,6 +201,7 @@
 
 ## 📅 Change Log
 
+- **2025-10-11**: Web UI Phase 1+2 alignment complete (60% → 90% parity), added WEB_UI_GUIDE.md
 - **2025-10-06**: Major cleanup (deleted 78 files), added PRODUCTION_READINESS.md, RENDERER_API.md
 - **2025-10-05**: Refactoring session, modularization, logging migration
 - **2025-10-03**: Multilingual and educational features added
