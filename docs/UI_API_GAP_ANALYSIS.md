@@ -543,10 +543,10 @@ InputConfig(
 
 | Feature | API | Quick Start | Multilingual Page | Builder | Gap |
 |---------|-----|-------------|-------------------|---------|-----|
-| 28+ languages | ✅ | ✅ | ✅ | ❌ | Medium |
-| Auto-translation | ✅ | ✅ | ✅ | ❌ | Medium |
-| Voice per language | ✅ | ✅ | ✅ | ❌ | Medium |
-| Single → N langs | ✅ | ✅ | ✅ | ❌ | Medium |
+| 28+ languages | ✅ | ✅ | ✅ | ✅ | ✅ COMPLETE |
+| Auto-translation | ✅ | ✅ | ✅ | ✅ | ✅ COMPLETE |
+| Voice per language | ✅ | ✅ | ✅ | ✅ | ✅ COMPLETE |
+| Single → N langs | ✅ | ✅ | ✅ | ✅ | ✅ COMPLETE |
 | M videos × N langs | ✅ | ✅ | ⚠️ | ❌ | Medium |
 
 **Priority: MEDIUM** - Good coverage in Quick Start, but Builder isolated
