@@ -9,8 +9,15 @@ import time
 import asyncio
 import tempfile
 from pathlib import Path
-import psutil
 import os
+
+# Optional dependency - skip all tests if not available
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    pytestmark = pytest.mark.skip(reason="psutil not installed (install: sudo apt-get install python3-psutil)")
 
 
 class TestPipelinePerformance:
@@ -24,7 +31,7 @@ class TestPipelinePerformance:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -43,7 +50,7 @@ class TestPipelinePerformance:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -62,7 +69,7 @@ class TestPipelinePerformance:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -110,7 +117,7 @@ class TestMemoryUsage:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(test_file)
@@ -134,7 +141,7 @@ class TestMemoryUsage:
                 f.write(content)
                 test_file = f.name
 
-            from app.input_adapters import DocumentAdapter
+            from video_gen.input_adapters.compat import DocumentAdapter
 
             adapter = DocumentAdapter()
             result = adapter.parse(test_file)
@@ -172,7 +179,7 @@ class TestConcurrentPerformance:
                 f.write(content)
                 documents.append(f.name)
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -276,7 +283,7 @@ class TestRegressionPrevention:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -299,7 +306,7 @@ class TestRegressionPrevention:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(test_file)
