@@ -232,11 +232,115 @@
                                     </div>
                                 </template>
 
-                                <!-- Educational Scenes -->
-                                <template x-if="['learning_objectives', 'problem', 'solution', 'checkpoint', 'quiz', 'exercise'].includes(scene.type)">
+                                <!-- Code Comparison Scene -->
+                                <template x-if="scene.type === 'code_comparison'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <textarea x-model="scene.content" rows="4" placeholder="Content (one item per line)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <input type="text" x-model="scene.before_label" placeholder="Before Label (default: Before)" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                            <input type="text" x-model="scene.after_label" placeholder="After Label (default: After)" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">Original Code</label>
+                                                <textarea x-model="scene.before_code" rows="8" placeholder="def old():\n    pass" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs text-gray-600 mb-1">Refactored Code</label>
+                                                <textarea x-model="scene.after_code" rows="8" placeholder="def new():\n    return True" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500">💡 Max 10 lines per side for readability</p>
+                                    </div>
+                                </template>
+
+                                <!-- Quote Scene -->
+                                <template x-if="scene.type === 'quote'">
+                                    <div class="space-y-3">
+                                        <textarea x-model="scene.quote_text" rows="4" placeholder="Quote text (e.g., 'Code is like humor...')" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.attribution" placeholder="Attribution (optional, e.g., 'Cory House')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                    </div>
+                                </template>
+
+                                <!-- Learning Objectives Scene -->
+                                <template x-if="scene.type === 'learning_objectives'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Lesson Title (e.g., 'Lesson Goals')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">Learning Objectives (one per line, max 5)</label>
+                                            <textarea x-model="scene.objectives" rows="5" placeholder="Understand variables&#10;Use basic data types&#10;Write simple functions" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        </div>
+                                        <p class="text-xs text-gray-500">ℹ️ Each line becomes a bullet point (max 5 for readability)</p>
+                                    </div>
+                                </template>
+
+                                <!-- Problem Scene -->
+                                <template x-if="scene.type === 'problem'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Problem Title (e.g., 'Reverse a String')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.problem_text" rows="4" placeholder="Problem description" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Difficulty (affects accent color in scene)</label>
+                                            <select x-model="scene.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                                <option value="easy">🟢 Easy (Green accent)</option>
+                                                <option value="medium">🟡 Medium (Orange accent)</option>
+                                                <option value="hard">🔴 Hard (Red accent)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Solution Scene -->
+                                <template x-if="scene.type === 'solution'">
+                                    <div class="space-y-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Solution Code (one line per line, max 12)</label>
+                                            <textarea x-model="scene.code" rows="8" placeholder="def reverse_string(s):\n    return s[::-1]" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Explanation</label>
+                                            <textarea x-model="scene.explanation" rows="3" placeholder="Explain how the solution works" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Exercise Scene -->
+                                <template x-if="scene.type === 'exercise'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.title" placeholder="Exercise Title (e.g., 'Practice: Variables')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Instructions</label>
+                                            <textarea x-model="scene.instructions" rows="3" placeholder="What the learner should do (e.g., 'Create three variables: name, age, city')" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Hints (one per line, max 3)</label>
+                                            <textarea x-model="scene.hints" rows="3" placeholder="Use descriptive names&#10;age should be an integer&#10;Use quotes for strings" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Checkpoint Scene -->
+                                <template x-if="scene.type === 'checkpoint'">
+                                    <div class="space-y-3">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">✓ Learned Topics (max 6)</label>
+                                                <textarea x-model="scene.learned_topics" rows="6" placeholder="Variables&#10;Data types&#10;Functions" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">→ Next Topics (max 6)</label>
+                                                <textarea x-model="scene.next_topics" rows="6" placeholder="Classes&#10;Modules&#10;File I/O" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500">ℹ️ Left column: what was covered. Right column: what's coming next.</p>
+                                    </div>
+                                </template>
+
+                                <!-- Quiz Scene -->
+                                <template x-if="scene.type === 'quiz'">
+                                    <div class="space-y-3">
+                                        <input type="text" x-model="scene.question" placeholder="Question" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.options" rows="4" placeholder="Options (one per line, max 4)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.answer" placeholder="Correct Answer" class="w-full px-3 py-2 border border-gray-300 rounded">
                                     </div>
                                 </template>
 
@@ -247,6 +351,38 @@
                                     <option value="female">Aria (Female)</option>
                                     <option value="female_friendly">Ava (Female Friendly)</option>
                                 </select>
+
+                                <!-- Duration Controls (injected into all scene types) -->
+                                <div class="pt-3 mt-3 border-t border-gray-200">
+                                    <div class="text-xs font-medium text-gray-600 mb-2">
+                                        ⏱️ Duration Control
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">
+                                                Min Duration (s)
+                                            </label>
+                                            <input type="number"
+                                                   x-model.number="scene.min_duration"
+                                                   min="1" max="60" step="0.5"
+                                                   placeholder="3.0"
+                                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600 mb-1">
+                                                Max Duration (s)
+                                            </label>
+                                            <input type="number"
+                                                   x-model.number="scene.max_duration"
+                                                   min="1" max="60" step="0.5"
+                                                   placeholder="15.0"
+                                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        ℹ️ System generates audio, then adjusts to fit duration range
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -300,7 +436,9 @@
             addScene(type) {
                 const sceneTemplate = {
                     type: type,
-                    voice: 'male'
+                    voice: 'male',
+                    min_duration: 3.0,  // Default min duration
+                    max_duration: 15.0  // Default max duration
                 };
 
                 // Add type-specific defaults
@@ -317,9 +455,35 @@
                 } else if (type === 'outro') {
                     sceneTemplate.message = '';
                     sceneTemplate.cta = '';
-                } else if (['learning_objectives', 'problem', 'solution', 'checkpoint', 'quiz', 'exercise'].includes(type)) {
+                } else if (type === 'code_comparison') {
+                    sceneTemplate.before_code = '';
+                    sceneTemplate.after_code = '';
+                    sceneTemplate.before_label = 'Before';
+                    sceneTemplate.after_label = 'After';
+                } else if (type === 'quote') {
+                    sceneTemplate.quote_text = '';
+                    sceneTemplate.attribution = '';
+                } else if (type === 'learning_objectives') {
                     sceneTemplate.title = '';
-                    sceneTemplate.content = '';
+                    sceneTemplate.objectives = '';
+                } else if (type === 'problem') {
+                    sceneTemplate.title = '';
+                    sceneTemplate.problem_text = '';
+                    sceneTemplate.difficulty = 'medium';
+                } else if (type === 'solution') {
+                    sceneTemplate.code = '';
+                    sceneTemplate.explanation = '';
+                } else if (type === 'exercise') {
+                    sceneTemplate.title = '';
+                    sceneTemplate.instructions = '';
+                    sceneTemplate.hints = '';
+                } else if (type === 'checkpoint') {
+                    sceneTemplate.learned_topics = '';
+                    sceneTemplate.next_topics = '';
+                } else if (type === 'quiz') {
+                    sceneTemplate.question = '';
+                    sceneTemplate.options = '';
+                    sceneTemplate.answer = '';
                 }
 
                 this.scenes.push(sceneTemplate);
@@ -393,6 +557,32 @@
                     }
                     if (scene.content && typeof scene.content === 'string') {
                         transformed.content = scene.content.split('\n').filter(c => c.trim());
+                    }
+                    // New scene types - convert string arrays
+                    if (scene.objectives && typeof scene.objectives === 'string') {
+                        transformed.objectives = scene.objectives.split('\n').filter(o => o.trim());
+                    }
+                    if (scene.hints && typeof scene.hints === 'string') {
+                        transformed.hints = scene.hints.split('\n').filter(h => h.trim());
+                    }
+                    if (scene.learned_topics && typeof scene.learned_topics === 'string') {
+                        transformed.learned_topics = scene.learned_topics.split('\n').filter(t => t.trim());
+                    }
+                    if (scene.next_topics && typeof scene.next_topics === 'string') {
+                        transformed.next_topics = scene.next_topics.split('\n').filter(t => t.trim());
+                    }
+                    if (scene.options && typeof scene.options === 'string') {
+                        transformed.options = scene.options.split('\n').filter(o => o.trim());
+                    }
+                    // Code fields - convert to arrays
+                    if (scene.before_code && typeof scene.before_code === 'string') {
+                        transformed.before_code = scene.before_code.split('\n');
+                    }
+                    if (scene.after_code && typeof scene.after_code === 'string') {
+                        transformed.after_code = scene.after_code.split('\n');
+                    }
+                    if (scene.code && typeof scene.code === 'string') {
+                        transformed.code = scene.code.split('\n');
                     }
 
                     return transformed;
