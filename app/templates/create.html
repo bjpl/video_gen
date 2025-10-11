@@ -446,15 +446,32 @@
                             </div>
 
                             <!-- AI Enhancement -->
-                            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
-                                <div>
-                                    <div class="font-medium text-sm text-gray-900">AI-Enhanced Narration</div>
-                                    <div class="text-xs text-gray-500">Use Claude AI for better content</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <div class="font-medium text-sm text-gray-900">Claude AI Script Enhancement</div>
+                                            <span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">BETA</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mb-1.5">Improves narration script quality and naturalness</div>
+                                        <div class="text-xs text-gray-600 font-medium">💰 ~$0.03/video • ⏱️ +3-5s per scene</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-3">
+                                        <input type="checkbox" x-model="single.useAI" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" x-model="single.useAI" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-                                </label>
+
+                                <!-- API Key Notice (conditional) -->
+                                <div x-show="single.useAI" x-transition class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-lg">⚠️</span>
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-sm text-amber-900 mb-1">Requires ANTHROPIC_API_KEY</div>
+                                            <div class="text-xs text-amber-800">Set in environment variables or .env file</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Accent Color -->
@@ -627,6 +644,86 @@
                             <span x-show="single.useAI">✓ AI Enhancement</span>
                             <span x-show="single.languageMode === 'multiple'">✓ Multilingual (<span x-text="single.targetLanguages.length"></span> langs)</span>
                             <span x-show="single.videos[0].voiceTracks.length > 1">✓ Multi-voice (<span x-text="single.videos[0].voiceTracks.length"></span> tracks)</span>
+                        </div>
+                    </div>
+
+                    <!-- Preview Button (Document Input Only) -->
+                    <div x-show="single.inputMethod === 'document'" class="mb-4">
+                        <button @click="parsePreview()" :disabled="previewLoading || !single.documentPath"
+                                class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all">
+                            <span x-show="!previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span>Preview Scenes</span>
+                            </span>
+                            <span x-show="previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Parsing...</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Scene Preview Panel -->
+                    <div x-show="showPreview && previewScenes.length > 0" class="mb-4 border-2 border-purple-200 rounded-xl overflow-hidden bg-white shadow-lg">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                                </svg>
+                                <h3 class="font-bold">Scene Preview (<span x-text="previewScenes.length"></span> scenes)</h3>
+                            </div>
+                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4 max-h-96 overflow-y-auto">
+                            <template x-for="scene in previewScenes" :key="scene.number">
+                                <div class="mb-3 border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                                    <div class="p-3 flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl" x-text="getSceneTypeIcon(scene.type)"></div>
+                                        <div class="flex-grow">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-xs font-bold text-gray-500">Scene <span x-text="scene.number"></span></span>
+                                                <span class="text-xs px-2 py-1 rounded border" :class="getSceneTypeColor(scene.type)" x-text="scene.type.replace('_', ' ').toUpperCase()"></span>
+                                            </div>
+                                            <h4 class="font-semibold text-gray-900 mb-1" x-text="scene.title"></h4>
+                                            <p class="text-sm text-gray-600 mb-2 whitespace-pre-line" x-text="scene.content"></p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.voice"></span>
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.duration + 's'"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>Note:</strong> This is a preview. The actual video will have more detailed content parsed from your document.
+                                        Use the <a href="/builder" class="underline font-semibold hover:text-blue-600">Builder</a> for scene-by-scene editing.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -942,15 +1039,32 @@
                             </div>
 
                             <!-- AI Enhancement -->
-                            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
-                                <div>
-                                    <div class="font-medium text-sm text-gray-900">AI-Enhanced Narration</div>
-                                    <div class="text-xs text-gray-500">Use Claude AI for better content (requires API key)</div>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <div class="font-medium text-sm text-gray-900">Claude AI Script Enhancement</div>
+                                            <span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">BETA</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mb-1.5">Improves narration script quality and naturalness</div>
+                                        <div class="text-xs text-gray-600 font-medium">💰 ~$0.03/video • ⏱️ +3-5s per scene</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-3">
+                                        <input type="checkbox" x-model="set.useAI" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                                    </label>
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" x-model="set.useAI" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                                </label>
+
+                                <!-- API Key Notice (conditional) -->
+                                <div x-show="set.useAI" x-transition class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-lg">⚠️</span>
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-sm text-amber-900 mb-1">Requires ANTHROPIC_API_KEY</div>
+                                            <div class="text-xs text-amber-800">Set in environment variables or .env file</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Accent Color -->
@@ -1209,6 +1323,86 @@
                         </div>
                     </div>
 
+                    <!-- Preview Button (Document Input Only) -->
+                    <div x-show="set.inputMethod === 'document'" class="mb-4">
+                        <button @click="parsePreview()" :disabled="previewLoading || !set.documentPath"
+                                class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all">
+                            <span x-show="!previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span>Preview Scenes</span>
+                            </span>
+                            <span x-show="previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Parsing...</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Scene Preview Panel (Shared with Single Mode) -->
+                    <div x-show="showPreview && previewScenes.length > 0" class="mb-4 border-2 border-purple-200 rounded-xl overflow-hidden bg-white shadow-lg">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                                </svg>
+                                <h3 class="font-bold">Scene Preview (<span x-text="previewScenes.length"></span> scenes)</h3>
+                            </div>
+                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4 max-h-96 overflow-y-auto">
+                            <template x-for="scene in previewScenes" :key="scene.number">
+                                <div class="mb-3 border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                                    <div class="p-3 flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl" x-text="getSceneTypeIcon(scene.type)"></div>
+                                        <div class="flex-grow">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-xs font-bold text-gray-500">Scene <span x-text="scene.number"></span></span>
+                                                <span class="text-xs px-2 py-1 rounded border" :class="getSceneTypeColor(scene.type)" x-text="scene.type.replace('_', ' ').toUpperCase()"></span>
+                                            </div>
+                                            <h4 class="font-semibold text-gray-900 mb-1" x-text="scene.title"></h4>
+                                            <p class="text-sm text-gray-600 mb-2 whitespace-pre-line" x-text="scene.content"></p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.voice"></span>
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.duration + 's'"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>Note:</strong> This is a preview. The actual video will have more detailed content parsed from your document.
+                                        Use the <a href="/builder" class="underline font-semibold hover:text-blue-600">Builder</a> for scene-by-scene editing.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button @click="generateSet()" :disabled="loading || !canGenerate('set')"
                             class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
                         <span x-show="!loading" class="flex items-center justify-center gap-2">
@@ -1326,6 +1520,11 @@ function videoCreator() {
         step: 1,
         loading: false,
         allLanguages: [],
+
+        // Scene preview state
+        showPreview: false,
+        previewScenes: [],
+        previewLoading: false,
 
         single: {
             inputMethod: 'manual',
@@ -1550,6 +1749,144 @@ function videoCreator() {
                     return config.name && config.name.length > 0;
                 }
             }
+        },
+
+        async parsePreview() {
+            const config = this.mode === 'single' ? this.single : this.set;
+
+            // Only works for document input
+            if (config.inputMethod !== 'document' || !config.documentPath) {
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: 'Scene preview only available for document input',
+                        type: 'info'
+                    }
+                }));
+                return;
+            }
+
+            this.previewLoading = true;
+            this.previewScenes = [];
+
+            try {
+                // Simple client-side markdown parsing
+                // In a real implementation, we'd fetch and parse the document
+                // For now, we'll create a mock preview based on common patterns
+
+                const documentPath = config.documentPath.trim();
+
+                // Check if it's a URL or file path
+                let content = '';
+                if (documentPath.startsWith('http://') || documentPath.startsWith('https://')) {
+                    // For URLs, we'd need to fetch - for now show placeholder
+                    this.previewScenes = [
+                        {
+                            type: 'title',
+                            number: 1,
+                            title: 'Title Scene',
+                            content: 'Document from URL',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 5
+                        },
+                        {
+                            type: 'info',
+                            number: 2,
+                            title: 'Preview Limitation',
+                            content: 'URL preview coming soon. Click Generate to process the full document.',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 3
+                        }
+                    ];
+                } else {
+                    // For file paths, show a sample structure
+                    // In production, we'd read the file via API
+                    this.previewScenes = [
+                        {
+                            type: 'title',
+                            number: 1,
+                            title: 'Document Title',
+                            content: `From: ${documentPath}`,
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 5
+                        },
+                        {
+                            type: 'section',
+                            number: 2,
+                            title: 'Introduction',
+                            content: 'Scene will be generated from first section',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 10
+                        },
+                        {
+                            type: 'bullet_list',
+                            number: 3,
+                            title: 'Key Points',
+                            content: '• Point 1\n• Point 2\n• Point 3',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 15
+                        },
+                        {
+                            type: 'code',
+                            number: 4,
+                            title: 'Code Examples',
+                            content: 'Code blocks will be rendered with syntax highlighting',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 12
+                        },
+                        {
+                            type: 'conclusion',
+                            number: 5,
+                            title: 'Summary',
+                            content: 'Final scene with key takeaways',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 8
+                        }
+                    ];
+                }
+
+                this.showPreview = true;
+
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: `Preview generated: ${this.previewScenes.length} scenes`,
+                        type: 'success'
+                    }
+                }));
+
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: 'Preview failed: ' + error.message,
+                        type: 'error'
+                    }
+                }));
+            } finally {
+                this.previewLoading = false;
+            }
+        },
+
+        getSceneTypeColor(type) {
+            const colors = {
+                'title': 'bg-blue-100 text-blue-800 border-blue-300',
+                'section': 'bg-green-100 text-green-800 border-green-300',
+                'bullet_list': 'bg-purple-100 text-purple-800 border-purple-300',
+                'code': 'bg-gray-100 text-gray-800 border-gray-300',
+                'conclusion': 'bg-orange-100 text-orange-800 border-orange-300',
+                'info': 'bg-yellow-100 text-yellow-800 border-yellow-300'
+            };
+            return colors[type] || 'bg-gray-100 text-gray-800 border-gray-300';
+        },
+
+        getSceneTypeIcon(type) {
+            const icons = {
+                'title': '🎬',
+                'section': '📄',
+                'bullet_list': '📋',
+                'code': '💻',
+                'conclusion': '🎯',
+                'info': 'ℹ️'
+            };
+            return icons[type] || '📝';
         },
 
         previewVoice(voiceId, buttonElement) {

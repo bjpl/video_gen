@@ -72,6 +72,226 @@
         </div>
     </div>
 
+    <!-- Multilingual Settings -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Multilingual Settings</h3>
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox"
+                       x-model="multilingualEnabled"
+                       class="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500">
+                <span class="text-sm font-medium text-gray-700">Enable Multilingual Mode</span>
+            </label>
+        </div>
+
+        <div x-show="multilingualEnabled" class="space-y-6">
+            <!-- Source Language -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Source Language
+                    <span class="text-xs text-gray-500">(Original content language)</span>
+                </label>
+                <select x-model="sourceLanguage"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="it">Italian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="nl">Dutch</option>
+                    <option value="ru">Russian</option>
+                    <option value="ja">Japanese</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ko">Korean</option>
+                    <option value="ar">Arabic</option>
+                    <option value="hi">Hindi</option>
+                    <option value="tr">Turkish</option>
+                    <option value="pl">Polish</option>
+                    <option value="sv">Swedish</option>
+                    <option value="no">Norwegian</option>
+                    <option value="da">Danish</option>
+                    <option value="fi">Finnish</option>
+                    <option value="el">Greek</option>
+                    <option value="he">Hebrew</option>
+                    <option value="th">Thai</option>
+                    <option value="vi">Vietnamese</option>
+                    <option value="id">Indonesian</option>
+                    <option value="ms">Malay</option>
+                    <option value="tl">Filipino</option>
+                    <option value="cs">Czech</option>
+                    <option value="hu">Hungarian</option>
+                </select>
+            </div>
+
+            <!-- Target Languages -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Target Languages
+                    <span class="text-xs text-gray-500">(Videos will be generated for each selected language)</span>
+                </label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="en" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">English</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="es" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Spanish</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="fr" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">French</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="de" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">German</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="it" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Italian</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="pt" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Portuguese</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="nl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Dutch</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="ru" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Russian</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="ja" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Japanese</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="zh" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Chinese</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="ko" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Korean</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="ar" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Arabic</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="hi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Hindi</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="tr" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Turkish</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="pl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Polish</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="sv" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Swedish</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="no" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Norwegian</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="da" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Danish</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="fi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Finnish</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="el" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Greek</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="he" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Hebrew</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="th" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Thai</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="vi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Vietnamese</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="id" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Indonesian</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="ms" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Malay</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="tl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Filipino</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="cs" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Czech</span>
+                    </label>
+                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" value="hu" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                        <span class="text-sm">Hungarian</span>
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    Selected: <span x-text="targetLanguages.length"></span> language(s)
+                </p>
+            </div>
+
+            <!-- Per-Language Voice Assignment -->
+            <div x-show="targetLanguages.length > 0">
+                <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Voice Assignment per Language
+                    <span class="text-xs text-gray-500">(Optional: customize voice for each target language)</span>
+                </label>
+                <div class="space-y-3">
+                    <template x-for="lang in targetLanguages" :key="lang">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <span class="text-sm font-medium text-gray-700 w-32" x-text="getLanguageName(lang)"></span>
+                            <select x-model="languageVoices[lang]"
+                                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                                <option value="">Default Voice</option>
+                                <option value="male">Andrew (Male)</option>
+                                <option value="male_warm">Brandon (Male Warm)</option>
+                                <option value="female">Aria (Female)</option>
+                                <option value="female_friendly">Ava (Female Friendly)</option>
+                            </select>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-blue-900 mb-1">How Multilingual Mode Works</h4>
+                        <ul class="text-xs text-blue-800 space-y-1">
+                            <li>Content will be automatically translated from source to each target language</li>
+                            <li>Separate video files will be generated for each language</li>
+                            <li>AI narration adapts to each language's pronunciation and rhythm</li>
+                            <li>Visual elements remain consistent across all language versions</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scene List -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <!-- Left: Scene Types -->
@@ -432,6 +652,11 @@
                 progress: 0,
                 message: 'Starting...'
             },
+            // Multilingual settings
+            multilingualEnabled: false,
+            sourceLanguage: 'en',
+            targetLanguages: [],
+            languageVoices: {},
 
             addScene(type) {
                 const sceneTemplate = {
@@ -538,6 +763,19 @@
                 return names[type] || type;
             },
 
+            getLanguageName(code) {
+                const languageNames = {
+                    en: 'English', es: 'Spanish', fr: 'French', de: 'German',
+                    it: 'Italian', pt: 'Portuguese', nl: 'Dutch', ru: 'Russian',
+                    ja: 'Japanese', zh: 'Chinese', ko: 'Korean', ar: 'Arabic',
+                    hi: 'Hindi', tr: 'Turkish', pl: 'Polish', sv: 'Swedish',
+                    no: 'Norwegian', da: 'Danish', fi: 'Finnish', el: 'Greek',
+                    he: 'Hebrew', th: 'Thai', vi: 'Vietnamese', id: 'Indonesian',
+                    ms: 'Malay', tl: 'Filipino', cs: 'Czech', hu: 'Hungarian'
+                };
+                return languageNames[code] || code;
+            },
+
             async generateVideo() {
                 if (this.scenes.length === 0) return;
 
@@ -598,6 +836,26 @@
                         scenes: transformedScenes
                     }]
                 };
+
+                // Add multilingual configuration if enabled
+                if (this.multilingualEnabled && this.targetLanguages.length > 0) {
+                    payload.multilingual = {
+                        enabled: true,
+                        source_language: this.sourceLanguage,
+                        target_languages: this.targetLanguages
+                    };
+
+                    // Add per-language voice assignments if configured
+                    const voiceAssignments = {};
+                    for (const lang of this.targetLanguages) {
+                        if (this.languageVoices[lang]) {
+                            voiceAssignments[lang] = this.languageVoices[lang];
+                        }
+                    }
+                    if (Object.keys(voiceAssignments).length > 0) {
+                        payload.multilingual.voice_mapping = voiceAssignments;
+                    }
+                }
 
                 try {
                     const response = await fetch('/api/generate', {
