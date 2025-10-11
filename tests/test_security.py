@@ -40,7 +40,9 @@ class TestPathTraversalProtection:
 
             # Should fail with path traversal error
             assert not result.success
-            assert "outside project directory" in result.error or "not found" in result.error.lower()
+            assert ("outside project directory" in result.error or
+                    "system directories denied" in result.error or
+                    "not found" in result.error.lower())
 
     @pytest.mark.asyncio
     async def test_blocks_absolute_path_to_system_files(self):

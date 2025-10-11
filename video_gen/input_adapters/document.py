@@ -139,16 +139,22 @@ class DocumentAdapter(InputAdapter):
             except (OSError, RuntimeError) as e:
                 raise ValueError(f"Invalid file path: {e}")
 
-            # If original was relative, validate it's within project bounds
-            if not Path(source_str).is_absolute():
-                # Get project root (3 levels up from this file: adapters -> input_adapters -> video_gen -> project)
-                project_root = Path(__file__).parent.parent.parent.resolve()
+            # Get project root (3 levels up from this file: adapters -> input_adapters -> video_gen -> project)
+            project_root = Path(__file__).parent.parent.parent.resolve()
 
-                # Path traversal protection: Ensure file is under project root
-                try:
-                    file_path.relative_to(project_root)
-                except ValueError:
-                    raise ValueError(f"Path traversal detected: {file_path} is outside project directory")
+            # CRITICAL SECURITY: Block absolute paths to system directories
+            # This prevents access to sensitive files like /etc/passwd, /root/.ssh/id_rsa, etc.
+            system_dirs = ['/etc', '/sys', '/proc', '/root', '/boot', '/var', '/usr', '/bin', '/sbin']
+            file_path_str = str(file_path)
+            if any(file_path_str.startswith(d) for d in system_dirs):
+                raise ValueError(f"Access to system directories denied: {file_path}")
+
+            # Path traversal protection: Ensure file is under project root
+            # This applies to BOTH relative and absolute paths
+            try:
+                file_path.relative_to(project_root)
+            except ValueError:
+                raise ValueError(f"Path traversal detected: {file_path} is outside project directory")
 
             # Validate file exists and is actually a file
             if not file_path.exists():
