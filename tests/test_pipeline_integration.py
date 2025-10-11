@@ -66,7 +66,7 @@ Thank you for testing our system.
 
     def test_document_to_yaml_stage(self, sample_document):
         """Test document parsing stage in isolation"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(sample_document)
@@ -98,7 +98,7 @@ Thank you for testing our system.
             yaml.dump(yaml_data, f)
             yaml_file = f.name
 
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         adapter = YAMLAdapter(generate_narration=True)
         result = adapter.parse(yaml_file)
@@ -127,7 +127,7 @@ class TestYouTubeToVideoComplete:
 
     def test_youtube_transcript_extraction(self):
         """Test YouTube transcript extraction stage"""
-        from app.input_adapters import YouTubeAdapter
+        from video_gen.input_adapters.compat import YouTubeAdapter
 
         adapter = YouTubeAdapter()
 
@@ -196,7 +196,7 @@ class TestParallelVideoGeneration:
     @pytest.mark.asyncio
     async def test_parallel_document_processing(self):
         """Test processing multiple documents in parallel"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         # Create multiple test documents
         documents = []
@@ -313,7 +313,7 @@ class TestPipelineOutputValidation:
 
     def test_yaml_output_validation(self):
         """Test that generated YAML is valid"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         content = "# Test\n\nContent"
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
@@ -368,7 +368,7 @@ class TestPipelineEdgeCases:
 
     def test_empty_input_handling(self):
         """Test handling of empty input"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         content = ""
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
@@ -392,7 +392,7 @@ class TestPipelineEdgeCases:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -417,7 +417,7 @@ Math: α β γ ∑ ∫
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(test_file)

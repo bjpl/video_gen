@@ -275,7 +275,7 @@ class TestVideoSet:
 
     def test_to_dict(self):
         """Test VideoSet to dict conversion"""
-        from app.input_adapters.base import VideoSetConfig
+        from video_gen.input_adapters.compat import VideoSetConfig
 
         config = VideoSetConfig(
             set_id='test',
@@ -297,7 +297,7 @@ class TestVideoSet:
 
     def test_export_to_yaml(self):
         """Test exporting VideoSet to YAML"""
-        from app.input_adapters.base import VideoSetConfig
+        from video_gen.input_adapters.compat import VideoSetConfig
 
         config = VideoSetConfig(
             set_id='test_export',

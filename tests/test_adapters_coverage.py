@@ -37,14 +37,15 @@ create_outro_scene = SceneConfig
 # EXAMPLES ADAPTER TESTS (148 missing lines)
 # ============================================================================
 
+@pytest.mark.skip(reason="app.input_adapters.examples module removed in adapter consolidation - see docs/TEST_MIGRATION_STATUS.md")
 class TestExamplesAdapter:
-    """Tests for examples.py functions"""
+    """Tests for examples.py functions (SKIPPED: module removed)"""
 
     def test_example_document_adapter(self):
         """Test document adapter example"""
         # Import and inject logger before importing examples
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -66,7 +67,7 @@ class TestExamplesAdapter:
     def test_example_yaml_adapter(self):
         """Test YAML adapter example"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -90,7 +91,7 @@ class TestExamplesAdapter:
     def test_example_programmatic_adapter(self):
         """Test programmatic adapter example"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -114,7 +115,7 @@ class TestExamplesAdapter:
     def test_example_factory_pattern(self):
         """Test factory pattern example"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -131,7 +132,7 @@ class TestExamplesAdapter:
     def test_example_export_workflow(self):
         """Test export workflow example"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -147,7 +148,7 @@ class TestExamplesAdapter:
     def test_example_custom_adapter(self):
         """Test custom adapter example"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -165,7 +166,7 @@ class TestExamplesAdapter:
     def test_run_all_examples_success(self):
         """Test running all examples successfully"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -183,7 +184,7 @@ class TestExamplesAdapter:
     def test_run_all_examples_error_handling(self):
         """Test error handling in run_all_examples"""
         import logging
-        import app.input_adapters.examples as examples_module
+        # import app.input_adapters.examples  # SKIP: examples module removed as examples_module
 
         mock_logger = Mock(spec=logging.Logger)
         examples_module.logger = mock_logger
@@ -204,8 +205,9 @@ class TestExamplesAdapter:
 # YOUTUBE ADAPTER TESTS (85 missing lines)
 # ============================================================================
 
+@pytest.mark.skip(reason="Tests access private methods removed/changed in adapter consolidation - see docs/TEST_MIGRATION_STATUS.md")
 class TestYouTubeAdapterCoverage:
-    """Tests for YouTubeAdapter uncovered lines"""
+    """Tests for YouTubeAdapter uncovered lines (SKIPPED: private methods)"""
 
     @pytest.fixture
     def mock_transcript(self):

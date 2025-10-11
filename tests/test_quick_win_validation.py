@@ -131,7 +131,7 @@ Main class for video generation.
 
     def test_simple_markdown_parsing(self, sample_markdown):
         """Test parsing simple markdown file"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(sample_markdown)
@@ -146,7 +146,7 @@ Main class for video generation.
 
     def test_complex_document_parsing(self, complex_markdown):
         """Test parsing complex multi-section document"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(complex_markdown)
@@ -166,7 +166,7 @@ Main class for video generation.
 
     def test_document_with_custom_options(self, sample_markdown):
         """Test parsing with custom voice and color"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         result = adapter.parse(
@@ -184,7 +184,7 @@ Main class for video generation.
         # This test requires network - mark as integration test
         pytest.skip("Network test - run manually")
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         github_url = "https://raw.githubusercontent.com/user/repo/main/README.md"
@@ -202,7 +202,7 @@ Main class for video generation.
             f.write("")
             empty_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -222,7 +222,7 @@ Main class for video generation.
             f.write(content)
             malformed_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
         # Should handle gracefully without crashing
@@ -238,7 +238,7 @@ class TestAutoOrchestratorYouTubeInput:
 
     def test_youtube_url_extraction(self):
         """Test extracting video ID from YouTube URL"""
-        from app.input_adapters import YouTubeAdapter
+        from video_gen.input_adapters.compat import YouTubeAdapter
 
         adapter = YouTubeAdapter()
 
@@ -267,7 +267,7 @@ class TestAutoOrchestratorYouTubeInput:
 
     def test_youtube_invalid_url(self):
         """Test error handling for invalid YouTube URL"""
-        from app.input_adapters import YouTubeAdapter
+        from video_gen.input_adapters.compat import YouTubeAdapter
 
         adapter = YouTubeAdapter()
 
@@ -287,7 +287,7 @@ class TestAutoOrchestratorYouTubeInput:
 
     def test_youtube_command_detection(self):
         """Test detecting commands in transcript"""
-        from app.input_adapters import YouTubeAdapter
+        from video_gen.input_adapters.compat import YouTubeAdapter
 
         adapter = YouTubeAdapter()
 
@@ -344,7 +344,7 @@ class TestAutoOrchestratorYAMLInput:
 
     def test_valid_yaml_parsing(self, valid_yaml):
         """Test parsing valid YAML file"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         adapter = YAMLAdapter()
         result = adapter.parse(valid_yaml)
@@ -359,7 +359,7 @@ class TestAutoOrchestratorYAMLInput:
 
     def test_yaml_with_narration_generation(self, valid_yaml):
         """Test YAML parsing with automatic narration"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         adapter = YAMLAdapter(generate_narration=True)
         result = adapter.parse(valid_yaml)
@@ -385,7 +385,7 @@ scenes:
             f.write(invalid_yaml)
             invalid_file = f.name
 
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         adapter = YAMLAdapter()
 
@@ -404,7 +404,7 @@ scenes:
             yaml.dump(minimal_yaml, f)
             minimal_file = f.name
 
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         adapter = YAMLAdapter()
 
@@ -421,7 +421,7 @@ class TestAutoOrchestratorErrorHandling:
 
     def test_missing_file_error(self):
         """Test error handling for missing file"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -434,7 +434,7 @@ class TestAutoOrchestratorErrorHandling:
             f.write("Test content")
             invalid_file = f.name
 
-        from app.input_adapters import get_adapter
+        from video_gen.input_adapters.compat import get_adapter
 
         # Should raise error or return None
         try:
@@ -459,7 +459,7 @@ class TestAutoOrchestratorErrorHandling:
             f.write(b'\x00\x01\x02\x03\x04\x05' * 100)
             corrupted_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -518,7 +518,7 @@ class TestAutoOrchestratorOutputValidation:
 
     def test_yaml_output_structure(self):
         """Test that generated YAML has correct structure"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         content = "# Test\n\nSome content"
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
@@ -564,7 +564,7 @@ class TestAutoOrchestratorPerformance:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 
@@ -585,7 +585,7 @@ class TestAutoOrchestratorPerformance:
             f.write(content)
             test_file = f.name
 
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         adapter = DocumentAdapter()
 

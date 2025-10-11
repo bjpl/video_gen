@@ -26,7 +26,7 @@ class TestYAMLWorkflow:
 
     def test_simple_yaml_to_scenes_real_file(self):
         """Test actual YAML file processing with real adapter"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
         assert yaml_path.exists(), f"Test file not found: {yaml_path}"
@@ -55,7 +55,7 @@ class TestYAMLWorkflow:
 
     def test_yaml_to_export_roundtrip(self):
         """Test YAML → parse → export → validate roundtrip"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
@@ -88,7 +88,7 @@ class TestYAMLWorkflow:
 
     def test_yaml_narration_generation(self):
         """Test automatic narration generation for scenes"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         # Create YAML without narration
         yaml_content = {
@@ -139,7 +139,7 @@ class TestDocumentWorkflow:
 
     def test_markdown_to_scenes_real_file(self):
         """Test actual markdown document processing"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         md_path = Path(__file__).parent.parent / "inputs" / "Internet_Guide_Vol1_Core_Infrastructure.md"
         assert md_path.exists(), f"Test file not found: {md_path}"
@@ -159,7 +159,7 @@ class TestDocumentWorkflow:
 
     def test_document_scene_type_detection(self):
         """Test that document adapter correctly detects scene types"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         # Create test document with different content types
         content = """# Test Document
@@ -211,7 +211,7 @@ Each option can be configured separately.
 
     def test_document_export_to_yaml(self):
         """Test document → scenes → YAML export workflow"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         content = """# Sample Project
 
@@ -262,7 +262,7 @@ class TestProgrammaticWorkflow:
 
     def test_programmatic_video_config_creation(self):
         """Test creating VideoConfig programmatically"""
-        from app.input_adapters.base import VideoConfig, VideoSet, VideoSetConfig
+        from video_gen.input_adapters.compat import VideoConfig, VideoSet, VideoSetConfig
 
         # Create scenes programmatically
         scenes = [
@@ -300,7 +300,7 @@ class TestProgrammaticWorkflow:
 
     def test_programmatic_video_set_export(self):
         """Test programmatic VideoSet export to YAML"""
-        from app.input_adapters.base import VideoConfig, VideoSet, VideoSetConfig
+        from video_gen.input_adapters.compat import VideoConfig, VideoSet, VideoSetConfig
 
         video = VideoConfig(
             video_id='test_video',
@@ -331,7 +331,7 @@ class TestMultiStageValidation:
 
     def test_yaml_parsing_stage(self):
         """Test YAML parsing stage outputs correct structure"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
@@ -352,7 +352,7 @@ class TestMultiStageValidation:
 
     def test_document_parsing_stage(self):
         """Test document parsing stage outputs correct structure"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         content = "# Test\n\n## Section\n\nContent here."
 
@@ -378,7 +378,7 @@ class TestMultiStageValidation:
 
     def test_scene_structure_validation(self):
         """Test that parsed scenes have valid structure"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         yaml_content = {
             'video': {
@@ -441,7 +441,7 @@ class TestErrorHandling:
 
     def test_invalid_yaml_file(self):
         """Test handling of invalid YAML file"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         # Create invalid YAML
         with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
@@ -459,7 +459,7 @@ class TestErrorHandling:
 
     def test_missing_required_fields(self):
         """Test handling of YAML missing required fields"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         # Missing 'video' key
         yaml_content = {
@@ -483,7 +483,7 @@ class TestErrorHandling:
 
     def test_file_not_found(self):
         """Test handling of non-existent file"""
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         adapter = YAMLAdapter()
 
@@ -492,7 +492,7 @@ class TestErrorHandling:
 
     def test_empty_document(self):
         """Test handling of empty document"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
             f.write("")  # Empty file
@@ -510,7 +510,7 @@ class TestErrorHandling:
 
     def test_document_with_only_whitespace(self):
         """Test handling of document with only whitespace"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
             f.write("   \n\n   \t\t  \n  ")
@@ -533,7 +533,7 @@ class TestPerformance:
     def test_yaml_parsing_speed(self):
         """Test YAML parsing completes quickly"""
         import time
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
@@ -553,7 +553,7 @@ class TestPerformance:
     def test_document_parsing_speed(self):
         """Test document parsing completes quickly"""
         import time
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         # Create moderately-sized document
         content = "# Test\n\n" + "\n\n".join([
@@ -582,7 +582,7 @@ class TestPerformance:
     def test_export_speed(self):
         """Test YAML export completes quickly"""
         import time
-        from app.input_adapters import YAMLAdapter
+        from video_gen.input_adapters.compat import YAMLAdapter
 
         yaml_path = Path(__file__).parent.parent / "inputs" / "example_simple.yaml"
 
@@ -607,7 +607,7 @@ class TestComplexWorkflows:
 
     def test_multiple_videos_in_set(self):
         """Test processing multiple videos in a set"""
-        from app.input_adapters.base import VideoConfig, VideoSet, VideoSetConfig
+        from video_gen.input_adapters.compat import VideoConfig, VideoSet, VideoSetConfig
 
         videos = [
             VideoConfig(
@@ -638,7 +638,7 @@ class TestComplexWorkflows:
 
     def test_document_with_multiple_scene_types(self):
         """Test document with various content types"""
-        from app.input_adapters import DocumentAdapter
+        from video_gen.input_adapters.compat import DocumentAdapter
 
         content = """# Complex Document
 
