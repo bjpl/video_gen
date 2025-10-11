@@ -61,13 +61,25 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
                 <select x-model="videoSet.accent_color"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
-                    <option value="blue">Blue</option>
-                    <option value="purple">Purple</option>
-                    <option value="orange">Orange</option>
-                    <option value="green">Green</option>
-                    <option value="pink">Pink</option>
-                    <option value="cyan">Cyan</option>
+                    <option value="blue">Blue - Professional, trustworthy (corporate, finance)</option>
+                    <option value="purple">Purple - Premium, sophisticated (high-end, creative)</option>
+                    <option value="orange">Orange - Energetic, creative (marketing, youth)</option>
+                    <option value="green">Green - Success, growth (environmental, health)</option>
+                    <option value="pink">Pink - Playful, modern (youth, lifestyle)</option>
+                    <option value="cyan">Cyan - Tech, innovation (technology, science)</option>
                 </select>
+                <div class="mt-2 flex items-center gap-2">
+                    <div class="w-6 h-6 rounded"
+                         :class="{
+                            'bg-blue-500': videoSet.accent_color === 'blue',
+                            'bg-purple-500': videoSet.accent_color === 'purple',
+                            'bg-orange-500': videoSet.accent_color === 'orange',
+                            'bg-green-500': videoSet.accent_color === 'green',
+                            'bg-pink-500': videoSet.accent_color === 'pink',
+                            'bg-cyan-500': videoSet.accent_color === 'cyan'
+                         }"></div>
+                    <span class="text-xs text-gray-500 italic">Color preview</span>
+                </div>
             </div>
         </div>
     </div>
