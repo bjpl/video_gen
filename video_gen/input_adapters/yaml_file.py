@@ -775,7 +775,7 @@ class YAMLFileAdapter(InputAdapter):
 
         Formats:
         - "video_set": Contains 'videos' key (even if not a valid list)
-        - "single_video": Contains 'video_id' or 'scenes' for a single video
+        - "single_video": Contains 'video_id' or 'scenes' for a single video, or nested 'video' key
         - "unknown": Neither format detected
 
         Args:
@@ -787,8 +787,8 @@ class YAMLFileAdapter(InputAdapter):
         # Check for video_set format (even if videos is invalid, validation will catch it)
         if "videos" in yaml_data:
             return "video_set"
-        # Check for single_video format
-        elif "video_id" in yaml_data or "id" in yaml_data or "scenes" in yaml_data:
+        # Check for single_video format (including nested 'video' key)
+        elif "video_id" in yaml_data or "id" in yaml_data or "scenes" in yaml_data or "video" in yaml_data:
             return "single_video"
         else:
             return "unknown"

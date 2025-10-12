@@ -21,8 +21,8 @@ class TestDocumentAdapterEdgeCases:
 
     @pytest.fixture
     def adapter(self):
-        """Create adapter instance"""
-        return DocumentAdapter()
+        """Create adapter instance with test mode enabled"""
+        return DocumentAdapter(test_mode=True)
 
     def test_nested_lists(self, adapter):
         """Test parsing nested lists"""
@@ -179,8 +179,8 @@ class TestDocumentAdapterMultipleVideos:
 
     @pytest.fixture
     def adapter(self):
-        """Create adapter instance"""
-        return DocumentAdapter()
+        """Create adapter instance with test mode enabled"""
+        return DocumentAdapter(test_mode=True)
 
     @pytest.mark.asyncio
     async def test_split_by_h2_headings(self, adapter):
@@ -294,8 +294,8 @@ class TestDocumentAdapterRealFiles:
 
     @pytest.fixture
     def adapter(self):
-        """Create adapter instance"""
-        return DocumentAdapter()
+        """Create adapter instance with test mode enabled"""
+        return DocumentAdapter(test_mode=True)
 
     @pytest.fixture
     def inputs_dir(self):
@@ -383,8 +383,8 @@ class TestDocumentAdapterErrorHandling:
 
     @pytest.fixture
     def adapter(self):
-        """Create adapter instance"""
-        return DocumentAdapter()
+        """Create adapter instance with test mode enabled"""
+        return DocumentAdapter(test_mode=True)
 
     @pytest.mark.asyncio
     async def test_nonexistent_file(self, adapter):

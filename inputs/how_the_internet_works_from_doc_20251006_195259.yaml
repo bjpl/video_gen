@@ -1,0 +1,39 @@
+video:
+  id: how_the_internet_works
+  title: How the Internet Works
+  description: Video generated from document
+  accent_color: blue
+  voice: male
+  version: v2.0
+  target_duration: 60
+  source: Internet_Guide_Vol1_Core_Infrastructure.md
+scenes:
+- type: title
+  id: scene_01_title
+  title: How the Internet Works
+  subtitle: '*Generated: October 05, 2025*
+
+    ---'
+  key_message: '*Generated: October 05, 2025* ---'
+- type: list
+  id: scene_02_volume_1_core_infrastructure
+  header: 'Volume 1: Core Infrastructure'
+  description: '*Generated: October 05, 2025* ---'
+  topic: '*Generated: October 05, 2025* ---'
+  items:
+  - '*Generated: October 05, 2025* ---'
+- type: list
+  id: scene_03_table_of_contents
+  header: Table of Contents
+  description: '---'
+  topic: '---'
+  items:
+  - '[Understanding What the Internet Actually Is](#understanding-what-the-internet-actually-is)'
+  - '[Physical Infrastructure Layer](#physical-infrastructure-layer)'
+  - '[Network Hardware Infrastructure](#network-hardware-infrastructure)'
+- type: outro
+  id: scene_04_outro
+  main_text: Learn More
+  sub_text: See Documentation
+  key_message: Data centers are the factories of the digital economy, housing the
+    servers that power everything

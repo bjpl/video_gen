@@ -26,14 +26,14 @@ class InputStage(Stage):
     - programmatic: Direct VideoConfig objects
     """
 
-    def __init__(self, event_emitter=None):
+    def __init__(self, event_emitter=None, test_mode: bool = False):
         super().__init__("input_adaptation", event_emitter)
 
         # Register adapters
         self.adapters = {
-            "document": DocumentAdapter(),
+            "document": DocumentAdapter(test_mode=test_mode),
             "youtube": YouTubeAdapter(),
-            "yaml": YAMLFileAdapter(),
+            "yaml": YAMLFileAdapter(test_mode=test_mode),
             "programmatic": ProgrammaticAdapter(),
         }
 

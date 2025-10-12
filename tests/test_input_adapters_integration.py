@@ -33,8 +33,8 @@ class TestDocumentAdapterIntegration:
 
     @pytest.fixture
     def document_adapter(self):
-        """Create DocumentAdapter instance."""
-        return DocumentAdapter()
+        """Create DocumentAdapter instance with test mode enabled."""
+        return DocumentAdapter(test_mode=True)
 
     @pytest.fixture
     def sample_markdown(self):
@@ -146,7 +146,7 @@ class TestYAMLAdapterIntegration:
     @pytest.fixture
     def yaml_adapter(self):
         """Create YAMLAdapter instance."""
-        return YAMLAdapter()
+        return YAMLAdapter(test_mode=True)
 
     @pytest.fixture
     def sample_yaml_config(self):
@@ -302,8 +302,8 @@ class TestAdapterColorAndVoiceHandling:
     def adapters(self):
         """Get all available adapters."""
         return [
-            DocumentAdapter(),
-            YAMLAdapter(),
+            DocumentAdapter(test_mode=True),
+            YAMLAdapter(test_mode=True),
             ProgrammaticAdapter()
         ]
 
@@ -335,7 +335,7 @@ class TestAdapterErrorMessages:
 
     def test_document_adapter_error_has_details(self):
         """Test DocumentAdapter errors include helpful details."""
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         try:
             adapter.parse(
@@ -352,7 +352,7 @@ class TestAdapterErrorMessages:
 
     def test_yaml_adapter_error_has_details(self):
         """Test YAMLAdapter errors include helpful details."""
-        adapter = YAMLAdapter()
+        adapter = YAMLAdapter(test_mode=True)
 
         try:
             adapter.parse(

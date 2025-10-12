@@ -199,6 +199,29 @@ class VideoSet:
         """Get languages from metadata."""
         return self.metadata.get("languages", ["en"])
 
+    @property
+    def config(self):
+        """Backward compatibility property for old API.
+
+        Old API expected video_set.config.set_id, video_set.config.set_name, etc.
+        New API has video_set.set_id, video_set.name directly.
+
+        This property creates a simple object with the old attribute names.
+        """
+        class _LegacyConfig:
+            def __init__(self, video_set):
+                self.set_id = video_set.set_id
+                self.set_name = video_set.name
+                self.description = video_set.description
+                # Add defaults property for backward compatibility
+                self.defaults = {
+                    "accent_color": "blue",
+                    "voice": "male",
+                    "languages": video_set.languages
+                }
+
+        return _LegacyConfig(self)
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {

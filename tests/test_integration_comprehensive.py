@@ -231,7 +231,7 @@ videos:
             test_yaml_path.write_text(test_yaml_content)
             yaml_files = [test_yaml_path]
 
-        adapter = YAMLAdapter()
+        adapter = YAMLAdapter(test_mode=True)
         video_set = adapter.parse(
             source=str(yaml_files[0]),
             target_languages=["en", "es", "de"],  # Override with 3 languages

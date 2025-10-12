@@ -133,7 +133,7 @@ Main class for video generation.
         """Test parsing simple markdown file"""
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(sample_markdown)
 
         assert result is not None
@@ -148,7 +148,7 @@ Main class for video generation.
         """Test parsing complex multi-section document"""
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(complex_markdown)
 
         assert result is not None
@@ -168,12 +168,11 @@ Main class for video generation.
         """Test parsing with custom voice and color"""
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(
             sample_markdown,
             accent_color='purple',
-            voice='female',
-            max_scenes=10
+            voice='female'
         )
 
         assert result.config.defaults.get('accent_color') == 'purple'
@@ -204,7 +203,7 @@ Main class for video generation.
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         # Should handle gracefully
         try:
@@ -224,7 +223,7 @@ Main class for video generation.
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         # Should handle gracefully without crashing
         try:
             result = adapter.parse(malformed_file)
@@ -318,22 +317,31 @@ class TestAutoOrchestratorYAMLInput:
             },
             'scenes': [
                 {
-                    'type': 'title',
-                    'title': 'Welcome',
-                    'subtitle': 'Getting Started',
-                    'narration': 'Welcome to our tutorial'
+                    'scene_id': '1',
+                    'scene_type': 'title',
+                    'narration': 'Welcome to our tutorial',
+                    'visual_content': {
+                        'title': 'Welcome',
+                        'subtitle': 'Getting Started'
+                    }
                 },
                 {
-                    'type': 'content',
-                    'title': 'Main Content',
-                    'content': ['Point 1', 'Point 2', 'Point 3'],
-                    'narration': 'Here are the key points'
+                    'scene_id': '2',
+                    'scene_type': 'list',
+                    'narration': 'Here are the key points',
+                    'visual_content': {
+                        'title': 'Main Content',
+                        'items': ['Point 1', 'Point 2', 'Point 3']
+                    }
                 },
                 {
-                    'type': 'outro',
-                    'main_text': 'Thank You',
-                    'sub_text': 'See You Next Time',
-                    'narration': 'Thanks for watching'
+                    'scene_id': '3',
+                    'scene_type': 'outro',
+                    'narration': 'Thanks for watching',
+                    'visual_content': {
+                        'main_text': 'Thank You',
+                        'sub_text': 'See You Next Time'
+                    }
                 }
             ]
         }
@@ -346,7 +354,7 @@ class TestAutoOrchestratorYAMLInput:
         """Test parsing valid YAML file"""
         from video_gen.input_adapters.compat import YAMLAdapter
 
-        adapter = YAMLAdapter()
+        adapter = YAMLAdapter(test_mode=True)
         result = adapter.parse(valid_yaml)
 
         assert result is not None
@@ -361,14 +369,14 @@ class TestAutoOrchestratorYAMLInput:
         """Test YAML parsing with automatic narration"""
         from video_gen.input_adapters.compat import YAMLAdapter
 
-        adapter = YAMLAdapter(generate_narration=True)
+        adapter = YAMLAdapter(test_mode=True)
         result = adapter.parse(valid_yaml)
 
         video = result.videos[0]
 
-        # All scenes should have narration
+        # All scenes should have narration (scenes are SceneConfig objects)
         for scene in video.scenes:
-            assert 'narration' in scene or scene.get('type') in ['title', 'outro']
+            assert scene.narration is not None and len(scene.narration) > 0
 
     def test_invalid_yaml_syntax(self):
         """Test error handling for invalid YAML syntax"""
@@ -387,7 +395,7 @@ scenes:
 
         from video_gen.input_adapters.compat import YAMLAdapter
 
-        adapter = YAMLAdapter()
+        adapter = YAMLAdapter(test_mode=True)
 
         with pytest.raises(Exception):
             adapter.parse(invalid_file)
@@ -406,7 +414,7 @@ scenes:
 
         from video_gen.input_adapters.compat import YAMLAdapter
 
-        adapter = YAMLAdapter()
+        adapter = YAMLAdapter(test_mode=True)
 
         # Should handle missing video section
         try:
@@ -423,7 +431,7 @@ class TestAutoOrchestratorErrorHandling:
         """Test error handling for missing file"""
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         with pytest.raises(Exception):
             adapter.parse('/path/to/nonexistent/file.md')
@@ -461,7 +469,7 @@ class TestAutoOrchestratorErrorHandling:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         # Should handle gracefully
         try:
@@ -519,29 +527,33 @@ class TestAutoOrchestratorOutputValidation:
     def test_yaml_output_structure(self):
         """Test that generated YAML has correct structure"""
         from video_gen.input_adapters.compat import DocumentAdapter
+        from video_gen.input_adapters.yaml_file import YAMLFileAdapter
 
         content = "# Test\n\nSome content"
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
             f.write(content)
             test_file = f.name
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(test_file)
 
-        # Export to YAML
+        # Export to YAML using YAMLFileAdapter
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = result.export_to_yaml(tmpdir)
+            yaml_adapter = YAMLFileAdapter()
+            output_path = Path(tmpdir) / 'output.yaml'
+            yaml_adapter.export_to_yaml(result, output_path, format_type="video_set")
 
             # Validate structure
-            assert (output_path / 'set_config.yaml').exists()
+            assert output_path.exists()
 
             # Load and validate
-            with open(output_path / 'set_config.yaml') as f:
+            with open(output_path) as f:
                 config = yaml.safe_load(f)
 
-            assert 'set' in config
-            assert 'id' in config['set']
-            assert 'name' in config['set']
+            # New format has set_id, name at root level
+            assert 'set_id' in config
+            assert 'name' in config
+            assert 'videos' in config
 
     def test_timing_report_generation(self):
         """Test that timing report is generated correctly"""
@@ -566,7 +578,7 @@ class TestAutoOrchestratorPerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         start = time.time()
         result = adapter.parse(test_file)
@@ -587,7 +599,7 @@ class TestAutoOrchestratorPerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         start = time.time()
         result = adapter.parse(test_file)

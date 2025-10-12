@@ -68,7 +68,7 @@ Thank you for testing our system.
         """Test document parsing stage in isolation"""
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(sample_document)
 
         assert result is not None
@@ -77,7 +77,7 @@ Thank you for testing our system.
 
     def test_yaml_to_script_stage(self):
         """Test script generation from YAML"""
-        # Create test YAML
+        # Create test YAML with required schema fields
         yaml_data = {
             'video': {
                 'id': 'test_001',
@@ -87,9 +87,13 @@ Thank you for testing our system.
             },
             'scenes': [
                 {
-                    'type': 'title',
-                    'title': 'Test',
-                    'subtitle': 'Integration'
+                    'scene_id': '1',
+                    'scene_type': 'title',
+                    'narration': 'Welcome to the test video',
+                    'visual_content': {
+                        'title': 'Test',
+                        'subtitle': 'Integration'
+                    }
                 }
             ]
         }
@@ -100,7 +104,7 @@ Thank you for testing our system.
 
         from video_gen.input_adapters.compat import YAMLAdapter
 
-        adapter = YAMLAdapter(generate_narration=True)
+        adapter = YAMLAdapter(test_mode=True)
         result = adapter.parse(yaml_file)
 
         assert result is not None
@@ -214,7 +218,7 @@ This is test video number {i}.
                 f.write(content)
                 documents.append(f.name)
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         # Process in parallel
         tasks = [
@@ -314,25 +318,30 @@ class TestPipelineOutputValidation:
     def test_yaml_output_validation(self):
         """Test that generated YAML is valid"""
         from video_gen.input_adapters.compat import DocumentAdapter
+        from video_gen.input_adapters.yaml_file import YAMLFileAdapter
 
         content = "# Test\n\nContent"
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
             f.write(content)
             test_file = f.name
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(test_file)
 
-        # Export and validate
+        # Export and validate using YAMLFileAdapter
         with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = result.export_to_yaml(tmpdir)
+            yaml_adapter = YAMLFileAdapter()
+            output_path = Path(tmpdir) / 'output.yaml'
+            yaml_adapter.export_to_yaml(result, output_path, format_type="video_set")
 
             # Should be valid YAML
-            with open(output_path / 'set_config.yaml') as f:
+            with open(output_path) as f:
                 data = yaml.safe_load(f)
 
             assert data is not None
-            assert 'set' in data
+            # New format has set_id, name at root level
+            assert 'set_id' in data
+            assert 'videos' in data
 
     def test_audio_timing_accuracy(self):
         """Test that audio timing is accurate"""
@@ -375,7 +384,7 @@ class TestPipelineEdgeCases:
             f.write(content)
             test_file = f.name
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         try:
             result = adapter.parse(test_file)
@@ -394,7 +403,7 @@ class TestPipelineEdgeCases:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
 
         # Should handle without crashing
         try:
@@ -419,7 +428,7 @@ Math: α β γ ∑ ∫
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter()
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(test_file)
 
         # Should handle special characters

@@ -27,6 +27,7 @@ class TestYouTubeAdapter:
         assert not await adapter.validate_source("not-a-url")
         assert not await adapter.validate_source(123)  # Not a string
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_video_ids(self, adapter):
         """Test video ID extraction from URLs."""
         # Standard watch URL
@@ -45,6 +46,7 @@ class TestYouTubeAdapter:
         ids = adapter._extract_video_ids("dQw4w9WgXcQ")
         assert ids == ["dQw4w9WgXcQ"]
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_create_title(self, adapter):
         """Test title creation from text."""
         # Normal text
@@ -57,6 +59,7 @@ class TestYouTubeAdapter:
         assert len(title) <= 53  # 50 + "..."
         assert title.endswith("...")
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_create_bullet_points(self, adapter):
         """Test bullet point creation from text."""
         text = "First point. Second point. Third point. Fourth point. Fifth point."

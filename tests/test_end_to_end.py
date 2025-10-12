@@ -20,8 +20,8 @@ class TestEndToEndPipeline:
 
     @pytest.fixture
     def pipeline(self):
-        """Create a fresh pipeline for each test."""
-        return create_complete_pipeline()
+        """Create a fresh pipeline for each test with test mode enabled."""
+        return create_complete_pipeline(test_mode=True)
 
     @pytest.fixture
     def test_document(self, tmp_path):

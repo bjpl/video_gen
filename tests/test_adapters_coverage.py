@@ -221,6 +221,7 @@ class TestYouTubeAdapterCoverage:
             {'text': 'Final thoughts here', 'start': 15.0, 'duration': 2.0},
         ]
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_video_id_from_url(self):
         """Test video ID extraction from various URL formats"""
         adapter = YouTubeAdapter()
@@ -241,6 +242,7 @@ class TestYouTubeAdapterCoverage:
         video_id = adapter._extract_video_id('https://example.com')
         assert video_id is None
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_analyze_transcript_empty(self):
         """Test analyzing empty transcript"""
         adapter = YouTubeAdapter()
@@ -250,6 +252,7 @@ class TestYouTubeAdapterCoverage:
         assert analysis['segments'] == 0
         assert analysis['paragraphs'] == []
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_analyze_transcript_with_pauses(self, mock_transcript):
         """Test analyzing transcript with pauses between segments"""
         adapter = YouTubeAdapter()
@@ -266,6 +269,7 @@ class TestYouTubeAdapterCoverage:
         assert analysis['segments'] == 2
         assert len(analysis['paragraphs']) >= 1
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_analyze_transcript_error_handling(self):
         """Test transcript analysis with malformed data in duration calculation"""
         adapter = YouTubeAdapter()
@@ -293,6 +297,7 @@ class TestYouTubeAdapterCoverage:
         # Verify warning was logged for duration calculation failure
         assert adapter.logger.warning.called
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_key_segments_empty(self):
         """Test extracting key segments from empty transcript"""
         adapter = YouTubeAdapter()
@@ -300,6 +305,7 @@ class TestYouTubeAdapterCoverage:
 
         assert segments == []
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_key_segments_with_data(self, mock_transcript):
         """Test extracting key segments from transcript"""
         adapter = YouTubeAdapter()
@@ -312,6 +318,7 @@ class TestYouTubeAdapterCoverage:
             assert 'text' in segment
             assert 'summary' in segment
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_has_commands_detection(self):
         """Test command pattern detection"""
         adapter = YouTubeAdapter()
@@ -329,6 +336,7 @@ class TestYouTubeAdapterCoverage:
         assert not adapter._has_commands('This is just regular text')
         assert not adapter._has_commands('No commands here')
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_commands_from_text(self):
         """Test command extraction from text"""
         adapter = YouTubeAdapter()
@@ -345,6 +353,7 @@ class TestYouTubeAdapterCoverage:
         commands = adapter._extract_commands_from_text(text)
         assert len(commands) == 0
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_key_points(self):
         """Test key point extraction"""
         adapter = YouTubeAdapter()
@@ -357,6 +366,7 @@ class TestYouTubeAdapterCoverage:
             word_count = len(point.split())
             assert 3 <= word_count <= 15
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_summarize_text(self):
         """Test text summarization"""
         adapter = YouTubeAdapter()
@@ -366,6 +376,7 @@ class TestYouTubeAdapterCoverage:
 
         assert len(summary.split()) <= 10
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_convert_to_scenes_with_commands(self):
         """Test converting segments with commands to scenes"""
         adapter = YouTubeAdapter()
@@ -386,6 +397,7 @@ class TestYouTubeAdapterCoverage:
         assert scenes[0]['type'] == 'title'
         assert scenes[-1]['type'] == 'outro'
 
+    @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_convert_to_scenes_with_lists(self):
         """Test converting segments without commands to scenes"""
         adapter = YouTubeAdapter()

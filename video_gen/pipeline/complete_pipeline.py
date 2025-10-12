@@ -21,7 +21,8 @@ from ..stages import (
 
 def create_complete_pipeline(
     state_manager: Optional[StateManager] = None,
-    event_emitter: Optional[EventEmitter] = None
+    event_emitter: Optional[EventEmitter] = None,
+    test_mode: bool = False
 ) -> PipelineOrchestrator:
     """
     Create a complete pipeline with all 6 stages registered.
@@ -37,6 +38,7 @@ def create_complete_pipeline(
     Args:
         state_manager: Optional custom state manager
         event_emitter: Optional custom event emitter
+        test_mode: If True, bypass security checks in adapters for testing
 
     Returns:
         Configured PipelineOrchestrator ready for execution
@@ -49,7 +51,7 @@ def create_complete_pipeline(
 
     # Register all stages in order
     orchestrator.register_stages([
-        InputStage(event_emitter),
+        InputStage(event_emitter, test_mode=test_mode),
         ParsingStage(event_emitter),
         ScriptGenerationStage(event_emitter),
         AudioGenerationStage(event_emitter),
