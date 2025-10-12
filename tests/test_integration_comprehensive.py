@@ -206,34 +206,32 @@ class TestIntegration:
         print("TEST 4: YAML Input with Multilingual Override")
         print("="*60)
 
-        # Find a YAML file
-        yaml_files = list(Path(__file__).parent.parent.glob("inputs/*.yaml"))
-
-        if not yaml_files:
-            print("⚠️  No YAML files found, creating test file")
-            # Create a simple test YAML
-            test_yaml_content = """
-videos:
-  - video_id: yaml_test_1
-    title: YAML Test Video
-    scenes:
-      - scene_id: yaml_test_1_title
-        type: title
-        content: Test Video from YAML
-        voice: male
-      - scene_id: yaml_test_1_content
-        type: command
-        content: This is test content
-        voice: female
+        # Always create a fresh test YAML file with correct format
+        test_yaml_content = """
+video:
+  video_id: yaml_test_1
+  title: YAML Test Video
+  voice: en-US-ChristopherNeural
+  scenes:
+    - scene_id: yaml_test_1_title
+      scene_type: title
+      narration: Test Video from YAML
+      visual_content:
+        title: YAML Test
+    - scene_id: yaml_test_1_content
+      scene_type: command
+      narration: This is test content
+      visual_content:
+        title: Content
 """
-            test_yaml_path = Path(__file__).parent.parent / "inputs" / "test_yaml.yaml"
-            test_yaml_path.parent.mkdir(exist_ok=True)
-            test_yaml_path.write_text(test_yaml_content)
-            yaml_files = [test_yaml_path]
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+            f.write(test_yaml_content)
+            yaml_file = f.name
 
         adapter = YAMLAdapter(test_mode=True)
         video_set = adapter.parse(
-            source=str(yaml_files[0]),
+            source=yaml_file,
             target_languages=["en", "es", "de"],  # Override with 3 languages
             source_language="en"
         )
@@ -246,7 +244,7 @@ videos:
         assert base_count > 0
 
         # Check metadata for language configuration
-        languages = video_set.config.metadata.get("languages", [])
+        languages = video_set.metadata.get("languages", [])
 
         print(f"✅ Base videos: {base_count}")
         print(f"✅ YAML parsed successfully")

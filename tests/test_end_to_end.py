@@ -47,22 +47,31 @@ Install Python from python.org and start coding!
         """Create a test YAML config."""
         yaml_file = tmp_path / "test_video.yaml"
         yaml_file.write_text("""
-title: "Test Video"
-description: "A test video"
-language: "en"
+video:
+  video_id: "test_video_001"
+  title: "Test Video"
+  description: "A test video"
+  language: "en"
+  voice: "en-US-ChristopherNeural"
 
-scenes:
-  - type: "title"
-    title: "Welcome"
-    content: "Welcome to our test video"
+  scenes:
+    - scene_id: "scene_1"
+      scene_type: "title"
+      narration: "Welcome to our test video"
+      visual_content:
+        title: "Welcome"
 
-  - type: "concept"
-    title: "Main Content"
-    content: "This is the main content of our video"
+    - scene_id: "scene_2"
+      scene_type: "command"
+      narration: "This is the main content of our video"
+      visual_content:
+        title: "Main Content"
 
-  - type: "summary"
-    title: "Summary"
-    content: "Thank you for watching"
+    - scene_id: "scene_3"
+      scene_type: "outro"
+      narration: "Thank you for watching"
+      visual_content:
+        title: "Summary"
         """)
         return yaml_file
 
