@@ -1,0 +1,81 @@
+# Presentation Template
+# A professional template for creating business presentations and talks
+#
+# Variables (can be overridden):
+#   ${title} - Presentation title
+#   ${presenter} - Presenter name
+#   ${topic} - Main presentation topic
+#   ${sections} - List of main sections/topics
+#   ${accent_color} - Visual theme (default: purple)
+
+video_id: ${video_id}
+title: ${title}
+description: ${description}
+accent_color: ${accent_color|purple}
+voice: ${voice|male}
+
+scenes:
+  # Title slide with presenter
+  - scene_id: title
+    scene_type: title
+    narration: |
+      ${presenter} presents: ${title}
+      ${opening_line}
+    visual_content:
+      title: ${title}
+      subtitle: ${subtitle}
+      presenter: ${presenter}
+      background: professional
+
+  # Agenda/Overview
+  - scene_id: agenda
+    scene_type: list
+    narration: |
+      Today we'll cover the following topics.
+      ${agenda_narration}
+    visual_content:
+      header: Agenda
+      items: ${sections}
+      style: numbered
+
+  # Problem/Context
+  - scene_id: problem
+    scene_type: problem
+    narration: |
+      Let's start by understanding the challenge.
+      ${problem_narration}
+    visual_content:
+      title: The Challenge
+      problem_text: ${problem_description}
+
+  # Solution/Proposal
+  - scene_id: solution
+    scene_type: solution
+    narration: |
+      Here's our proposed approach.
+      ${solution_narration}
+    visual_content:
+      title: Our Solution
+      solution_text: ${solution_description}
+
+  # Key points
+  - scene_id: key_points
+    scene_type: list
+    narration: |
+      Here are the key takeaways.
+      ${key_points_narration}
+    visual_content:
+      header: Key Points
+      items: ${key_points}
+      style: bullet
+
+  # Call to action
+  - scene_id: cta
+    scene_type: outro
+    narration: |
+      ${closing_line}
+      Thank you for your time.
+    visual_content:
+      title: ${cta_title|Next Steps}
+      message: ${cta_message}
+      contact: ${contact_info}

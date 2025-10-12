@@ -1,0 +1,110 @@
+# Course Lesson Template
+# Comprehensive template for structured course lessons with exercises
+#
+# Variables:
+#   ${course_name} - Name of the course
+#   ${lesson_number} - Lesson number in course
+#   ${lesson_title} - Title of this lesson
+#   ${prerequisites} - Required prior knowledge
+
+video_id: ${video_id}
+title: ${lesson_title}
+description: Lesson ${lesson_number} of ${course_name}
+accent_color: ${accent_color|green}
+voice: ${voice|female}
+
+scenes:
+  # Lesson intro
+  - scene_id: intro
+    scene_type: title
+    narration: |
+      Welcome to lesson ${lesson_number} of ${course_name}.
+      Today's topic: ${lesson_title}
+    visual_content:
+      title: ${course_name}
+      subtitle: Lesson ${lesson_number} - ${lesson_title}
+      background: course
+
+  # Prerequisites check
+  - scene_id: prerequisites
+    scene_type: list
+    narration: |
+      Before we begin, make sure you're familiar with these concepts.
+      ${prerequisites_narration}
+    visual_content:
+      header: Prerequisites
+      items: ${prerequisites}
+      style: checklist
+
+  # Learning objectives
+  - scene_id: objectives
+    scene_type: learning_objectives
+    narration: |
+      In this lesson, you will learn:
+      ${objectives_narration}
+    visual_content:
+      header: Learning Objectives
+      objectives: ${objectives}
+
+  # Main content
+  - scene_id: content
+    scene_type: list
+    narration: |
+      Let's dive into the core concepts.
+      ${content_narration}
+    visual_content:
+      header: Core Concepts
+      items: ${concepts}
+
+  # Live demonstration
+  - scene_id: demo
+    scene_type: command
+    narration: |
+      Now let's see this in practice.
+      ${demo_narration}
+    visual_content:
+      header: Live Demo
+      commands: ${demo_commands}
+
+  # Quiz/Assessment
+  - scene_id: quiz
+    scene_type: quiz
+    narration: |
+      Test your understanding with this quick quiz.
+      ${quiz_narration}
+    visual_content:
+      question: ${quiz_question}
+      options: ${quiz_options}
+      hint: ${quiz_hint}
+
+  # Exercise
+  - scene_id: exercise
+    scene_type: exercise
+    narration: |
+      Now it's your turn to practice.
+      ${exercise_narration}
+    visual_content:
+      title: Practice Exercise
+      description: ${exercise_description}
+      steps: ${exercise_steps}
+
+  # Summary
+  - scene_id: summary
+    scene_type: checkpoint
+    narration: |
+      Let's review what we learned today.
+      ${summary_narration}
+    visual_content:
+      title: Lesson Summary
+      summary: ${summary_points}
+
+  # Outro with next lesson preview
+  - scene_id: outro
+    scene_type: outro
+    narration: |
+      Great job completing lesson ${lesson_number}!
+      Next time: ${next_lesson_preview}
+    visual_content:
+      title: Well Done!
+      message: Lesson ${lesson_number} Complete
+      next_steps: ${next_lesson_title}

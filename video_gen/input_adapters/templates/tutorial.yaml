@@ -1,0 +1,103 @@
+# Tutorial Template
+# A structured template for creating educational tutorial videos
+#
+# Variables (can be overridden when using template):
+#   ${title} - Tutorial title
+#   ${description} - Tutorial description
+#   ${topic} - Main topic being taught
+#   ${accent_color} - Visual theme color (default: blue)
+#   ${voice} - Narration voice (default: male)
+#   ${objectives} - List of learning objectives
+#   ${concepts} - List of key concepts
+#   ${examples} - List of practical examples
+
+video_id: ${video_id}
+title: ${title}
+description: ${description}
+accent_color: ${accent_color|blue}
+voice: ${voice|male}
+
+scenes:
+  # Title scene - Introduction
+  - scene_id: title
+    scene_type: title
+    narration: |
+      Welcome to this tutorial on ${topic}.
+      In this video, we'll explore the key concepts and practical applications.
+    visual_content:
+      title: ${title}
+      subtitle: ${subtitle|A Comprehensive Guide}
+      background: gradient
+
+  # Learning objectives scene
+  - scene_id: objectives
+    scene_type: learning_objectives
+    narration: |
+      By the end of this tutorial, you will be able to:
+      ${objectives_narration}
+    visual_content:
+      header: Learning Objectives
+      objectives: ${objectives}
+
+  # Concepts scene
+  - scene_id: concepts
+    scene_type: list
+    narration: |
+      Let's start with the fundamental concepts.
+      ${concepts_narration}
+    visual_content:
+      header: Key Concepts
+      items: ${concepts}
+      style: animated
+
+  # Example/demonstration scene
+  - scene_id: example
+    scene_type: command
+    narration: |
+      Now let's see this in action with a practical example.
+      ${example_narration}
+    visual_content:
+      header: Practical Example
+      commands: ${examples}
+
+  # Problem-solving scene
+  - scene_id: problem
+    scene_type: problem
+    narration: |
+      Here's a common challenge you might encounter.
+      ${problem_narration}
+    visual_content:
+      title: Challenge
+      problem_text: ${problem_description}
+
+  # Solution scene
+  - scene_id: solution
+    scene_type: solution
+    narration: |
+      Let's solve this step by step.
+      ${solution_narration}
+    visual_content:
+      title: Solution
+      solution_text: ${solution_description}
+      steps: ${solution_steps}
+
+  # Checkpoint scene
+  - scene_id: checkpoint
+    scene_type: checkpoint
+    narration: |
+      Let's review what we've covered so far.
+      ${checkpoint_narration}
+    visual_content:
+      title: Knowledge Check
+      summary: ${checkpoint_summary}
+
+  # Outro scene
+  - scene_id: outro
+    scene_type: outro
+    narration: |
+      Congratulations! You've completed this tutorial on ${topic}.
+      Practice these concepts to reinforce your learning.
+    visual_content:
+      title: Great Work!
+      message: Keep learning and practicing
+      next_steps: ${next_steps|Continue with the next tutorial}
