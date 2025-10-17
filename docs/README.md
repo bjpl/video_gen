@@ -33,13 +33,15 @@ docs/
 ├── architecture/             Architecture and design documents
 ├── diagrams/                 Visual diagrams and flow charts
 ├── guides/                   User and developer guides
-├── reference/                Reference documentation
+├── reference/                Quick reference and implementation docs
 ├── reports/                  Analysis, session, and progress reports
 │   ├── ai-integration/       AI integration reports
 │   ├── analysis/             Technical analysis reports
+│   ├── assessments/          Production readiness assessments
 │   ├── completion/           Phase completion reports
 │   ├── pipeline/             Pipeline analysis
 │   ├── sessions/             Daily session summaries
+│   ├── summaries/            High-level summary reports
 │   ├── technology/           Technology stack docs
 │   └── ui-alignment/         UI/API alignment reports
 └── testing/                  Testing guides and reports
@@ -81,9 +83,9 @@ docs/
 
 **Deployment:**
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment procedures
-- **[PRODUCTION_READINESS_CHECKLIST.md](reference/PRODUCTION_READINESS.md)** - Pre-deployment checklist
+- **[PRODUCTION_READINESS.md](reports/assessments/PRODUCTION_READINESS.md)** - Pre-deployment checklist
 - **[FINAL_DELIVERY_REPORT.md](FINAL_DELIVERY_REPORT.md)** - Project delivery report
-- **[VALIDATION_SUMMARY.md](reports/VALIDATION_SUMMARY.md)** - Validation results
+- **[VALIDATION_SUMMARY.md](reports/summaries/VALIDATION_SUMMARY.md)** - Validation results
 
 **Quality Assurance:**
 - **[FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md)** - Complete test results
@@ -246,7 +248,7 @@ Entry Points:
 4. Integration: [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 
 **I'm deploying to production:**
-1. Checklist: [PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md)
+1. Checklist: [PRODUCTION_READINESS.md](reports/assessments/PRODUCTION_READINESS.md)
 2. Deploy: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 3. Validate: [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md)
 
@@ -277,12 +279,12 @@ Entry Points:
 
 **Deployment:**
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deployment
-- [PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md) - Checklist
+- [PRODUCTION_READINESS.md](reports/assessments/PRODUCTION_READINESS.md) - Checklist
 - [FINAL_DELIVERY_REPORT.md](FINAL_DELIVERY_REPORT.md) - Report
 
 **Validation:**
 - [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) - Tests
-- [VALIDATION_SUMMARY.md](reports/VALIDATION_SUMMARY.md) - Summary
+- [VALIDATION_SUMMARY.md](reports/summaries/VALIDATION_SUMMARY.md) - Summary
 - [INTEGRATION_COMPLETE.md](INTEGRATION_COMPLETE.md) - Integration
 - [WEB_UI_COMPLETE.md](WEB_UI_COMPLETE.md) - Web UI
 
@@ -351,9 +353,9 @@ Entry Points:
 3. **[TESTING_GUIDE.md](testing/TESTING_GUIDE.md)** - Testing
 
 **For Operations:**
-1. **[PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md)** - Deploy checklist
+1. **[PRODUCTION_READINESS.md](reports/assessments/PRODUCTION_READINESS.md)** - Deploy checklist
 2. **[FINAL_DELIVERY_REPORT.md](FINAL_DELIVERY_REPORT.md)** - Project status
-3. **[VALIDATION_SUMMARY.md](reports/VALIDATION_SUMMARY.md)** - Validation
+3. **[VALIDATION_SUMMARY.md](reports/summaries/VALIDATION_SUMMARY.md)** - Validation
 
 ### External Resources
 
@@ -383,7 +385,7 @@ Entry Points:
 
 **Deployment:**
 - Deploy guide: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Checklist: [PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md)
+- Checklist: [PRODUCTION_READINESS.md](reports/assessments/PRODUCTION_READINESS.md)
 
 **Problems:**
 - Troubleshooting: [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)
