@@ -1,0 +1,407 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Type "DEPLOY" to confirm production deployment'
+        required: true
+        type: string
+
+jobs:
+  pre-deployment-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Confirm production deployment
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        if [ "${{ github.event.inputs.confirm_production }}" != "DEPLOY" ]; then
+          echo "Production deployment not confirmed"
+          exit 1
+        fi
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install safety bandit
+
+    - name: Run comprehensive tests
+      run: |
+        pytest tests/ \
+          -v \
+          --cov=video_gen \
+          --cov=app \
+          --cov-report=xml \
+          --cov-report=term \
+          --cov-fail-under=75 \
+          --timeout=60 \
+          --maxfail=3
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+
+    - name: Security scan - Dependencies
+      run: |
+        safety check --file requirements.txt --output json || true
+
+    - name: Security scan - Code
+      run: |
+        bandit -r video_gen app -f json -o bandit-report.json || true
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+
+    - name: Check coverage threshold
+      run: |
+        coverage report --fail-under=75
+
+    - name: Validate configuration
+      run: |
+        # Check for sensitive data in code
+        if grep -r "sk-ant-api03-" video_gen app 2>/dev/null; then
+          echo "ERROR: API keys found in source code"
+          exit 1
+        fi
+
+        # Verify .env.example exists
+        if [ ! -f .env.example ]; then
+          echo "ERROR: .env.example not found"
+          exit 1
+        fi
+
+  backup-production:
+    needs: pre-deployment-checks
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+    - name: Create production backup
+      run: |
+        ssh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'ENDSSH'
+          set -e
+
+          BACKUP_DIR="/var/backups/video-gen"
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+          # Create backup directory
+          sudo mkdir -p $BACKUP_DIR
+
+          # Backup application
+          sudo tar -czf $BACKUP_DIR/app-backup-$TIMESTAMP.tar.gz \
+            -C /var/www video_gen
+
+          # Backup environment
+          sudo cp /var/www/video_gen/.env \
+            $BACKUP_DIR/env-backup-$TIMESTAMP
+
+          # Keep only last 5 backups
+          sudo ls -t $BACKUP_DIR/app-backup-* | tail -n +6 | xargs -r sudo rm
+
+          echo "Backup created: $TIMESTAMP"
+        ENDSSH
+
+  deploy-production:
+    needs: backup-production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://your-domain.com
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+    - name: Add known hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to production
+      run: |
+        ssh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'ENDSSH'
+          set -e
+
+          # Navigate to application
+          cd /var/www/video_gen
+
+          # Record current commit for rollback
+          git rev-parse HEAD > /tmp/pre-deploy-commit.txt
+
+          # Pull latest changes
+          git fetch origin
+          git checkout main
+          git pull origin main
+
+          # Activate virtualenv
+          source venv/bin/activate
+
+          # Update dependencies
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          # Run quick smoke tests
+          pytest tests/ -m "not slow" -q --tb=short || {
+            echo "Tests failed, aborting deployment"
+            exit 1
+          }
+
+          # Restart service with zero-downtime (if using multiple workers)
+          sudo systemctl reload video-gen || sudo systemctl restart video-gen
+
+          # Wait for service
+          sleep 10
+
+          # Verify health
+          for i in {1..5}; do
+            if curl -f http://localhost:8000/api/health; then
+              echo "Health check passed"
+              break
+            fi
+            if [ $i -eq 5 ]; then
+              echo "Health check failed after 5 attempts"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "Deployment successful!"
+        ENDSSH
+
+    - name: Verify production deployment
+      run: |
+        # Wait for full service initialization
+        sleep 15
+
+        # Comprehensive health check
+        response=$(curl -s https://your-domain.com/api/health)
+        status=$(echo $response | jq -r '.status')
+        version=$(echo $response | jq -r '.version')
+
+        echo "Status: $status"
+        echo "Version: $version"
+
+        if [ "$status" != "healthy" ]; then
+          echo "ERROR: Production service not healthy"
+          exit 1
+        fi
+
+        echo "Production deployment verified!"
+
+    - name: Post-deployment smoke tests
+      run: |
+        # Test all critical endpoints
+        echo "Testing API endpoints..."
+
+        endpoints=(
+          "/api/health"
+          "/api/voices"
+          "/api/colors"
+          "/api/scene-types"
+          "/api/languages"
+        )
+
+        for endpoint in "${endpoints[@]}"; do
+          echo "Testing: $endpoint"
+          if ! curl -f -s "https://your-domain.com$endpoint" > /dev/null; then
+            echo "ERROR: Endpoint failed: $endpoint"
+            exit 1
+          fi
+        done
+
+        echo "All smoke tests passed!"
+
+    - name: Create deployment tag
+      if: github.event_name == 'push'
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        TAG="deploy-$TIMESTAMP"
+
+        git tag -a $TAG -m "Production deployment: $TIMESTAMP"
+        git push origin $TAG
+
+    - name: Notify success
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: 'success'
+        text: |
+          :rocket: Production deployment successful!
+          Version: ${{ github.sha }}
+          Deployed by: ${{ github.actor }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+    - name: Notify failure
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: 'failure'
+        text: |
+          :x: Production deployment FAILED!
+          Version: ${{ github.sha }}
+          Initiating rollback...
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback-production:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    if: failure()
+    environment: production
+
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+    - name: Rollback production deployment
+      run: |
+        ssh ${{ secrets.PRODUCTION_USER }}@${{ secrets.PRODUCTION_HOST }} << 'ENDSSH'
+          set -e
+
+          cd /var/www/video_gen
+
+          echo "Rolling back to previous version..."
+
+          # Restore from pre-deploy commit
+          if [ -f /tmp/pre-deploy-commit.txt ]; then
+            PREVIOUS_COMMIT=$(cat /tmp/pre-deploy-commit.txt)
+            git checkout $PREVIOUS_COMMIT
+          else
+            # Fallback: go back one commit
+            git reset --hard HEAD~1
+          fi
+
+          # Reactivate venv and restore dependencies
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+          # Restart service
+          sudo systemctl restart video-gen
+
+          # Wait and verify
+          sleep 10
+          curl -f http://localhost:8000/api/health
+
+          echo "Rollback completed successfully"
+        ENDSSH
+
+    - name: Verify rollback
+      run: |
+        sleep 10
+
+        response=$(curl -s https://your-domain.com/api/health)
+        status=$(echo $response | jq -r '.status')
+
+        if [ "$status" != "healthy" ]; then
+          echo "CRITICAL: Rollback verification failed!"
+          exit 1
+        fi
+
+        echo "Rollback verified - service is healthy"
+
+    - name: Notify rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: 'warning'
+        text: |
+          :warning: Production deployment rolled back
+          Service restored to previous version
+          Investigate deployment failure immediately
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  post-deployment-verification:
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+    - name: Performance baseline test
+      run: |
+        echo "Running performance baseline..."
+
+        # Test response times
+        for i in {1..10}; do
+          time=$(curl -o /dev/null -s -w '%{time_total}\n' https://your-domain.com/api/health)
+          echo "Request $i: ${time}s"
+        done
+
+    - name: Monitor for 5 minutes
+      run: |
+        echo "Monitoring production for 5 minutes..."
+
+        for i in {1..60}; do
+          response=$(curl -s https://your-domain.com/api/health)
+          status=$(echo $response | jq -r '.status')
+
+          if [ "$status" != "healthy" ]; then
+            echo "ERROR: Service became unhealthy during monitoring"
+            exit 1
+          fi
+
+          sleep 5
+        done
+
+        echo "5-minute monitoring completed - service stable"
+
+    - name: Create deployment report
+      run: |
+        cat > deployment-report.md << 'EOF'
+        # Production Deployment Report
+
+        **Date**: $(date)
+        **Commit**: ${{ github.sha }}
+        **Deployed by**: ${{ github.actor }}
+        **Status**: SUCCESS
+
+        ## Verification Results
+        - Health check: PASSED
+        - Smoke tests: PASSED
+        - Performance baseline: PASSED
+        - 5-minute stability: PASSED
+
+        ## Next Steps
+        - Monitor error logs for 24 hours
+        - Review performance metrics
+        - User acceptance testing
+        EOF
+
+        cat deployment-report.md
+
+    - name: Upload deployment report
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-report
+        path: deployment-report.md

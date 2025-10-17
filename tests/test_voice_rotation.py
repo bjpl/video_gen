@@ -11,6 +11,7 @@ Tests that:
 import asyncio
 import sys
 from pathlib import Path
+import pytest
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -140,6 +141,7 @@ def test_api_model_compatibility():
     print("✅ TEST 3 PASSED\n")
 
 
+@pytest.mark.asyncio
 async def test_audio_stage_integration():
     """Test audio generation stage with voice rotation."""
 

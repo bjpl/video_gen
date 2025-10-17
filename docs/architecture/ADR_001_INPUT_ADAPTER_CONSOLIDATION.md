@@ -101,74 +101,135 @@ This **duplication causes:**
 
 ## Implementation Strategy
 
-### Phase 1: Compatibility Layer (Days 1-2)
+### Phase 1: Compatibility Layer (Days 1-2) ✅ COMPLETED
+
+**Status:** Implemented and tested (2025-10-11)
+**Location:** `video_gen/input_adapters/compat.py`
+**Tests:** `tests/test_compat_layer.py` (47 tests, 100% passing)
+
+#### Implementation Overview
+
+The compatibility layer provides three key components:
+
+1. **CompatAdapter Wrapper**
+   - Wraps async `InputAdapter` to provide sync `.parse()` API
+   - Handles event loop management (including nested loop scenarios)
+   - Emits deprecation warnings (once per instance)
+   - Raises exceptions on failure (legacy behavior)
+
+2. **Backward-Compatible Models**
+   - `BackwardCompatibleVideoSet` - wraps VideoSet
+   - `BackwardCompatibleVideoConfig` - wraps VideoConfig
+   - Provides subscriptable access (`video['title']`)
+   - Maintains scene structure compatibility
+
+3. **Drop-in Replacement Adapters**
+   - `DocumentAdapter` - wraps async DocumentAdapter
+   - `YouTubeAdapter` - wraps async YouTubeAdapter
+   - `YAMLAdapter` - wraps async YAMLFileAdapter
+   - `WizardAdapter` - wraps async InteractiveWizard
+   - `ProgrammaticAdapter` - wraps async ProgrammaticAdapter
+
+#### Key Design Decisions
+
+**Event Loop Handling:**
 ```python
-# video_gen/input_adapters/compat.py
-"""
-Compatibility layer for migrating from deprecated app.input_adapters
-to canonical video_gen.input_adapters.
+try:
+    result = asyncio.run(self._adapter.adapt(source, **options))
+except RuntimeError as e:
+    if 'asyncio.run() cannot be called from a running event loop' in str(e):
+        # Handle nested event loop by spawning thread
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, self._adapter.adapt(source, **options))
+            result = future.result()
+```
 
-This module provides:
-1. Sync wrappers for async adapters (parse -> adapt)
-2. VideoSet extraction from InputAdapterResult
-3. Drop-in replacements for all deprecated adapters
-"""
+**VideoSet Compatibility:**
+```python
+class BackwardCompatibleVideoSet(_VideoSet):
+    """Inherits from VideoSet to pass isinstance() checks.
 
-import asyncio
-from typing import Any
-
-from .base import InputAdapter, InputAdapterResult
-from ..shared.models import VideoSet
-
-
-class CompatAdapter:
-    """Synchronous wrapper for async InputAdapter.
-
-    Provides deprecated .parse() method that internally calls
-    the canonical async .adapt() method.
+    Wraps videos with BackwardCompatibleVideoConfig to provide
+    scene structure compatibility throughout the hierarchy.
     """
+    @property
+    def videos(self) -> List[BackwardCompatibleVideoConfig]:
+        return [BackwardCompatibleVideoConfig(v) for v in self._video_set.videos]
+```
 
-    def __init__(self, async_adapter: InputAdapter):
-        self._adapter = async_adapter
+**Deprecation Warnings:**
+- Emitted on first `.parse()` call per adapter instance
+- Clear migration path provided in warning message
+- Includes version removal notice (v3.0)
 
-    def parse(self, source: str, **options) -> VideoSet:
-        """Synchronous parse method (deprecated pattern).
+#### Test Coverage
 
-        Internally runs async adapt() and extracts VideoSet.
-        Raises exception on failure for backward compatibility.
-        """
-        # Run async adapt in sync context
-        result = asyncio.run(self._adapter.adapt(source, **options))
+**47 tests covering:**
+- ✅ Core wrapper functionality
+- ✅ Sync/async conversion
+- ✅ Event loop edge cases
+- ✅ Error handling (success/failure paths)
+- ✅ Deprecation warnings
+- ✅ All 5 adapter types
+- ✅ Backward compatibility scenarios
+- ✅ Migration path validation
 
-        # Extract VideoSet or raise exception (legacy behavior)
-        if not result.success:
-            raise ValueError(f"Adapter failed: {result.error}")
+**Example test:**
+```python
+def test_compat_adapter_returns_video_set(self):
+    """CompatAdapter.parse() should return VideoSet"""
+    from video_gen.input_adapters import DocumentAdapter as AsyncDoc
 
-        return result.video_set
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        f.write("# Test\n\nContent")
+        test_file = f.name
 
+    try:
+        compat = CompatAdapter(AsyncDoc(test_mode=True))
 
-# Drop-in replacements
-class DocumentAdapter(CompatAdapter):
-    """Backward-compatible DocumentAdapter."""
-    def __init__(self):
-        from .document import DocumentAdapter as AsyncDoc
-        super().__init__(AsyncDoc())
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = compat.parse(test_file)
 
+        assert isinstance(result, VideoSet)
+        assert result is not None
 
-class YouTubeAdapter(CompatAdapter):
-    """Backward-compatible YouTubeAdapter."""
-    def __init__(self):
-        from .youtube import YouTubeAdapter as AsyncYT
-        super().__init__(AsyncYT())
+    finally:
+        Path(test_file).unlink()
+```
 
+#### Migration Path
 
-# Export all for easy migration
-__all__ = [
-    "CompatAdapter",
-    "DocumentAdapter",
-    "YouTubeAdapter",
-    # ... other adapters
-]
+**Step 1: Import change only (zero risk)**
+```python
+# OLD
+from app.input_adapters import DocumentAdapter
+
+# NEW (same code)
+from video_gen.input_adapters.compat import DocumentAdapter
+```
+
+**Step 2: Async migration (better performance)**
+```python
+# From compat
+from video_gen.input_adapters.compat import DocumentAdapter
+video_set = adapter.parse('file.md')
+
+# To async
+from video_gen.input_adapters import DocumentAdapter
+result = await adapter.adapt('file.md')
+video_set = result.video_set
+```
+
+**Step 3: Full InputAdapterResult (better error handling)**
+```python
+result = await adapter.adapt('file.md')
+if result.success:
+    video_set = result.video_set
+    print(f"Metadata: {result.metadata}")
+else:
+    print(f"Error: {result.error}")
 ```
 
 ### Phase 2: Test Migration (Days 3-10)

@@ -652,52 +652,9 @@ class TestNarrationGeneratorGenerate:
         assert narration == "Test narration"
 
 
-class TestNarrationGeneratorNotImplemented:
-    """Test NarrationGenerator not-yet-implemented methods."""
-
-    @pytest.mark.asyncio
-    async def test_generate_script_not_implemented(self):
-        """Test generate_script() raises NotImplementedError."""
-        generator = NarrationGenerator()
-
-        scene = SceneConfig(
-            scene_id="test",
-            scene_type="title",
-            narration="Test",
-            visual_content={}
-        )
-
-        with pytest.raises(NotImplementedError):
-            await generator.generate_script([scene])
-
-    @pytest.mark.asyncio
-    async def test_apply_style_not_implemented(self):
-        """Test apply_style() raises NotImplementedError."""
-        generator = NarrationGenerator()
-
-        with pytest.raises(NotImplementedError):
-            await generator.apply_style("Test text")
 
 
 # ============================================================================
 # AIScriptEnhancer Not-Implemented Methods Tests
 # ============================================================================
 
-class TestAIScriptEnhancerNotImplemented:
-    """Test AIScriptEnhancer not-yet-implemented methods."""
-
-    @pytest.mark.asyncio
-    async def test_translate_script_not_implemented(self):
-        """Test translate_script() raises NotImplementedError."""
-        enhancer = AIScriptEnhancer(api_key="test-key")
-
-        with pytest.raises(NotImplementedError, match="Translation not yet implemented"):
-            await enhancer.translate_script("Test script", "es")
-
-    @pytest.mark.asyncio
-    async def test_improve_clarity_not_implemented(self):
-        """Test improve_clarity() raises NotImplementedError."""
-        enhancer = AIScriptEnhancer(api_key="test-key")
-
-        with pytest.raises(NotImplementedError, match="Clarity improvement not yet implemented"):
-            await enhancer.improve_clarity("Test script")

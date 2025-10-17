@@ -39,6 +39,14 @@
 - **[docs/architecture/PIPELINE_ARCHITECTURE.md](docs/architecture/PIPELINE_ARCHITECTURE.md)** - Pipeline design
 - **[docs/architecture/COMPONENT_DIAGRAM.md](docs/architecture/COMPONENT_DIAGRAM.md)** - Component relationships
 
+### Architecture Decision Records (ADRs) 🆕
+- **[docs/architecture/ARCHITECTURE_DECISIONS_OVERVIEW.md](docs/architecture/ARCHITECTURE_DECISIONS_OVERVIEW.md)** - Complete ADR index and guide
+- **[docs/architecture/ADR_001_INPUT_ADAPTER_CONSOLIDATION.md](docs/architecture/ADR_001_INPUT_ADAPTER_CONSOLIDATION.md)** - Input system consolidation (In Progress)
+- **[docs/architecture/ADR_002_MODULAR_RENDERER_SYSTEM.md](docs/architecture/ADR_002_MODULAR_RENDERER_SYSTEM.md)** - Modular renderer design (Accepted)
+- **[docs/architecture/ADR_003_AI_INTEGRATION_STRATEGY.md](docs/architecture/ADR_003_AI_INTEGRATION_STRATEGY.md)** - AI narration strategy (Accepted)
+- **[docs/architecture/ADR_004_TESTING_STRATEGY.md](docs/architecture/ADR_004_TESTING_STRATEGY.md)** - Testing organization (Accepted)
+- **[docs/architecture/ADR_005_CONFIGURATION_SYSTEM.md](docs/architecture/ADR_005_CONFIGURATION_SYSTEM.md)** - Configuration design (Accepted)
+
 ### API Documentation
 - **[docs/api/RENDERER_API.md](docs/api/RENDERER_API.md)** - Renderer module API (18 functions)
 - **[docs/API_DESIGN.md](docs/API_DESIGN.md)** - API design principles
@@ -57,7 +65,7 @@
 
 ### Session Reports (Recent Changes)
 - **[docs/session-reports/SESSION_SUMMARY_2025-10-06.md](docs/session-reports/SESSION_SUMMARY_2025-10-06.md)** - Oct 6: Coverage expansion, test fixes
-- **[scripts/LOGGING_MIGRATION_REPORT.md](scripts/LOGGING_MIGRATION_REPORT.md)** - Logging migration (1,020 statements)
+- **[docs/reports/completion/LOGGING_MIGRATION_REPORT.md](docs/reports/completion/LOGGING_MIGRATION_REPORT.md)** - Logging migration (1,020 statements)
 
 ---
 
@@ -71,6 +79,7 @@
 
 ### Specialized Guides
 - **[docs/AUTO_ORCHESTRATOR_GUIDE.md](docs/AUTO_ORCHESTRATOR_GUIDE.md)** - Auto-orchestrator usage
+- **[docs/guides/AUTO_ORCHESTRATOR_USAGE.md](docs/guides/AUTO_ORCHESTRATOR_USAGE.md)** - Auto-orchestrator examples (scripts)
 - **[docs/BACKEND_API_QUICKREF.md](docs/BACKEND_API_QUICKREF.md)** - Backend API reference
 - **[docs/BACKEND_API_UPDATES.md](docs/BACKEND_API_UPDATES.md)** - Recent API updates
 
@@ -146,7 +155,9 @@
 - AI_NARRATION_QUICKSTART.md
 
 **For Developers:**
-- docs/architecture/ (all files)
+- docs/architecture/ARCHITECTURE_DECISIONS_OVERVIEW.md 🆕 - Start here for architecture
+- docs/architecture/ADR_* (5 decision records) 🆕
+- docs/architecture/ (all architectural docs)
 - docs/api/RENDERER_API.md
 - docs/testing/TESTING_GUIDE.md
 - docs/session-reports/SESSION_SUMMARY_2025-10-06.md
@@ -161,11 +172,16 @@
 
 ## 🗂️ File Count
 
-**Total documentation:** 92 markdown files (after cleanup)
+**Total documentation:** 98 markdown files (after cleanup + ADRs)
 - Root directory: 19 files
 - docs/ directory: ~55 files
-- docs/architecture/: 9 files
+- docs/architecture/: 15 files (+6 new ADRs) 🆕
 - Other directories: ~9 files
+
+**Recent additions (Oct 16, 2025):** 🆕
+- 5 Architecture Decision Records (ADRs)
+- 1 ADR overview document
+- Comprehensive architecture decision documentation
 
 **Recent cleanup:** Deleted 78 outdated files (Oct 6, 2025)
 - Removed: Agent reports, duplicate summaries, completed implementation plans
@@ -201,6 +217,7 @@
 
 ## 📅 Change Log
 
+- **2025-10-16**: 🆕 Added 5 Architecture Decision Records (ADRs) documenting key design decisions
 - **2025-10-11**: Web UI Phase 1+2 alignment complete (60% → 90% parity), added WEB_UI_GUIDE.md
 - **2025-10-06**: Major cleanup (deleted 78 files), added PRODUCTION_READINESS.md, RENDERER_API.md
 - **2025-10-05**: Refactoring session, modularization, logging migration
@@ -208,7 +225,29 @@
 
 ---
 
-**Total Reading Time:** ~2-3 hours for complete documentation
-**Quick Start Path:** README → GETTING_STARTED → Pick feature guide
+## 🎯 Recommended Reading Paths
 
-*Index Last Updated: 2025-10-06*
+**For New Developers** (Understanding Architecture):
+1. README → GETTING_STARTED (15 min)
+2. docs/architecture/ARCHITECTURE_DECISIONS_OVERVIEW.md (15 min) 🆕
+3. ADR-005: Configuration System (10 min) 🆕
+4. ADR-002: Modular Renderer System (15 min) 🆕
+5. ADR-004: Testing Strategy (12 min) 🆕
+
+**Total:** ~90 minutes for complete architectural understanding
+
+**For End Users** (Using the System):
+1. README → GETTING_STARTED (15 min)
+2. Pick your use case:
+   - Web UI: docs/WEB_UI_GUIDE.md (20 min)
+   - Python API: PROGRAMMATIC_GUIDE.md (10 min)
+   - AI Narration: AI_NARRATION_QUICKSTART.md (3 min)
+
+---
+
+**Total Reading Time:**
+- Complete documentation: ~3-4 hours
+- Architecture understanding: ~90 minutes
+- Quick Start: ~15 minutes
+
+*Index Last Updated: 2025-10-16*

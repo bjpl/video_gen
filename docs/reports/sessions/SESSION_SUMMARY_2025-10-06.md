@@ -241,7 +241,7 @@
 
 **Session Documents:**
 - REFACTORING_SESSION_SUMMARY.md (Oct 5 - previous session)
-- LOGGING_MIGRATION_REPORT.md (Oct 5 - logging migration)
+- docs/reports/completion/LOGGING_MIGRATION_REPORT.md (Oct 5 - logging migration)
 
 **Test Documentation:**
 - tests/test_stages_coverage.py (inline docstrings)

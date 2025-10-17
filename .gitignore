@@ -37,6 +37,8 @@ temp_*/
 *.tmp
 *.log
 *.cache
+profile.stats
+*.backup
 
 # IDE
 .vscode/

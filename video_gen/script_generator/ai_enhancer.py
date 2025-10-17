@@ -250,16 +250,100 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
     ) -> str:
         """Translate script to target language using Claude.
 
+        Supports 28+ languages including:
+        - European: Spanish, French, German, Italian, Portuguese, Dutch, etc.
+        - Asian: Japanese, Chinese (Simplified/Traditional), Korean, etc.
+        - Others: Arabic, Hebrew, Hindi, Russian, Turkish, etc.
+
         Args:
-            script: Original script
-            target_language: Target language code
+            script: Original script to translate
+            target_language: Target language (full name or code)
+                Examples: "Spanish", "es", "Japanese", "ja"
             **kwargs: Additional translation parameters
+                - preserve_tone: Keep original tone (default: True)
+                - technical_context: Add technical translation context
 
         Returns:
             Translated script
+
+        Raises:
+            ScriptGenerationError: If API key not configured
         """
-        # TODO: Implement translation
-        raise NotImplementedError("Translation not yet implemented")
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=self.api_key)
+
+            # Map language codes to full names
+            language_map = {
+                'es': 'Spanish', 'fr': 'French', 'de': 'German', 'it': 'Italian',
+                'pt': 'Portuguese', 'pt-br': 'Brazilian Portuguese', 'nl': 'Dutch',
+                'pl': 'Polish', 'ru': 'Russian', 'uk': 'Ukrainian', 'cs': 'Czech',
+                'ja': 'Japanese', 'zh': 'Chinese (Simplified)', 'zh-cn': 'Chinese (Simplified)',
+                'zh-tw': 'Chinese (Traditional)', 'ko': 'Korean', 'ar': 'Arabic',
+                'he': 'Hebrew', 'hi': 'Hindi', 'th': 'Thai', 'vi': 'Vietnamese',
+                'id': 'Indonesian', 'tr': 'Turkish', 'sv': 'Swedish', 'da': 'Danish',
+                'no': 'Norwegian', 'fi': 'Finnish', 'el': 'Greek', 'ro': 'Romanian'
+            }
+
+            # Normalize language name
+            lang_key = target_language.lower().strip()
+            language_name = language_map.get(lang_key, target_language.title())
+
+            # Get translation options
+            preserve_tone = kwargs.get('preserve_tone', True)
+            technical_context = kwargs.get('technical_context', '')
+
+            # Build translation prompt
+            prompt = f"""Translate this video narration script to {language_name}.
+
+Original Script (English):
+"{script}"
+
+Translation Requirements:
+- Translate naturally for native speakers of {language_name}
+- Maintain similar length and pacing (±20%)
+- {"Preserve the original tone and style" if preserve_tone else "Adapt tone for target culture"}
+- Keep technical terms accurate and clear
+- Use appropriate formality level for educational content
+- Make it sound natural when spoken aloud
+{"- Context: " + technical_context if technical_context else ""}
+
+Quality Standards:
+- Natural speech patterns in {language_name}
+- Clear pronunciation-friendly language
+- Culturally appropriate expressions
+- Maintain all technical accuracy
+
+Return ONLY the translated narration - no explanations or quotes."""
+
+            response = client.messages.create(
+                model="claude-sonnet-4-5-20250929",
+                max_tokens=1000,
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }]
+            )
+
+            translated = response.content[0].text.strip()
+
+            # Track usage
+            usage = response.usage
+            self.metrics.record_call(
+                input_tokens=usage.input_tokens,
+                output_tokens=usage.output_tokens,
+                success=True
+            )
+
+            logger.info(f"Script translated to {language_name}: {len(translated)} chars")
+
+            return translated
+
+        except Exception as e:
+            logger.error(f"Translation failed: {e}, returning original")
+            self.metrics.record_call(0, 0, success=False)
+            return script
 
     async def improve_clarity(
         self,
@@ -268,12 +352,111 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
     ) -> str:
         """Improve script clarity and readability.
 
+        Focuses on:
+        - Simplifying complex sentences
+        - Removing jargon and buzzwords
+        - Improving logical flow
+        - Making technical concepts accessible
+        - Enhancing pronunciation-friendliness
+
         Args:
             script: Original script
             **kwargs: Additional parameters
+                - target_audience: Audience level (beginner, intermediate, advanced)
+                - max_complexity: Maximum sentence complexity (simple, moderate, complex)
 
         Returns:
-            Improved script
+            Improved script with better clarity
+
+        Raises:
+            ScriptGenerationError: If API key not configured
         """
-        # TODO: Implement clarity improvement
-        raise NotImplementedError("Clarity improvement not yet implemented")
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=self.api_key)
+
+            # Get clarity options
+            target_audience = kwargs.get('target_audience', 'general')
+            max_complexity = kwargs.get('max_complexity', 'moderate')
+
+            # Map audience to complexity guidelines
+            audience_guidelines = {
+                'beginner': 'Explain concepts simply, avoid technical jargon, use analogies',
+                'intermediate': 'Balance technical accuracy with accessibility, define complex terms',
+                'advanced': 'Use precise technical language, assume domain knowledge',
+                'general': 'Make concepts accessible to non-experts while staying accurate'
+            }
+
+            audience_guide = audience_guidelines.get(target_audience, audience_guidelines['general'])
+
+            # Build clarity improvement prompt
+            prompt = f"""Improve the clarity and readability of this video narration script.
+
+Original Script:
+"{script}"
+
+Improvement Guidelines:
+- Target Audience: {target_audience.title()}
+- {audience_guide}
+- Simplify complex sentences (max {max_complexity} complexity)
+- Remove unnecessary jargon and buzzwords
+- Improve logical flow and transitions
+- Make pronunciation-friendly for text-to-speech
+- Keep similar length (±20%)
+
+Focus on Clarity:
+1. Use shorter, simpler sentences
+2. Define technical terms when needed
+3. Use concrete examples where helpful
+4. Remove redundant words and phrases
+5. Ensure smooth, natural speech flow
+
+Quality Standards:
+- Clear and concise language
+- Logical progression of ideas
+- Easy to understand when spoken
+- Maintains all technical accuracy
+- Natural conversational tone
+
+Return ONLY the improved narration - no explanations or quotes."""
+
+            response = client.messages.create(
+                model="claude-sonnet-4-5-20250929",
+                max_tokens=800,
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }]
+            )
+
+            improved = response.content[0].text.strip()
+
+            # Validate improvement
+            validation_result = self._validate_enhanced_script(improved, script)
+            if not validation_result['valid']:
+                logger.warning(f"Clarity improvement failed validation: {validation_result['reason']}, using original")
+                usage = response.usage
+                self.metrics.record_call(
+                    input_tokens=usage.input_tokens,
+                    output_tokens=usage.output_tokens,
+                    success=False
+                )
+                return script
+
+            # Track usage
+            usage = response.usage
+            self.metrics.record_call(
+                input_tokens=usage.input_tokens,
+                output_tokens=usage.output_tokens,
+                success=True
+            )
+
+            logger.info(f"Script clarity improved: {len(improved)} chars")
+
+            return improved
+
+        except Exception as e:
+            logger.error(f"Clarity improvement failed: {e}, returning original")
+            self.metrics.record_call(0, 0, success=False)
+            return script
