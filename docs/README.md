@@ -22,6 +22,31 @@ python scripts/create_video_auto.py --from README.md --type document
 
 ---
 
+## Documentation Structure
+
+**Organization:** All documentation is organized into logical subdirectories:
+
+```
+docs/
+├── README.md                 (this file - main index)
+├── api/                      API documentation and reference
+├── architecture/             Architecture and design documents
+├── diagrams/                 Visual diagrams and flow charts
+├── guides/                   User and developer guides
+├── reference/                Reference documentation
+├── reports/                  Analysis, session, and progress reports
+│   ├── ai-integration/       AI integration reports
+│   ├── analysis/             Technical analysis reports
+│   ├── completion/           Phase completion reports
+│   ├── pipeline/             Pipeline analysis
+│   ├── sessions/             Daily session summaries
+│   ├── technology/           Technology stack docs
+│   └── ui-alignment/         UI/API alignment reports
+└── testing/                  Testing guides and reports
+```
+
+---
+
 ## Documentation Categories
 
 ### 📘 For End Users
@@ -34,7 +59,7 @@ python scripts/create_video_auto.py --from README.md --type document
 
 **Reference:**
 - **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Python API reference
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Problem solving guide
+- **[TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)** - Problem solving guide
 - **[FAQ.md](FAQ.md)** - Frequently asked questions
 - **[CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md)** - Configuration options
 
@@ -56,9 +81,9 @@ python scripts/create_video_auto.py --from README.md --type document
 
 **Deployment:**
 - **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Deployment procedures
-- **[PRODUCTION_READINESS_CHECKLIST.md](PRODUCTION_READINESS_CHECKLIST.md)** - Pre-deployment checklist
+- **[PRODUCTION_READINESS_CHECKLIST.md](reference/PRODUCTION_READINESS.md)** - Pre-deployment checklist
 - **[FINAL_DELIVERY_REPORT.md](FINAL_DELIVERY_REPORT.md)** - Project delivery report
-- **[VALIDATION_SUMMARY.md](VALIDATION_SUMMARY.md)** - Validation results
+- **[VALIDATION_SUMMARY.md](reports/VALIDATION_SUMMARY.md)** - Validation results
 
 **Quality Assurance:**
 - **[FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md)** - Complete test results
@@ -207,12 +232,12 @@ Entry Points:
 **I'm a new user:**
 1. Start: [QUICKSTART.md](QUICKSTART.md)
 2. Learn: [USER_GUIDE.md](USER_GUIDE.md)
-3. Help: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+3. Help: [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)
 
 **I'm migrating from old workflow:**
 1. Migration: [USER_MIGRATION_GUIDE.md](USER_MIGRATION_GUIDE.md)
 2. Reference: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-3. Help: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+3. Help: [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)
 
 **I'm a developer:**
 1. Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -221,7 +246,7 @@ Entry Points:
 4. Integration: [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 
 **I'm deploying to production:**
-1. Checklist: [PRODUCTION_READINESS_CHECKLIST.md](PRODUCTION_READINESS_CHECKLIST.md)
+1. Checklist: [PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md)
 2. Deploy: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 3. Validate: [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md)
 
@@ -236,7 +261,7 @@ Entry Points:
 **Configuration:**
 - [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) - Configuration
 - [API_KEY_SETUP_COMPLETE.md](API_KEY_SETUP_COMPLETE.md) - API setup
-- [BACKEND_API_QUICKREF.md](BACKEND_API_QUICKREF.md) - Backend API
+- [BACKEND_API_QUICKREF.md](api/BACKEND_API_QUICKREF.md) - Backend API
 
 **Architecture:**
 - [ARCHITECTURE.md](ARCHITECTURE.md) - System design
@@ -246,23 +271,23 @@ Entry Points:
 
 **Development:**
 - [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - API reference
-- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Testing
+- [TESTING_GUIDE.md](testing/TESTING_GUIDE.md) - Testing
 - [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) - Integration
-- [API_DESIGN.md](API_DESIGN.md) - API design
+- [API_DESIGN.md](api/API_DESIGN.md) - API design
 
 **Deployment:**
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deployment
-- [PRODUCTION_READINESS_CHECKLIST.md](PRODUCTION_READINESS_CHECKLIST.md) - Checklist
+- [PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md) - Checklist
 - [FINAL_DELIVERY_REPORT.md](FINAL_DELIVERY_REPORT.md) - Report
 
 **Validation:**
 - [FINAL_TEST_REPORT.md](FINAL_TEST_REPORT.md) - Tests
-- [VALIDATION_SUMMARY.md](VALIDATION_SUMMARY.md) - Summary
+- [VALIDATION_SUMMARY.md](reports/VALIDATION_SUMMARY.md) - Summary
 - [INTEGRATION_COMPLETE.md](INTEGRATION_COMPLETE.md) - Integration
 - [WEB_UI_COMPLETE.md](WEB_UI_COMPLETE.md) - Web UI
 
 **Troubleshooting:**
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Problems
+- [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) - Problems
 - [TROUBLESHOOTING_IMPORT_ERROR.md](TROUBLESHOOTING_IMPORT_ERROR.md) - Import errors
 - [FAQ.md](FAQ.md) - FAQs
 
@@ -317,18 +342,18 @@ Entry Points:
 
 **For Users:**
 1. **[QUICKSTART.md](QUICKSTART.md)** - Start here
-2. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - When things go wrong
+2. **[TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)** - When things go wrong
 3. **[USER_MIGRATION_GUIDE.md](USER_MIGRATION_GUIDE.md)** - Migrating
 
 **For Developers:**
 1. **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design
 2. **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - API reference
-3. **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Testing
+3. **[TESTING_GUIDE.md](testing/TESTING_GUIDE.md)** - Testing
 
 **For Operations:**
-1. **[PRODUCTION_READINESS_CHECKLIST.md](PRODUCTION_READINESS_CHECKLIST.md)** - Deploy checklist
+1. **[PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md)** - Deploy checklist
 2. **[FINAL_DELIVERY_REPORT.md](FINAL_DELIVERY_REPORT.md)** - Project status
-3. **[VALIDATION_SUMMARY.md](VALIDATION_SUMMARY.md)** - Validation
+3. **[VALIDATION_SUMMARY.md](reports/VALIDATION_SUMMARY.md)** - Validation
 
 ### External Resources
 
@@ -345,7 +370,7 @@ Entry Points:
 **Using the system:**
 - Quick start: [QUICKSTART.md](QUICKSTART.md)
 - User guide: [USER_GUIDE.md](USER_GUIDE.md)
-- Troubleshooting: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Troubleshooting: [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)
 
 **Migrating from old workflow:**
 - Migration guide: [USER_MIGRATION_GUIDE.md](USER_MIGRATION_GUIDE.md)
@@ -354,14 +379,14 @@ Entry Points:
 **Development:**
 - Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
 - API docs: [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
-- Testing: [TESTING_GUIDE.md](TESTING_GUIDE.md)
+- Testing: [TESTING_GUIDE.md](testing/TESTING_GUIDE.md)
 
 **Deployment:**
 - Deploy guide: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- Checklist: [PRODUCTION_READINESS_CHECKLIST.md](PRODUCTION_READINESS_CHECKLIST.md)
+- Checklist: [PRODUCTION_READINESS.md](reference/PRODUCTION_READINESS.md)
 
 **Problems:**
-- Troubleshooting: [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+- Troubleshooting: [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)
 - FAQs: [FAQ.md](FAQ.md)
 
 ---
@@ -402,7 +427,7 @@ Entry Points:
 **For developers wanting to contribute:**
 
 1. Read [ARCHITECTURE.md](ARCHITECTURE.md)
-2. Review [TESTING_GUIDE.md](TESTING_GUIDE.md)
+2. Review [TESTING_GUIDE.md](testing/TESTING_GUIDE.md)
 3. Check [STAGE_DEVELOPMENT.md](STAGE_DEVELOPMENT.md)
 4. Follow [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)
 
@@ -417,7 +442,7 @@ Entry Points:
 ## Support
 
 **Need help?**
-1. Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+1. Check [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)
 2. Review [FAQ.md](FAQ.md)
 3. Read relevant guide above
 4. Contact support (add contact info)
@@ -446,7 +471,7 @@ python scripts/create_video_auto.py --help
 ---
 
 **Documentation Version:** 1.0.0
-**Last Updated:** October 4, 2025
+**Last Updated:** October 16, 2025
 **Status:** ✅ COMPLETE
 
-*For questions about this documentation, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)*
+*For questions about this documentation, see [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md)*
