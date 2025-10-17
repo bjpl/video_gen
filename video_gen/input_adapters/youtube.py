@@ -17,14 +17,22 @@ class YouTubeAdapter(InputAdapter):
 
     This adapter downloads transcripts from YouTube videos and converts
     them into structured VideoSet objects for video generation.
+
+    Args:
+        test_mode: If True, bypass external API calls for testing purposes
     """
 
-    def __init__(self):
-        """Initialize the YouTube adapter."""
+    def __init__(self, test_mode: bool = False):
+        """Initialize the YouTube adapter.
+
+        Args:
+            test_mode: If True, bypass external API calls for testing purposes
+        """
         super().__init__(
             name="youtube",
             description="Processes YouTube video transcripts"
         )
+        self.test_mode = test_mode
 
     async def adapt(self, source: Any, **kwargs) -> InputAdapterResult:
         """Adapt a YouTube video to VideoSet structure.

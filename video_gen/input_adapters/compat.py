@@ -309,14 +309,17 @@ class YouTubeAdapter(CompatAdapter):
     Drop-in replacement for app.input_adapters.YouTubeAdapter
     that uses canonical async implementation with compat layer.
 
+    Args:
+        test_mode: If True, bypass external API calls for testing purposes
+
     Example:
         >>> adapter = YouTubeAdapter()
         >>> video_set = adapter.parse('https://youtube.com/watch?v=abc123')
     """
 
-    def __init__(self):
+    def __init__(self, test_mode: bool = False):
         from .youtube import YouTubeAdapter as AsyncYouTubeAdapter
-        super().__init__(AsyncYouTubeAdapter())
+        super().__init__(AsyncYouTubeAdapter(test_mode=test_mode))
 
 
 class YAMLAdapter(CompatAdapter):
@@ -344,14 +347,17 @@ class WizardAdapter(CompatAdapter):
     Drop-in replacement for app.input_adapters.WizardAdapter
     that uses canonical async implementation with compat layer.
 
+    Args:
+        test_mode: If True, bypass interactive prompts for testing purposes
+
     Example:
         >>> adapter = WizardAdapter()
         >>> video_set = adapter.parse()  # Interactive prompts
     """
 
-    def __init__(self):
+    def __init__(self, test_mode: bool = False):
         from .wizard import InteractiveWizard as AsyncWizard
-        super().__init__(AsyncWizard())
+        super().__init__(AsyncWizard(test_mode=test_mode))
 
 
 class ProgrammaticAdapter(CompatAdapter):
@@ -365,9 +371,9 @@ class ProgrammaticAdapter(CompatAdapter):
         >>> video_set = adapter.parse(builder_data)
     """
 
-    def __init__(self):
+    def __init__(self, test_mode: bool = False):
         from .programmatic import ProgrammaticAdapter as AsyncProgrammatic
-        super().__init__(AsyncProgrammatic())
+        super().__init__(AsyncProgrammatic(test_mode=test_mode))
 
 
 # Re-export wrapped models with backward-compatible names

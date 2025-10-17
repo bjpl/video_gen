@@ -135,7 +135,7 @@ class TestYouTubeToVideoComplete:
         from video_gen.input_adapters.compat import YouTubeAdapter
         import re
 
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Test URL parsing - YouTubeAdapter doesn't expose _extract_video_id, so test inline
         test_url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'

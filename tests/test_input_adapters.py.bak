@@ -121,7 +121,7 @@ class TestYouTubeAdapter:
     @pytest.mark.skip(reason="Deprecated API: _extract_video_id() private method removed - internal implementation changed")
     def test_extract_video_id_from_url(self):
         """Test extracting video ID from URLs"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Standard URL
         video_id = adapter._extract_video_id('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -138,7 +138,7 @@ class TestYouTubeAdapter:
     @pytest.mark.skip(reason="Deprecated API: _has_commands() private method removed - internal implementation changed")
     def test_has_commands(self):
         """Test command detection"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         assert adapter._has_commands("Run npm install to start")
         assert adapter._has_commands("Use pip install requests")
@@ -181,7 +181,7 @@ class TestYAMLAdapter:
     @pytest.mark.skip(reason="Deprecated API: YAML parsing not yet implemented in async refactor")
     def test_parse_single_video(self, sample_yaml):
         """Test parsing single video YAML"""
-        adapter = YAMLAdapter(test_mode=True)
+        adapter = YAMLAdapter()
         video_set = adapter.parse(sample_yaml)
 
         assert isinstance(video_set, VideoSet)
@@ -195,7 +195,7 @@ class TestYAMLAdapter:
     @pytest.mark.skip(reason="Deprecated API: YAMLAdapter constructor no longer accepts generate_narration parameter")
     def test_parse_with_narration_generation(self, sample_yaml):
         """Test parsing with automatic narration"""
-        adapter = YAMLAdapter(generate_narration=True, test_mode=True)
+        adapter = YAMLAdapter(generate_narration=True)
         video_set = adapter.parse(sample_yaml)
 
         video = video_set.videos[0]
@@ -211,7 +211,7 @@ class TestProgrammaticAdapter:
     @pytest.mark.skip(reason="Deprecated API: create_from_dict() method removed - use .parse(dict) instead")
     def test_create_from_dict(self):
         """Test creating VideoSet from dictionary"""
-        adapter = ProgrammaticAdapter(test_mode=True)
+        adapter = ProgrammaticAdapter()
 
         data = {
             'set': {

@@ -39,14 +39,22 @@ class InteractiveWizard(InputAdapter):
     - Customizable scene structures
     - Save/resume capability
     - Context-aware suggestions
+
+    Args:
+        test_mode: If True, bypass interactive prompts for testing purposes
     """
 
-    def __init__(self):
-        """Initialize the interactive wizard."""
+    def __init__(self, test_mode: bool = False):
+        """Initialize the interactive wizard.
+
+        Args:
+            test_mode: If True, bypass interactive prompts for testing purposes
+        """
         super().__init__(
             name="wizard",
             description="Interactive guided video creation"
         )
+        self.test_mode = test_mode
 
         # Content type templates
         self.templates = {

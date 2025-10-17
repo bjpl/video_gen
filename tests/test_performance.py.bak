@@ -33,7 +33,7 @@ class TestPipelinePerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
 
         start = time.time()
         result = adapter.parse(test_file)
@@ -52,7 +52,7 @@ class TestPipelinePerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
 
         start = time.time()
         result = adapter.parse(test_file)
@@ -71,7 +71,7 @@ class TestPipelinePerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
 
         start = time.time()
         result = adapter.parse(test_file)
@@ -119,7 +119,7 @@ class TestMemoryUsage:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
         result = adapter.parse(test_file)
 
         peak_memory = process.memory_info().rss / 1024 / 1024  # MB
@@ -143,7 +143,7 @@ class TestMemoryUsage:
 
             from video_gen.input_adapters.compat import DocumentAdapter
 
-            adapter = DocumentAdapter(test_mode=True)
+            adapter = DocumentAdapter()
             result = adapter.parse(test_file)
 
         final_memory = process.memory_info().rss / 1024 / 1024
@@ -181,7 +181,7 @@ class TestConcurrentPerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
 
         # Sequential timing
         start = time.time()
@@ -285,7 +285,7 @@ class TestRegressionPrevention:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
 
         start = time.time()
         result = adapter.parse(test_file)
@@ -308,7 +308,7 @@ class TestRegressionPrevention:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
         result = adapter.parse(test_file)
 
         peak_memory = process.memory_info().rss / 1024 / 1024

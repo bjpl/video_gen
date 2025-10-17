@@ -224,7 +224,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_video_id_from_url(self):
         """Test video ID extraction from various URL formats"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Standard YouTube URL
         video_id = adapter._extract_video_id('https://youtube.com/watch?v=ABC123')
@@ -245,7 +245,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_analyze_transcript_empty(self):
         """Test analyzing empty transcript"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
         analysis = adapter._analyze_transcript([])
 
         assert analysis['total_duration'] == 0
@@ -255,7 +255,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_analyze_transcript_with_pauses(self, mock_transcript):
         """Test analyzing transcript with pauses between segments"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Add pause
         transcript_with_pause = [
@@ -272,7 +272,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_analyze_transcript_error_handling(self):
         """Test transcript analysis with malformed data in duration calculation"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Data with missing duration key (will trigger exception in duration calc)
         bad_transcript = [
@@ -300,7 +300,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_key_segments_empty(self):
         """Test extracting key segments from empty transcript"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
         segments = adapter._extract_key_segments([], num_scenes=4)
 
         assert segments == []
@@ -308,7 +308,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_key_segments_with_data(self, mock_transcript):
         """Test extracting key segments from transcript"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
         segments = adapter._extract_key_segments(mock_transcript, num_scenes=2)
 
         assert len(segments) <= 2
@@ -321,7 +321,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_has_commands_detection(self):
         """Test command pattern detection"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Should detect commands
         assert adapter._has_commands('Run npm install to start')
@@ -339,7 +339,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_commands_from_text(self):
         """Test command extraction from text"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Text with quoted commands
         text = 'Run `npm install` and then `npm start` to begin'
@@ -356,7 +356,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_extract_key_points(self):
         """Test key point extraction"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         text = 'First point here. Second important point. Third key insight. Very short. This is way too long to be included as a single point in the list.'
         points = adapter._extract_key_points(text)
@@ -369,7 +369,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_summarize_text(self):
         """Test text summarization"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         long_text = ' '.join(['word'] * 50)
         summary = adapter._summarize_text(long_text, max_words=10)
@@ -379,7 +379,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_convert_to_scenes_with_commands(self):
         """Test converting segments with commands to scenes"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         segments = [
             {
@@ -400,7 +400,7 @@ class TestYouTubeAdapterCoverage:
     @pytest.mark.skip(reason="Private method removed - see ADR_001_INPUT_ADAPTER_CONSOLIDATION")
     def test_convert_to_scenes_with_lists(self):
         """Test converting segments without commands to scenes"""
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         segments = [
             {
@@ -419,7 +419,7 @@ class TestYouTubeAdapterCoverage:
     def test_parse_without_api(self):
         """Test parse raises error when API not available"""
         with patch('app.input_adapters.youtube.HAS_YOUTUBE_API', False):
-            adapter = YouTubeAdapter(test_mode=True)
+            adapter = YouTubeAdapter()
 
             with pytest.raises(ImportError, match='youtube-transcript-api'):
                 adapter.parse('https://youtube.com/watch?v=test')
@@ -430,7 +430,7 @@ class TestYouTubeAdapterCoverage:
         # when it doesn't start with http, so we need to test with a URL that has
         # no video ID
         with patch('app.input_adapters.youtube.HAS_YOUTUBE_API', True):
-            adapter = YouTubeAdapter(test_mode=True)
+            adapter = YouTubeAdapter()
 
             with pytest.raises(ValueError, match='Could not extract video ID'):
                 # Use a URL that will return None from _extract_video_id
@@ -444,7 +444,7 @@ class TestYouTubeAdapterCoverage:
         if not hasattr(youtube_module, 'YouTubeTranscriptApi'):
             pytest.skip("YouTube API not available")
 
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
 
         # Mock the logger in youtube module since _fetch_transcript uses module-level logger
         import logging
@@ -473,7 +473,7 @@ class TestYouTubeAdapterCoverage:
     def test_parse_transcript_fetch_failure(self):
         """Test parse when transcript fetch fails"""
         with patch('app.input_adapters.youtube.HAS_YOUTUBE_API', True):
-            adapter = YouTubeAdapter(test_mode=True)
+            adapter = YouTubeAdapter()
 
             with patch.object(adapter, '_extract_video_id', return_value='test_id'):
                 with patch.object(adapter, '_fetch_transcript', return_value=None):
@@ -523,7 +523,7 @@ class TestProgrammaticAdapterCoverage:
 
     def test_create_from_dict_minimal(self):
         """Test creating from minimal dictionary"""
-        adapter = ProgrammaticAdapter(test_mode=True)
+        adapter = ProgrammaticAdapter()
 
         data = {
             'set_id': 'min_set',
@@ -545,7 +545,7 @@ class TestProgrammaticAdapterCoverage:
 
     def test_create_from_dict_full(self):
         """Test creating from full dictionary"""
-        adapter = ProgrammaticAdapter(test_mode=True)
+        adapter = ProgrammaticAdapter()
 
         data = {
             'set_id': 'full_set',

@@ -260,7 +260,7 @@ class TestYouTubeAdapterIntegration:
     @pytest.fixture
     def youtube_adapter(self):
         """Create YouTubeAdapter instance."""
-        return YouTubeAdapter(test_mode=True)
+        return YouTubeAdapter()
 
 
 class TestProgrammaticAdapterIntegration:
@@ -269,7 +269,7 @@ class TestProgrammaticAdapterIntegration:
     @pytest.fixture
     def programmatic_adapter(self):
         """Create ProgrammaticAdapter instance."""
-        return ProgrammaticAdapter(test_mode=True)
+        return ProgrammaticAdapter()
 
     def test_programmatic_adapter_with_invalid_source(self, programmatic_adapter):
         """Test ProgrammaticAdapter handles invalid source types."""
@@ -289,7 +289,7 @@ class TestWizardAdapter:
         """Test WizardAdapter can be imported."""
         try:
             from video_gen.input_adapters.compat import WizardAdapter  # Migrated from app.input_adapters.wizard
-            adapter = WizardAdapter(test_mode=True)
+            adapter = WizardAdapter()
             assert adapter is not None
         except ImportError:
             pytest.skip("WizardAdapter not available")
@@ -304,7 +304,7 @@ class TestAdapterColorAndVoiceHandling:
         return [
             DocumentAdapter(test_mode=True),
             YAMLAdapter(test_mode=True),
-            ProgrammaticAdapter(test_mode=True)
+            ProgrammaticAdapter()
         ]
 
     def test_adapters_accept_color_tuples(self, adapters):

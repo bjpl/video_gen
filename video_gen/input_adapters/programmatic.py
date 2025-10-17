@@ -17,12 +17,17 @@ class ProgrammaticAdapter(InputAdapter):
     allowing full programmatic control over video generation.
     """
 
-    def __init__(self):
-        """Initialize the programmatic adapter."""
+    def __init__(self, test_mode: bool = False):
+        """Initialize the programmatic adapter.
+
+        Args:
+            test_mode: If True, runs in test mode (no external dependencies)
+        """
         super().__init__(
             name="programmatic",
             description="Direct programmatic API for video creation"
         )
+        self.test_mode = test_mode
 
     async def adapt(self, source: Any, **kwargs) -> InputAdapterResult:
         """Adapt programmatic input to VideoSet structure.

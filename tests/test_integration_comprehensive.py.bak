@@ -36,7 +36,7 @@ class TestIntegration:
         print("="*60)
 
         # Setup
-        adapter = DocumentAdapter(test_mode=True)
+        adapter = DocumentAdapter()
         readme_path = Path(__file__).parent.parent / "README.md"
 
         if not readme_path.exists():
@@ -75,7 +75,7 @@ class TestIntegration:
         print("="*60)
 
         # Setup
-        adapter = YouTubeAdapter(test_mode=True)
+        adapter = YouTubeAdapter()
         test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # Example URL
 
         # Process (may fail if no API key, that's ok)
