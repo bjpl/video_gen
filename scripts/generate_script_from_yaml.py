@@ -18,9 +18,19 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    # Load from parent directory (project root) if running from scripts/
+    env_path = Path(__file__).parent.parent / '.env'
+    load_dotenv(dotenv_path=env_path)
+except ImportError:
+    pass  # dotenv not installed, will use system environment variables
 import logging
 
 # Setup logging
+logging.basicConfig(level=logging.INFO, format='%(message)s')
 logger = logging.getLogger(__name__)
 
 
@@ -47,11 +57,18 @@ COLOR_MAP = {
 class NarrationGenerator:
     """Generate professional narration from structured input"""
 
-    def __init__(self, target_wpm=135, use_ai=False):
+    def __init__(self, target_wpm=135, use_ai=False, target_duration=None):
         self.target_wpm = target_wpm  # Words per minute
         self.words_per_second = target_wpm / 60.0  # ~2.25 WPS
         self.use_ai = use_ai
         self.ai_client = None
+        self.target_duration = target_duration  # Target video duration in seconds
+
+        # Calculate target word count if duration specified
+        if target_duration:
+            self.target_word_count = int(target_duration * self.words_per_second)
+        else:
+            self.target_word_count = None
 
         # Initialize AI client if requested
         if use_ai:
@@ -70,10 +87,10 @@ class NarrationGenerator:
                 logger.info("   Install: pip install anthropic")
                 self.use_ai = False
 
-    def generate_title_narration(self, scene_data):
+    def generate_title_narration(self, scene_data, scene_num=1, total_scenes=4):
         """Generate narration for title scenes"""
         if self.use_ai and self.ai_client:
-            return self._generate_ai_narration(scene_data, 'title')
+            return self._generate_ai_narration(scene_data, 'title', scene_num, total_scenes)
 
         # Template-based generation
         title = scene_data.get('title', '')
@@ -87,10 +104,10 @@ class NarrationGenerator:
 
         return narration.strip()
 
-    def generate_command_narration(self, scene_data):
+    def generate_command_narration(self, scene_data, scene_num=2, total_scenes=4):
         """Generate narration for command scenes"""
         if self.use_ai and self.ai_client:
-            return self._generate_ai_narration(scene_data, 'command')
+            return self._generate_ai_narration(scene_data, 'command', scene_num, total_scenes)
 
         header = scene_data.get('header', '')
         topic = scene_data.get('topic', '')
@@ -124,10 +141,10 @@ class NarrationGenerator:
         narration = " ".join(parts)
         return narration.strip()
 
-    def generate_list_narration(self, scene_data):
+    def generate_list_narration(self, scene_data, scene_num=2, total_scenes=4):
         """Generate narration for list scenes"""
         if self.use_ai and self.ai_client:
-            return self._generate_ai_narration(scene_data, 'list')
+            return self._generate_ai_narration(scene_data, 'list', scene_num, total_scenes)
 
         header = scene_data.get('header', '')
         topic = scene_data.get('topic', '')
@@ -163,10 +180,10 @@ class NarrationGenerator:
         narration = " ".join(parts)
         return narration.strip()
 
-    def generate_outro_narration(self, scene_data):
+    def generate_outro_narration(self, scene_data, scene_num=4, total_scenes=4):
         """Generate narration for outro scenes"""
         if self.use_ai and self.ai_client:
-            return self._generate_ai_narration(scene_data, 'outro')
+            return self._generate_ai_narration(scene_data, 'outro', scene_num, total_scenes)
 
         main_text = scene_data.get('main_text', '')
         sub_text = scene_data.get('sub_text', '')
@@ -179,10 +196,10 @@ class NarrationGenerator:
 
         return narration.strip()
 
-    def generate_code_comparison_narration(self, scene_data):
+    def generate_code_comparison_narration(self, scene_data, scene_num=2, total_scenes=4):
         """Generate narration for code comparison scenes"""
         if self.use_ai and self.ai_client:
-            return self._generate_ai_narration(scene_data, 'code_comparison')
+            return self._generate_ai_narration(scene_data, 'code_comparison', scene_num, total_scenes)
 
         header = scene_data.get('header', '')
         key_points = scene_data.get('key_points', [])
@@ -202,10 +219,10 @@ class NarrationGenerator:
         narration = " ".join(parts)
         return narration.strip()
 
-    def generate_quote_narration(self, scene_data):
+    def generate_quote_narration(self, scene_data, scene_num=2, total_scenes=4):
         """Generate narration for quote scenes"""
         if self.use_ai and self.ai_client:
-            return self._generate_ai_narration(scene_data, 'quote')
+            return self._generate_ai_narration(scene_data, 'quote', scene_num, total_scenes)
 
         quote_text = scene_data.get('quote_text', '')
         attribution = scene_data.get('attribution', '')
@@ -233,8 +250,24 @@ class NarrationGenerator:
         duration = word_count / self.words_per_second
         return duration, word_count
 
-    def _generate_ai_narration(self, scene_data, scene_type):
+    def _generate_ai_narration(self, scene_data, scene_type, scene_num=1, total_scenes=4):
         """Generate narration using Claude AI"""
+
+        # Calculate word budget for this scene
+        if self.target_word_count:
+            # Distribute word count across scenes (title/outro get less)
+            if scene_type == 'title':
+                word_budget = int(self.target_word_count * 0.15)  # 15% for title
+            elif scene_type == 'outro':
+                word_budget = int(self.target_word_count * 0.15)  # 15% for outro
+            else:
+                # Divide remaining 70% among content scenes
+                content_scenes = max(1, total_scenes - 2)  # Subtract title and outro
+                word_budget = int(self.target_word_count * 0.7 / content_scenes)
+        else:
+            # Default word budgets if no target duration
+            word_budget = {'title': 10, 'outro': 15, 'command': 20, 'list': 20,
+                          'code_comparison': 18, 'quote': 25}.get(scene_type, 20)
 
         # Build context based on scene type
         if scene_type == 'title':
@@ -245,7 +278,7 @@ class NarrationGenerator:
             Subtitle: {scene_data.get('subtitle', '')}
             Key message: {scene_data.get('key_message', '')}
 
-            Create a brief, direct introduction (1-2 sentences, ~10 words).
+            Create a brief, direct introduction (EXACTLY {word_budget} words).
             Style: Technical, factual, educational - NOT marketing/sales language.
             Avoid: "powerful", "amazing", "transform", "instantly", "revolutionary"
             Use: Direct statements about what it is and does.
@@ -260,7 +293,7 @@ class NarrationGenerator:
             Commands shown: {len(scene_data.get('commands', []))} commands
             Key points: {', '.join(scene_data.get('key_points', []))}
 
-            Create clear, instructional narration (2-3 sentences, 15-20 words).
+            Create clear, instructional narration (EXACTLY {word_budget} words).
             Style: Technical documentation, straightforward, educational.
             Avoid: Marketing language, hype, superlatives.
             Focus: What the commands do and why you'd use them.
@@ -283,7 +316,7 @@ class NarrationGenerator:
             Header: {scene_data.get('header', '')}
             Items to mention: {', '.join(item_titles)}
 
-            Create narration that introduces the list (2 sentences, 15-20 words).
+            Create narration that introduces the list (EXACTLY {word_budget} words).
             Style: Technical documentation, factual, clear.
             Avoid: Promotional language, excitement, hype.
             Focus: Factual description of what each item is/does.
@@ -298,7 +331,7 @@ class NarrationGenerator:
             Improvement: {scene_data.get('improvement', '')}
             Key points: {', '.join(scene_data.get('key_points', []))}
 
-            Create narration explaining the code difference (2 sentences, 12-18 words).
+            Create narration explaining the code difference (EXACTLY {word_budget} words).
             Style: Technical explanation, factual comparison.
             Avoid: Subjective language like "better", "cleaner" unless technically justified.
             Focus: What changed and the technical reason why.
@@ -313,7 +346,7 @@ class NarrationGenerator:
             Attribution: {scene_data.get('attribution', '')}
             Context: {scene_data.get('context', '')}
 
-            Create narration that introduces and reads the quote (15-25 words).
+            Create narration that introduces and reads the quote (EXACTLY {word_budget} words).
             Style: Straightforward, factual introduction to the quote.
             Avoid: Flowery language, excessive buildup.
             Focus: Brief context, then the quote itself, then attribution.
@@ -328,7 +361,7 @@ class NarrationGenerator:
             Documentation link: {scene_data.get('sub_text', '')}
             Key message: {scene_data.get('key_message', '')}
 
-            Create a brief, factual closing (1-2 sentences, 10-15 words).
+            Create a brief, factual closing (EXACTLY {word_budget} words).
             Style: Direct, helpful, informative - NOT motivational/sales language.
             Avoid: "journey", "transform", "unleash", "empower"
             Focus: Point to documentation/resources factually.
@@ -340,16 +373,20 @@ class NarrationGenerator:
             return ""
 
         try:
+            # Calculate max tokens based on word budget (1 token ≈ 0.75 words)
+            max_tokens = int(word_budget * 1.5)  # Add buffer for token conversion
+
             # Call Claude API with latest Sonnet 4.5
             response = self.ai_client.messages.create(
                 model="claude-sonnet-4-20250514",
-                max_tokens=150,
+                max_tokens=max_tokens,
                 temperature=0.5,  # Lower temperature for more consistent, less creative output
                 messages=[{
                     "role": "user",
                     "content": f"""{context}
 
 Requirements:
+- STRICT: Write EXACTLY {word_budget} words (no more, no less)
 - Technical documentation tone (NOT marketing/promotional)
 - Target pace: {self.target_wpm} words per minute
 - Clear, direct language (avoid hype and superlatives)
@@ -405,8 +442,9 @@ Generate ONLY the narration text, nothing else."""
 class ScriptGenerator:
     """Main script generator from YAML input"""
 
-    def __init__(self, use_ai=False):
-        self.narration_gen = NarrationGenerator(use_ai=use_ai)
+    def __init__(self, use_ai=False, target_duration=None):
+        self.narration_gen = NarrationGenerator(use_ai=use_ai, target_duration=target_duration)
+        self.target_duration = target_duration
 
     def load_yaml(self, yaml_file):
         """Load and parse YAML input"""
@@ -426,17 +464,25 @@ class ScriptGenerator:
         version = video_config.get('version', 'v2.0')
         default_voice = video_config.get('voice', 'male')
 
-        scenes = []
+        # Extract target_duration from YAML
+        target_duration = video_config.get('target_duration', self.target_duration)
+        if target_duration and not self.target_duration:
+            # Update narration generator with duration from YAML
+            self.narration_gen.target_duration = target_duration
+            self.narration_gen.target_word_count = int(target_duration * self.narration_gen.words_per_second)
 
-        for scene_data in scenes_config:
+        scenes = []
+        total_scenes = len(scenes_config)
+
+        for scene_num, scene_data in enumerate(scenes_config, 1):
             scene_type = scene_data.get('type', 'title')
             scene_id = scene_data.get('id', f"scene_{len(scenes)+1:02d}")
 
             # Generate visual content
             visual_content = self._generate_visual_content(scene_type, scene_data)
 
-            # Generate narration
-            narration = self._generate_narration(scene_type, scene_data)
+            # Generate narration with scene number and total scenes for word budget calculation
+            narration = self._generate_narration(scene_type, scene_data, scene_num, total_scenes)
 
             # Get duration constraints
             min_dur = scene_data.get('min_duration', 3.0)
@@ -445,6 +491,12 @@ class ScriptGenerator:
 
             # Estimate duration
             est_duration, word_count = self.narration_gen.estimate_duration(narration)
+
+            # Validation: warn if narration exceeds target for individual scenes
+            if self.target_duration:
+                expected_scene_duration = self.target_duration / max(total_scenes, 1)
+                if est_duration > expected_scene_duration * 1.2:  # 20% tolerance
+                    logger.warning(f"⚠️  Scene {scene_num}/{total_scenes} narration ({word_count} words, {est_duration:.1f}s) exceeds target ({expected_scene_duration:.1f}s)")
 
             scene_dict = {
                 'scene_id': scene_id,
@@ -522,7 +574,7 @@ class ScriptGenerator:
         else:
             return {}
 
-    def _generate_narration(self, scene_type, scene_data):
+    def _generate_narration(self, scene_type, scene_data, scene_num=1, total_scenes=4):
         """Generate narration based on scene type"""
         # Check if user provided custom narration
         if 'narration' in scene_data and scene_data['narration']:
@@ -530,17 +582,17 @@ class ScriptGenerator:
 
         # Otherwise, generate from structure
         if scene_type == 'title':
-            return self.narration_gen.generate_title_narration(scene_data)
+            return self.narration_gen.generate_title_narration(scene_data, scene_num, total_scenes)
         elif scene_type == 'command':
-            return self.narration_gen.generate_command_narration(scene_data)
+            return self.narration_gen.generate_command_narration(scene_data, scene_num, total_scenes)
         elif scene_type == 'list':
-            return self.narration_gen.generate_list_narration(scene_data)
+            return self.narration_gen.generate_list_narration(scene_data, scene_num, total_scenes)
         elif scene_type == 'outro':
-            return self.narration_gen.generate_outro_narration(scene_data)
+            return self.narration_gen.generate_outro_narration(scene_data, scene_num, total_scenes)
         elif scene_type == 'code_comparison':
-            return self.narration_gen.generate_code_comparison_narration(scene_data)
+            return self.narration_gen.generate_code_comparison_narration(scene_data, scene_num, total_scenes)
         elif scene_type == 'quote':
-            return self.narration_gen.generate_quote_narration(scene_data)
+            return self.narration_gen.generate_quote_narration(scene_data, scene_num, total_scenes)
         else:
             return ""
 
@@ -623,14 +675,17 @@ class ScriptGenerator:
                             if isinstance(item, tuple):
                                 f.write(f"                    {repr(item)},\n")
                             else:
-                                f.write(f"                    \"{item}\",\n")
+                                # Escape strings properly
+                                f.write(f"                    {repr(item)},\n")
                         f.write(f"                ],\n")
                     else:
-                        f.write(f"                \"{key}\": \"{value}\",\n")
+                        # Escape string values properly
+                        f.write(f"                \"{key}\": {repr(value)},\n")
 
                 f.write(f"            }},\n")
-                f.write(f"            narration=\"{scene['narration']}\",\n")
-                f.write(f"            voice=\"{scene['voice']}\",\n")
+                # Use repr() to properly escape quotes, newlines, and special characters
+                f.write(f"            narration={repr(scene['narration'])},\n")
+                f.write(f"            voice={repr(scene['voice'])},\n")
                 f.write(f"            min_duration={scene['min_duration']},\n")
                 f.write(f"            max_duration={scene['max_duration']}\n")
                 f.write(f"        ),\n")
@@ -677,6 +732,15 @@ class ScriptGenerator:
         total_duration = sum(s['estimated_duration'] for s in unified_video['scenes'])
         total_words = sum(s['word_count'] for s in unified_video['scenes'])
 
+        # Validate total duration against target
+        if self.target_duration:
+            if total_duration > self.target_duration * 1.2:  # 20% tolerance
+                logger.warning(f"\n⚠️  WARNING: Total duration ({total_duration:.1f}s) exceeds target ({self.target_duration}s) by {((total_duration/self.target_duration - 1) * 100):.0f}%")
+                logger.warning(f"   Consider splitting into more videos or reducing content\n")
+            elif total_duration < self.target_duration * 0.8:  # 20% tolerance
+                logger.warning(f"\n⚠️  WARNING: Total duration ({total_duration:.1f}s) is below target ({self.target_duration}s) by {((1 - total_duration/self.target_duration) * 100):.0f}%")
+                logger.warning(f"   Consider adding more content or reducing video count\n")
+
         logger.info(f"\n{'='*80}")
         logger.info("SCRIPT GENERATION COMPLETE")
         logger.info(f"{'='*80}\n")
@@ -716,5 +780,10 @@ if __name__ == "__main__":
         logger.error(f"❌ File not found: {args.yaml_file}")
         sys.exit(1)
 
-    generator = ScriptGenerator(use_ai=args.use_ai)
+    # Pre-load YAML to check for target_duration
+    with open(args.yaml_file, 'r') as f:
+        yaml_data = yaml.safe_load(f)
+    target_duration = yaml_data.get('video', {}).get('target_duration')
+
+    generator = ScriptGenerator(use_ai=args.use_ai, target_duration=target_duration)
     generator.generate(args.yaml_file, output_dir=args.output_dir)
