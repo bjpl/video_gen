@@ -3,10 +3,14 @@
 This module uses Claude AI to enhance, refine, and improve narration scripts
 for better engagement and clarity.
 
-Enhancements (Oct 9, 2025 - Plan B):
-- Scene-position awareness for better narrative flow
-- Cost tracking and usage metrics
-- Quality validation checks
+Enhancements:
+- Oct 9, 2025 (Plan B): Scene-position awareness, cost tracking, quality validation
+- Oct 18, 2025 (Prompt Restoration): Restored OLD working prompts from 31e0299c
+  * Scene-specific prompts (not generic)
+  * Tight word count constraints (10-20 words)
+  * Temperature 0.5 for consistency
+  * Explicit anti-marketing language
+  * "Developer colleague" tone
 """
 
 from typing import Optional, Dict, Any, List
@@ -14,6 +18,7 @@ import logging
 
 from ..shared.config import config
 from ..shared.exceptions import ScriptGenerationError
+from .prompt_templates import get_scene_prompt
 
 
 logger = logging.getLogger(__name__)
@@ -92,11 +97,15 @@ class AIScriptEnhancer:
     ) -> str:
         """Enhance narration script using Claude.
 
+        Uses RESTORED OLD PROMPTS from commit 31e0299c that produced
+        high-quality technical narration with tight constraints.
+
         Args:
             script: Original narration script
-            scene_type: Type of scene (for context)
+            scene_type: Type of scene (for scene-specific prompt)
             context: Optional context (topic, audience, scene_position, total_scenes, etc.)
             **kwargs: Additional enhancement parameters
+                use_old_prompts: bool (default True) - Use OLD working prompts
 
         Returns:
             Enhanced narration script
@@ -106,65 +115,56 @@ class AIScriptEnhancer:
 
             client = anthropic.Anthropic(api_key=self.api_key)
 
-            # Extract scene position information (NEW - Plan B enhancement)
+            # Extract scene position information (NEW - Plan B enhancement - KEEP THIS)
             scene_position = context.get('scene_position', 0) if context else 0
             total_scenes = context.get('total_scenes', 1) if context else 1
             scene_number = scene_position + 1  # Convert 0-indexed to 1-indexed
 
-            # Determine position context for better narrative flow
+            # Determine position context for better narrative flow (NEW - KEEP THIS)
             if scene_number == 1:
-                position_context = "This is the OPENING scene - set the tone and hook the viewer."
+                position_context = "Position: OPENING scene - set the tone directly and factually."
             elif scene_number == total_scenes:
-                position_context = "This is the FINAL scene - provide closure and call-to-action."
+                position_context = "Position: FINAL scene - provide brief closure, point to docs."
             elif scene_number == 2:
-                position_context = "This is the second scene - transition smoothly from the intro."
+                position_context = "Position: Second scene - transition smoothly from intro."
             elif scene_number == total_scenes - 1:
-                position_context = "This is the second-to-last scene - prepare for conclusion."
+                position_context = "Position: Second-to-last scene - prepare for conclusion."
             else:
-                position_context = f"This is scene {scene_number} of {total_scenes} - maintain narrative flow."
+                position_context = f"Position: Scene {scene_number} of {total_scenes} - maintain flow."
 
-            # Build enhancement prompt - optimized for technical/educational content
-            scene_context = {
-                'title': 'opening/header slide',
-                'list': 'bulleted list of topics/concepts',
-                'command': 'technical commands/code',
-                'outro': 'closing/call-to-action',
-                'quiz': 'educational quiz question',
-                'problem': 'technical problem/challenge',
-                'code_comparison': 'before/after code comparison',
-                'checkpoint': 'learning progress review',
-                'exercise': 'practice instructions'
-            }.get(scene_type or 'general', 'general content')
+            # Use OLD scene-specific prompts (RESTORED from 31e0299c)
+            use_old_prompts = kwargs.get('use_old_prompts', True)
 
-            prompt = f"""You are a professional narrator for technical educational videos. Enhance this narration to be clear, engaging, and natural-sounding.
+            if use_old_prompts and scene_type:
+                # Build scene data dictionary from context and script
+                scene_data = context.copy() if context else {}
+                scene_data['original_script'] = script
 
-Original narration: "{script}"
+                # Get scene-specific prompt from OLD system
+                prompt = get_scene_prompt(
+                    scene_type=scene_type,
+                    scene_data=scene_data,
+                    position_context=position_context
+                )
+            else:
+                # Fallback to improved generic prompt (tighter than NEW system)
+                prompt = f"""Create technical narration for a {scene_type or 'general'} scene.
 
-Scene Context: This is for a {scene_context} in an educational video about technical topics.
-Position Context: {position_context}
+Original text: "{script}"
+{position_context}
 
-Enhancement Guidelines:
-- Make it sound natural when spoken aloud (this will be voice narration)
-- Keep it concise and clear (viewers are watching, not reading)
-- Maintain all technical accuracy and key information
-- Use conversational but professional tone
-- Keep similar length (±30% - target 50-150 words for most scenes)
-- {"Use appropriate opening hooks and enthusiasm" if scene_number == 1 else ""}
-- {"Include appropriate closing and call-to-action" if scene_number == total_scenes else ""}
-- {"Use transition language to connect with previous scene" if scene_number > 1 else ""}
-- Avoid jargon unless necessary for technical content
+Create clear, concise narration (15-25 words maximum).
+Style: Technical documentation, factual, educational.
+Avoid: Marketing language, hype, promotional tone.
+Tone: Like explaining to a developer colleague.
 
-Quality Requirements:
-- Must be 20-200 words (strict limit)
-- No markdown formatting or special characters
-- Natural speech patterns and pacing
-- Clear pronunciation-friendly language
+Return ONLY the narration text, nothing else."""
 
-Return ONLY the enhanced narration text - no explanations, no quotes, just the narration."""
-
+            # API call with OLD system parameters
             response = client.messages.create(
-                model="claude-sonnet-4-5-20250929",  # Sonnet 4.5
-                max_tokens=500,
+                model="claude-sonnet-4-5-20250929",  # Sonnet 4.5 (keep latest model)
+                max_tokens=150,  # OLD: 150 (down from NEW: 500) - forces brevity
+                temperature=0.5,  # OLD: 0.5 (NEW had no explicit temp) - consistency
                 messages=[{
                     "role": "user",
                     "content": prompt
@@ -207,6 +207,8 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
     def _validate_enhanced_script(self, enhanced: str, original: str) -> Dict[str, Any]:
         """Validate enhanced script quality.
 
+        Updated with OLD system constraints (tighter validation).
+
         Args:
             enhanced: Enhanced script
             original: Original script
@@ -214,17 +216,16 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
         Returns:
             Dictionary with 'valid' (bool) and 'reason' (str) keys
         """
-        # Length validation (20-200 words)
+        # Length validation - TIGHTER for OLD prompts (5-50 words for most scenes)
         word_count = len(enhanced.split())
-        if word_count < 20:
+        if word_count < 5:
             return {'valid': False, 'reason': f'Too short ({word_count} words)'}
-        if word_count > 200:
-            return {'valid': False, 'reason': f'Too long ({word_count} words)'}
+        if word_count > 50:  # OLD: Much tighter (was 200 in NEW)
+            return {'valid': False, 'reason': f'Too long ({word_count} words) - target 10-25 words'}
 
-        # Length change validation (should be within ±50% of original)
-        len_ratio = len(enhanced) / len(original) if len(original) > 0 else 0
-        if len_ratio > 1.5 or len_ratio < 0.5:
-            return {'valid': False, 'reason': f'Length changed too much ({len_ratio:.1f}x)'}
+        # Length change validation - REMOVED for OLD system
+        # OLD prompts generate from scratch, not enhance existing text
+        # So comparing to original length doesn't make sense
 
         # Content validation (should not be empty or just whitespace)
         if not enhanced.strip():
@@ -234,6 +235,13 @@ Return ONLY the enhanced narration text - no explanations, no quotes, just the n
         # Note: Allow parentheses and brackets - they're normal in speech
         if any(marker in enhanced for marker in ['**', '__', '##', '```', '](', '[!', '```']):
             return {'valid': False, 'reason': 'Contains markdown formatting'}
+
+        # Marketing language validation (NEW - check for banned words)
+        from .prompt_templates import BANNED_MARKETING_WORDS
+        enhanced_lower = enhanced.lower()
+        found_banned = [word for word in BANNED_MARKETING_WORDS if word in enhanced_lower]
+        if found_banned:
+            return {'valid': False, 'reason': f'Contains banned marketing words: {", ".join(found_banned[:3])}'}
 
         return {'valid': True, 'reason': 'Passed all checks'}
 
