@@ -1,0 +1,21 @@
+{
+  "video_id": "ai_narration_test",
+  "title": "AI Narration Test",
+  "description": "Testing AI-enhanced narration",
+  "language": "en",
+  "total_duration": 3.76,
+  "scene_count": 1,
+  "generated_at": "2025-10-06T20:05:22.036342",
+  "pipeline": {
+    "task_id": "task_b263a654efa1",
+    "input_type": "programmatic"
+  },
+  "scenes": [
+    {
+      "scene_id": "test1",
+      "type": "title",
+      "title": "AI Narration Test",
+      "duration": 3.76
+    }
+  ]
+}

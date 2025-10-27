@@ -1,0 +1,27 @@
+"""
+OBSOLETE TEST FILE - DO NOT USE
+=================================
+
+This test file tests the deprecated app.input_adapters.examples module
+which was removed during input adapter consolidation.
+
+Status: DEPRECATED - Removed 2025-10-11
+Reason: Tests code that no longer exists (app/input_adapters/examples.py)
+
+The example functions tested here:
+- example_document_adapter()
+- example_yaml_adapter()
+- example_programmatic_adapter()
+- example_factory_pattern()
+- example_export_workflow()
+- example_custom_adapter()
+- run_all_examples()
+
+These were removed as part of consolidating input adapters from:
+  app/input_adapters/* → video_gen/input_adapters/*
+
+TODO: Rewrite these tests for the new video_gen.input_adapters API
+      or create new example adapters if needed for testing.
+
+See: docs/architecture/ADR_001_INPUT_ADAPTER_CONSOLIDATION.md
+"""

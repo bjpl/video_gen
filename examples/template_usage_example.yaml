@@ -1,0 +1,79 @@
+# Example: Using the Tutorial Template
+# This demonstrates how to use templates for rapid video creation
+
+# Specify the template to use
+template: tutorial
+
+# Define variables that will be substituted in the template
+variables:
+  # Required variables
+  video_id: git_basics_tutorial
+  title: Git Basics for Beginners
+  topic: Git Version Control
+
+  # Optional (templates have defaults)
+  subtitle: Master Version Control
+  accent_color: blue
+  voice: male
+
+  # Content variables
+  objectives:
+    - Understand Git fundamentals
+    - Create and manage repositories
+    - Work with branches and merges
+    - Collaborate using remote repositories
+  objectives_narration: |
+    By the end of this tutorial, you'll be able to use Git
+    effectively for version control in your projects.
+
+  concepts:
+    - Repository initialization
+    - Staging and committing changes
+    - Branch management
+    - Remote repositories
+  concepts_narration: |
+    These core concepts form the foundation of Git workflow.
+
+  examples:
+    - git init
+    - git add .
+    - git commit -m "Initial commit"
+    - git branch feature-new
+    - git checkout feature-new
+  example_narration: |
+    Let's see these commands in action with practical examples.
+
+  problem_description: |
+    You've made changes to multiple files but need to commit them separately.
+  problem_narration: |
+    This is a common scenario when you want to keep your commits atomic.
+
+  solution_description: |
+    Use git add with specific file paths to stage only the changes you want.
+  solution_narration: |
+    By staging selectively, you maintain clean, focused commits.
+  solution_steps:
+    - Stage specific files: git add file1.js
+    - Review staged changes: git status
+    - Commit staged changes: git commit -m "Update file1"
+    - Repeat for other files
+
+  checkpoint_narration: |
+    Let's review what we've covered so far in this tutorial.
+  checkpoint_summary: |
+    Repository basics, staging, committing, and branches
+
+  next_steps: |
+    Next: Learn about merge conflicts and advanced Git workflows
+
+# You can also override individual scenes or add custom ones
+# scenes:
+#   - scene_id: bonus_tip
+#     scene_type: list
+#     narration: Here are some bonus tips for working with Git.
+#     visual_content:
+#       header: Pro Tips
+#       items:
+#         - Use meaningful commit messages
+#         - Commit often
+#         - Always pull before push

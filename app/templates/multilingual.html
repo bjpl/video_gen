@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <ol class="flex items-center space-x-2 text-gray-500">
+            <li><a href="/" class="hover:text-green-600">Home</a></li>
+            <li>→</li>
+            <li class="text-green-600 font-medium">Multilingual Generation</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">🌍 Multilingual Video Generation</h1>
+                <p class="text-gray-600">Generate videos in 28+ languages with automatic translation</p>
+            </div>
+            <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg font-semibold">
+                28+ Languages
+            </div>
+        </div>
+    </div>
+
+    <!-- Alpine.js Component -->
+    <div x-data="{
+        sourceLanguage: 'en',
+        targetLanguages: ['en'],
+        languageVoices: {},  // Store selected voice per language
+        translationMethod: 'claude',
+        allLanguages: [],
+        accentColor: 'blue',
+        loading: false,
+
+        async init() {
+            // Fetch available languages
+            const response = await fetch('/api/languages');
+            const data = await response.json();
+            this.allLanguages = data.languages;
+
+            // Initialize default voices for English
+            this.languageVoices['en'] = 'male';
+        },
+
+        toggleLanguage(code) {
+            const index = this.targetLanguages.indexOf(code);
+            if (index === -1) {
+                this.targetLanguages.push(code);
+                // Set default voice for this language
+                const lang = this.allLanguages.find(l => l.code === code);
+                if (lang && lang.voices.length > 0) {
+                    this.languageVoices[code] = lang.voices[0];
+                }
+            } else {
+                if (this.targetLanguages.length > 1) {
+                    this.targetLanguages.splice(index, 1);
+                    delete this.languageVoices[code];
+                }
+            }
+        },
+
+        async getVoicesForLanguage(langCode) {
+            const response = await fetch(`/api/languages/${langCode}/voices`);
+            const data = await response.json();
+            return data.voices;
+        },
+
+        isSelected(code) {
+            return this.targetLanguages.includes(code);
+        },
+
+        getLanguageName(code) {
+            const lang = this.allLanguages.find(l => l.code === code);
+            return lang ? `${lang.name} (${lang.name_local})` : code.toUpperCase();
+        },
+
+        async generate() {
+            this.loading = true;
+
+            try {
+                // Call backend API
+                const response = await fetch('/api/generate/multilingual', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        video_set: {
+                            set_id: 'multilingual_' + Date.now(),
+                            set_name: 'Multilingual Video Set',
+                            videos: [],  // TODO: Get from builder
+                            accent_color: this.accentColor,
+                            language_voices: this.languageVoices
+                        },
+                        target_languages: this.targetLanguages,
+                        source_language: this.sourceLanguage,
+                        translation_method: this.translationMethod
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Redirect to progress page with real-time tracking
+                    window.location.href = `/progress?task_id=${data.task_id}`;
+                } else {
+                    // Handle both string and array detail formats from FastAPI
+                    let errorMessage = 'Failed to start generation';
+                    if (data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            errorMessage = data.detail.map(err => err.msg || JSON.stringify(err)).join(', ');
+                        } else if (typeof data.detail === 'string') {
+                            errorMessage = data.detail;
+                        } else {
+                            errorMessage = JSON.stringify(data.detail);
+                        }
+                    }
+                    alert(`❌ Error: ${errorMessage}`);
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error.message}`);
+            } finally {
+                this.loading = false;
+            }
+        }
+    }">
+        <!-- Configuration Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Configuration</h2>
+
+            <!-- Source Language -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Source Language
+                </label>
+                <select x-model="sourceLanguage"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <template x-for="lang in allLanguages" :key="lang.code">
+                        <option :value="lang.code" x-text="`${lang.name} (${lang.name_local})`"></option>
+                    </template>
+                </select>
+                <p class="text-sm text-gray-500 mt-1">The language your content is currently in</p>
+            </div>
+
+            <!-- Translation Method -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Translation Method
+                </label>
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer"
+                           :class="translationMethod === 'claude' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
+                        <input type="radio" x-model="translationMethod" value="claude" class="sr-only">
+                        <div>
+                            <div class="font-medium">⭐ Claude API</div>
+                            <div class="text-sm text-gray-600">High quality, context-aware</div>
+                            <div class="text-xs text-gray-500 mt-1">~$0.01 per video</div>
+                        </div>
+                    </label>
+                    <label class="relative flex items-center p-4 border-2 rounded-lg cursor-pointer"
+                           :class="translationMethod === 'google' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'">
+                        <input type="radio" x-model="translationMethod" value="google" class="sr-only">
+                        <div>
+                            <div class="font-medium">Google Translate</div>
+                            <div class="text-sm text-gray-600">Fast and free</div>
+                            <div class="text-xs text-gray-500 mt-1">Free</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Target Languages Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Target Languages <span class="text-gray-500">(select all languages you want to generate)</span>
+                </label>
+
+                <!-- Selected Languages Badge -->
+                <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-sm font-medium mb-2">Selected: <span x-text="targetLanguages.length"></span> languages</div>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="code in targetLanguages" :key="code">
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded-full text-sm">
+                                <span x-text="getLanguageName(code)"></span>
+                                <button @click="toggleLanguage(code)"
+                                        class="hover:bg-blue-600 rounded-full p-0.5"
+                                        x-show="targetLanguages.length > 1">
+                                    ✕
+                                </button>
+                            </span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Language Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto border border-gray-200 rounded-lg p-4">
+                    <template x-for="lang in allLanguages" :key="lang.code">
+                        <label class="flex items-center space-x-2 p-2 rounded cursor-pointer hover:bg-gray-50"
+                               :class="isSelected(lang.code) ? 'bg-blue-50' : ''">
+                            <input type="checkbox"
+                                   :checked="isSelected(lang.code)"
+                                   @change="toggleLanguage(lang.code)"
+                                   class="rounded text-blue-500 focus:ring-blue-500">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium" x-text="lang.name"></div>
+                                <div class="text-xs text-gray-500" x-text="lang.name_local"></div>
+                                <div class="text-xs text-gray-400" x-text="`${lang.voice_count} voices`"></div>
+                            </div>
+                        </label>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Quick Presets</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button @click="targetLanguages = ['en', 'es']"
+                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <div class="font-medium">EN + ES</div>
+                    <div class="text-sm text-gray-600">Bilingual</div>
+                </button>
+                <button @click="targetLanguages = ['en', 'es', 'fr', 'de', 'it']"
+                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <div class="font-medium">European</div>
+                    <div class="text-sm text-gray-600">5 languages</div>
+                </button>
+                <button @click="targetLanguages = ['en', 'ja', 'zh', 'ko']"
+                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <div class="font-medium">Asian</div>
+                    <div class="text-sm text-gray-600">4 languages</div>
+                </button>
+                <button @click="targetLanguages = ['en', 'es', 'fr', 'de', 'pt', 'it', 'ja', 'zh', 'ko', 'ar']"
+                        class="p-3 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                    <div class="font-medium">Global</div>
+                    <div class="text-sm text-gray-600">10 languages</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4">
+            <button @click="generate"
+                    :disabled="loading || targetLanguages.length === 0"
+                    class="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                <span x-show="!loading">🌍 Generate <span x-text="targetLanguages.length"></span> Language Versions</span>
+                <span x-show="loading">Generating...</span>
+            </button>
+            <a href="/"
+               class="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors">
+                Back
+            </a>
+        </div>
+
+        <!-- Info Box -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-900 mb-2">💡 How It Works</h3>
+            <ul class="text-sm text-blue-800 space-y-1">
+                <li>✓ Select your source language (what your content is in)</li>
+                <li>✓ Choose target languages (what you want to generate)</li>
+                <li>✓ System auto-translates content with Claude API or Google Translate</li>
+                <li>✓ Each language gets native TTS voices</li>
+                <li>✓ All languages generated in parallel</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

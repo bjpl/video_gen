@@ -1,0 +1,2286 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <ol class="flex items-center space-x-2 text-gray-500">
+            <li><a href="/" class="hover:text-blue-600">Home</a></li>
+            <li>→</li>
+            <li class="text-blue-600 font-medium">Quick Start</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">🎬 Quick Start Video Creation</h1>
+        <p class="text-gray-600">Generate professional videos with AI narration and translation in just a few clicks</p>
+    </div>
+
+    <!-- Status Message -->
+    <div x-data="{ show: false, message: '', type: 'success' }"
+         @show-message.window="show = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => show = false, 5000)"
+         x-show="show"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed top-20 right-6 z-50 max-w-md"
+         style="display: none;">
+        <div class="rounded-lg shadow-2xl p-4 border-2"
+             :class="type === 'success' ? 'bg-green-50 border-green-200' : type === 'error' ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'">
+            <div class="flex items-center gap-3">
+                <div class="text-2xl" x-text="type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'"></div>
+                <div class="flex-1">
+                    <div class="font-semibold" :class="type === 'success' ? 'text-green-900' : type === 'error' ? 'text-red-900' : 'text-blue-900'" x-text="message"></div>
+                </div>
+                <button @click="show = false" class="text-gray-400 hover:text-gray-600">×</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alpine.js App -->
+    <div x-data="videoCreator()" x-init="init()">
+
+        <!-- Step Indicator -->
+        <div class="bg-white rounded-lg shadow-lg mb-6 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white transition-all duration-300"
+                         :class="step === 1 ? 'bg-blue-500 scale-110' : 'bg-green-500'">
+                        <span x-text="step"></span>
+                    </div>
+                    <div>
+                        <div class="font-bold text-gray-900" x-text="step === 1 ? 'Choose Type' : 'Configure & Generate'"></div>
+                        <div class="text-sm text-gray-500" x-text="step === 1 ? 'Single video or video set' : (mode === 'single' ? 'Single video settings' : 'Video set configuration')"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button @click="step = 1" x-show="step === 2" class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+                        ← Back to Type Selection
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="flex items-center gap-2">
+                <div class="flex-1 h-3 rounded-full transition-all duration-500" :class="step >= 1 ? 'bg-gradient-to-r from-blue-500 to-blue-600 shadow-md' : 'bg-gray-200'"></div>
+                <div class="flex-1 h-3 rounded-full transition-all duration-500" :class="step >= 2 ? 'bg-gradient-to-r from-green-500 to-green-600 shadow-md' : 'bg-gray-200'"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2">
+                <span>Type Selection</span>
+                <span>Configuration</span>
+            </div>
+        </div>
+
+        <!-- Quick Templates -->
+        <div x-show="step === 1" class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
+            <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span class="text-xl">⚡</span>
+                Quick Templates
+            </h3>
+            <div class="grid md:grid-cols-4 gap-3">
+                <button @click="loadTemplate('tutorial')" type="button"
+                        class="p-3 bg-white hover:bg-yellow-50 border-2 border-yellow-200 rounded-lg text-left transition-all hover:shadow-md">
+                    <div class="text-2xl mb-1">📚</div>
+                    <div class="font-semibold text-sm">Tutorial</div>
+                    <div class="text-xs text-gray-600">3 videos, EN+ES</div>
+                </button>
+                <button @click="loadTemplate('course')" type="button"
+                        class="p-3 bg-white hover:bg-yellow-50 border-2 border-yellow-200 rounded-lg text-left transition-all hover:shadow-md">
+                    <div class="text-2xl mb-1">🎓</div>
+                    <div class="font-semibold text-sm">Course</div>
+                    <div class="text-xs text-gray-600">10 videos, multi-voice</div>
+                </button>
+                <button @click="loadTemplate('demo')" type="button"
+                        class="p-3 bg-white hover:bg-yellow-50 border-2 border-yellow-200 rounded-lg text-left transition-all hover:shadow-md">
+                    <div class="text-2xl mb-1">💻</div>
+                    <div class="font-semibold text-sm">Demo</div>
+                    <div class="text-xs text-gray-600">1 video, quick</div>
+                </button>
+                <button @click="loadTemplate('global')" type="button"
+                        class="p-3 bg-white hover:bg-yellow-50 border-2 border-yellow-200 rounded-lg text-left transition-all hover:shadow-md">
+                    <div class="text-2xl mb-1">🌍</div>
+                    <div class="font-semibold text-sm">Global</div>
+                    <div class="text-xs text-gray-600">5 videos, 10 langs</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation (Step 1: Choose Type) -->
+        <div x-show="step === 1" class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3">
+                <h2 class="text-white font-semibold">Step 1: Choose Creation Type</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <button @click="mode = 'single'; step = 2"
+                            class="p-8 border-2 rounded-xl text-left hover:border-blue-500 hover:bg-blue-50 transition-all group">
+                        <div class="text-5xl mb-4">🎥</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Single Video</h3>
+                        <p class="text-gray-600 mb-4">Create one professional video with AI narration</p>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500">✓</span>
+                                <span>Quick setup in minutes</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500">✓</span>
+                                <span>Perfect for tutorials & demos</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500">✓</span>
+                                <span>Optional multilingual versions</span>
+                            </li>
+                        </ul>
+                        <div class="mt-6 text-blue-600 font-semibold group-hover:text-blue-700 flex items-center gap-2">
+                            Get Started
+                            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </div>
+                    </button>
+
+                    <button @click="mode = 'set'; step = 2"
+                            class="p-8 border-2 rounded-xl text-left hover:border-purple-500 hover:bg-purple-50 transition-all group">
+                        <div class="text-5xl mb-4">📚</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Video Set</h3>
+                        <p class="text-gray-600 mb-4">Generate multiple videos with shared settings</p>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex items-start gap-2">
+                                <span class="text-purple-500">✓</span>
+                                <span>Create series or courses</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-purple-500">✓</span>
+                                <span>Consistent branding across all videos</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-purple-500">✓</span>
+                                <span>Batch processing for efficiency</span>
+                            </li>
+                        </ul>
+                        <div class="mt-6 text-purple-600 font-semibold group-hover:text-purple-700 flex items-center gap-2">
+                            Create Set
+                            <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration (Step 2) -->
+        <div x-show="step === 2" x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform scale-95"
+             x-transition:enter-end="opacity-100 transform scale-100"
+             class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 flex items-center justify-between">
+                <h2 class="text-white font-semibold">Step 2: Configure Video Settings</h2>
+                <span class="text-white text-sm px-3 py-1 bg-white/20 rounded-full" x-text="mode === 'single' ? '🎥 Single Video' : '📚 Video Set'"></span>
+            </div>
+
+            <div class="p-6">
+
+                <!-- SINGLE VIDEO MODE -->
+                <div x-show="mode === 'single'" x-cloak class="p-6">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                        <span class="text-2xl">🎥</span>
+                        Single Video Configuration
+                    </h2>
+
+                    <!-- Input Method Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Content Source</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" @click="single.inputMethod = 'manual'"
+                                    :class="single.inputMethod === 'manual' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>✍️</span>
+                                    <span>Manual</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Enter title manually</div>
+                            </button>
+                            <button type="button" @click="single.inputMethod = 'document'"
+                                    :class="single.inputMethod === 'document' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>📄</span>
+                                    <span>Document</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Parse README/Markdown</div>
+                            </button>
+                            <button type="button" @click="single.inputMethod = 'youtube'"
+                                    :class="single.inputMethod === 'youtube' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>📺</span>
+                                    <span>YouTube</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">From YouTube URL</div>
+                            </button>
+                            <button type="button" @click="single.inputMethod = 'yaml'"
+                                    :class="single.inputMethod === 'yaml' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>📝</span>
+                                    <span>YAML</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">From YAML file</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Input -->
+                    <div x-show="single.inputMethod === 'manual'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                        <input x-model="single.title" type="text" placeholder="My Awesome Video"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Document Input -->
+                    <div x-show="single.inputMethod === 'document'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Document Path or URL</label>
+                        <input x-model="single.documentPath" type="text" placeholder="README.md or https://github.com/user/repo"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Local file path or GitHub repository URL</p>
+                    </div>
+
+                    <!-- YouTube Input -->
+                    <div x-show="single.inputMethod === 'youtube'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
+                        <input x-model="single.youtubeUrl" type="text" placeholder="https://youtube.com/watch?v=..."
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Video will be transcribed and converted to scenes</p>
+                    </div>
+
+                    <!-- YAML Input -->
+                    <div x-show="single.inputMethod === 'yaml'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">YAML File Path</label>
+                        <input x-model="single.yamlPath" type="text" placeholder="inputs/my_video.yaml"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Path to YAML configuration file</p>
+                    </div>
+
+                    <!-- 1️⃣ LANGUAGE CONFIGURATION (FIRST!) -->
+                    <div class="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">🌍</span>
+                            1. Language Configuration
+                        </h3>
+
+                        <!-- Language Mode Selection -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <button type="button" @click="single.languageMode = 'single'"
+                                    :class="single.languageMode === 'single' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300' : 'border-gray-300'"
+                                    class="p-4 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span class="text-2xl">📍</span>
+                                    <span>Single Language</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Generate in one language only</div>
+                            </button>
+                            <button type="button" @click="single.languageMode = 'multiple'"
+                                    :class="single.languageMode === 'multiple' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-300' : 'border-gray-300'"
+                                    class="p-4 border-2 rounded-lg text-left hover:border-purple-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span class="text-2xl">🌍</span>
+                                    <span>Multiple Languages</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Auto-translate to many languages</div>
+                            </button>
+                        </div>
+
+                        <!-- Single Language Mode -->
+                        <div x-show="single.languageMode === 'single'" class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Select Language</label>
+                                <select x-model="single.primaryLanguage"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <option :value="lang.code" x-text="`${lang.name} (${lang.name_local})`"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Multiple Language Mode -->
+                        <div x-show="single.languageMode === 'multiple'" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Source Language</label>
+                                <select x-model="single.sourceLanguage"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <option :value="lang.code" x-text="`${lang.name} (${lang.name_local})`"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Target Languages (<span x-text="single.targetLanguages.length"></span> selected)
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <button type="button" @click="single.targetLanguages = ['en', 'es']" class="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded">EN+ES</button>
+                                    <button type="button" @click="single.targetLanguages = ['en', 'es', 'fr', 'de', 'it']" class="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded">European</button>
+                                    <button type="button" @click="single.targetLanguages = ['en', 'ja', 'zh', 'ko']" class="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded">Asian</button>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                            <input type="checkbox"
+                                                   :checked="single.targetLanguages.includes(lang.code)"
+                                                   @change="toggleLanguage('single', lang.code)"
+                                                   class="rounded text-purple-500">
+                                            <span x-text="lang.code.toUpperCase()"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Translation Method</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer text-sm"
+                                           :class="single.translationMethod === 'claude' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'">
+                                        <input type="radio" x-model="single.translationMethod" value="claude" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">⭐ Claude API</div>
+                                            <div class="text-xs text-gray-600">High quality</div>
+                                        </div>
+                                    </label>
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer text-sm"
+                                           :class="single.translationMethod === 'google' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'">
+                                        <input type="radio" x-model="single.translationMethod" value="google" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">Google Translate</div>
+                                            <div class="text-xs text-gray-600">Free & fast</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2️⃣ VOICE CONFIGURATION (Adapts to Language Choice) -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">🎙️</span>
+                            2. Voice Configuration
+                        </h3>
+
+                        <!-- Single Language: Simple Voice Picker -->
+                        <div x-show="single.languageMode === 'single'">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Narrator Voice for <span x-text="allLanguages.find(l => l.code === single.primaryLanguage)?.name || 'selected language'"></span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <select x-model="single.primaryVoice"
+                                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <template x-for="voice in getVoicesForLang(single.primaryLanguage)" :key="voice.id">
+                                        <option :value="voice.id" x-text="voice.name"></option>
+                                    </template>
+                                </select>
+                                <button @click="previewVoice(single.primaryVoice, $event.target)" type="button"
+                                        class="preview-btn-compact" title="Preview voice">
+                                    <span class="preview-icon">🔊</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 italic">💡 This voice will be used for all narration</p>
+                        </div>
+
+                        <!-- Multiple Languages: Voice per Language -->
+                        <div x-show="single.languageMode === 'multiple'">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Voice per Language (<span x-text="single.targetLanguages.length"></span> languages)
+                            </label>
+                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-white">
+                                <template x-for="lang in single.targetLanguages" :key="lang">
+                                    <div class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors">
+                                        <span class="font-mono text-sm font-bold w-10 text-blue-700" x-text="lang.toUpperCase()"></span>
+                                        <span class="text-sm w-32 text-gray-700" x-text="allLanguages.find(l => l.code === lang)?.name || lang"></span>
+                                        <select x-model="single.languageVoices[lang]"
+                                                @change="initializeLanguageVoice('single', lang)"
+                                                class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                            <template x-for="voice in getVoicesForLang(lang)" :key="voice.id">
+                                                <option :value="voice.id" x-text="voice.name"></option>
+                                            </template>
+                                        </select>
+                                        <button @click="previewVoice(single.languageVoices[lang], $event.target)" type="button"
+                                                class="preview-btn-compact" title="Preview voice">
+                                            <span class="preview-icon">🔊</span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-2 italic">💡 Each language will use its assigned voice</p>
+                        </div>
+                    </div>
+
+                    <!-- 3️⃣ VIDEO SETTINGS -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <span>⚙️</span>
+                            Global Settings
+                        </h3>
+
+                        <div class="space-y-4">
+                            <!-- Default Duration -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Default Duration (can override per video)
+                                </label>
+                                <div class="flex items-center gap-4">
+                                    <input x-model.number="single.duration" type="range" min="30" max="300" step="10"
+                                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <span class="text-sm font-medium text-gray-700 w-16 text-right" x-text="single.duration + 's'"></span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>30s</span>
+                                    <span>5 min</span>
+                                </div>
+                            </div>
+
+                            <!-- AI Enhancement -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <div class="font-medium text-sm text-gray-900">Claude AI Script Enhancement</div>
+                                            <span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">BETA</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mb-1.5">Improves narration script quality and naturalness</div>
+                                        <div class="text-xs text-gray-600 font-medium">💰 ~$0.03/video • ⏱️ +3-5s per scene</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-3">
+                                        <input type="checkbox" x-model="single.useAI" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                </div>
+
+                                <!-- API Key Notice (conditional) -->
+                                <div x-show="single.useAI" x-transition class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-lg">⚠️</span>
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-sm text-amber-900 mb-1">Requires ANTHROPIC_API_KEY</div>
+                                            <div class="text-xs text-amber-800">Set in environment variables or .env file</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accent Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                                <div class="flex gap-3">
+                                    <button type="button" @click="single.color = 'blue'" :class="single.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" title="Blue: Professional, trustworthy (best for corporate, finance, healthcare)"></button>
+                                    <button type="button" @click="single.color = 'purple'" :class="single.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform" title="Purple: Premium, sophisticated (best for high-end products, creative)"></button>
+                                    <button type="button" @click="single.color = 'orange'" :class="single.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform" title="Orange: Energetic, creative (best for creative, marketing, youth)"></button>
+                                    <button type="button" @click="single.color = 'green'" :class="single.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform" title="Green: Success, growth (best for environmental, health, finance)"></button>
+                                    <button type="button" @click="single.color = 'pink'" :class="single.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform" title="Pink: Playful, modern (best for youth, creative, lifestyle)"></button>
+                                    <button type="button" @click="single.color = 'cyan'" :class="single.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform" title="Cyan: Tech, innovation (best for technology, science, modern)"></button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2 italic">💡 Hover over colors for psychology guide</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Per-Video Configuration -->
+                    <div class="mb-6">
+                        <div class="bg-white border-2 border-blue-200 rounded-xl overflow-hidden">
+                            <button @click="single.showAdvanced = !single.showAdvanced" type="button"
+                                    class="w-full px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-150 transition-all flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">🎬</span>
+                                    <span class="font-semibold text-gray-900">Video Configuration</span>
+                                    <span class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">Advanced</span>
+                                </div>
+                                <svg class="w-5 h-5 transition-transform" :class="single.showAdvanced ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <div x-show="single.showAdvanced" x-collapse class="p-4 border-t border-blue-200">
+                                <!-- Video Title -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                                    <input x-model="single.videos[0].title" type="text" placeholder="My Awesome Video"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+
+                                <!-- Multi-Voice Tracks (Optional - For Conversations) -->
+                                <div class="mb-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            🎙️ Multi-Voice Tracks (<span x-text="single.videos[0].voiceTracks.length"></span>)
+                                        </label>
+                                        <button @click="addVoiceTrack('single', 0)" type="button"
+                                                :disabled="single.videos[0].voiceTracks.length >= 4"
+                                                class="text-sm bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
+                                            + Add Track
+                                        </button>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <template x-for="(voiceTrack, vIdx) in single.videos[0].voiceTracks" :key="vIdx">
+                                            <div class="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <span class="text-xs font-semibold text-blue-700 w-14">Track <span x-text="vIdx + 1"></span></span>
+                                                <select x-model="single.videos[0].voiceTracks[vIdx]"
+                                                        class="flex-1 px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                                    <template x-for="voice in getAllAvailableVoices('single')" :key="voice.id">
+                                                        <option :value="voice.id" x-text="voice.label"></option>
+                                                    </template>
+                                                </select>
+                                                <button @click="previewVoice(single.videos[0].voiceTracks[vIdx], $event.target)" type="button"
+                                                        class="preview-btn-compact"
+                                                        title="Preview voice">
+                                                    <span class="preview-icon">🔊</span>
+                                                </button>
+                                                <button @click="removeVoiceTrack('single', 0, vIdx)" type="button"
+                                                        :disabled="single.videos[0].voiceTracks.length === 1"
+                                                        class="text-red-500 hover:text-red-700 disabled:opacity-20 disabled:cursor-not-allowed text-lg px-2 font-bold">
+                                                    ×
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Voice Rotation Explainer -->
+                                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="font-semibold text-sm text-blue-900 mb-3 flex items-center gap-2">
+                                        <span>🔄</span>
+                                        <span>How Voice Rotation Works</span>
+                                    </div>
+                                    <div class="space-y-2 text-xs text-blue-800">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <strong>1 Track:</strong> Same voice for all scenes
+                                                <div class="mt-1 p-2 bg-blue-100 rounded font-mono text-xs">
+                                                    Male → Male → Male
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <strong>2 Tracks:</strong> Alternates between voices
+                                                <div class="mt-1 p-2 bg-blue-100 rounded font-mono text-xs">
+                                                    Male → Female → Male
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>3+ Tracks:</strong> Rotates through all voices in order
+                                            <div class="mt-1 p-2 bg-blue-100 rounded font-mono text-xs">
+                                                Male → Female → Brandon → Ava → Male...
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-t border-blue-200 text-xs text-blue-700 italic">
+                                        💡 Perfect for: Conversations, interviews, multi-speaker tutorials
+                                    </div>
+                                </div>
+
+                                <!-- Per-Video Duration Override -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Duration Override
+                                        <span class="text-xs text-gray-500 font-normal">(leave blank to use global default)</span>
+                                    </label>
+                                    <div class="flex items-center gap-3">
+                                        <input x-model.number="single.videos[0].duration" type="number" min="30" max="300" placeholder="Use global default"
+                                               class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                        <span class="text-xs text-gray-500">seconds</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                        <span>Min: 30s</span>
+                                        <span>Max: 300s (5 min)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Scene Builder Integration -->
+                                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="font-semibold text-sm text-gray-900">Need more control?</div>
+                                            <div class="text-xs text-gray-600">Build custom scenes with the Advanced Builder</div>
+                                        </div>
+                                        <a href="/builder" class="text-sm bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                            Open Builder →
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Generation Summary -->
+                    <div class="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                        <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                            <span>📋</span>
+                            Generation Summary
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Input Method</div>
+                                <div class="font-medium text-gray-900" x-text="single.inputMethod === 'manual' ? '✍️ Manual' : single.inputMethod === 'document' ? '📄 Document' : single.inputMethod === 'youtube' ? '📺 YouTube' : '📝 YAML'"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Duration</div>
+                                <div class="font-medium text-gray-900" x-text="(single.videos[0].duration || single.duration) + 's'"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Voice Tracks</div>
+                                <div class="font-medium text-gray-900" x-text="single.videos[0].voiceTracks.length + ' voice' + (single.videos[0].voiceTracks.length > 1 ? 's' : '')"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Languages</div>
+                                <div class="font-medium text-gray-900" x-text="single.languageMode === 'multiple' ? single.targetLanguages.length + ' languages' : '1 language'"></div>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2 text-xs text-blue-800">
+                            <span x-show="single.useAI">✓ AI Enhancement</span>
+                            <span x-show="single.languageMode === 'multiple'">✓ Multilingual (<span x-text="single.targetLanguages.length"></span> langs)</span>
+                            <span x-show="single.videos[0].voiceTracks.length > 1">✓ Multi-voice (<span x-text="single.videos[0].voiceTracks.length"></span> tracks)</span>
+                        </div>
+                    </div>
+
+                    <!-- Preview Button (Document Input Only) -->
+                    <div x-show="single.inputMethod === 'document'" class="mb-4">
+                        <button @click="parsePreview()" :disabled="previewLoading || !single.documentPath"
+                                class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all">
+                            <span x-show="!previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span>Preview Scenes</span>
+                            </span>
+                            <span x-show="previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Parsing...</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Scene Preview Panel -->
+                    <div x-show="showPreview && previewScenes.length > 0" class="mb-4 border-2 border-purple-200 rounded-xl overflow-hidden bg-white shadow-lg">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                                </svg>
+                                <h3 class="font-bold">Scene Preview (<span x-text="previewScenes.length"></span> scenes)</h3>
+                            </div>
+                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4 max-h-96 overflow-y-auto">
+                            <template x-for="scene in previewScenes" :key="scene.number">
+                                <div class="mb-3 border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                                    <div class="p-3 flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl" x-text="getSceneTypeIcon(scene.type)"></div>
+                                        <div class="flex-grow">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-xs font-bold text-gray-500">Scene <span x-text="scene.number"></span></span>
+                                                <span class="text-xs px-2 py-1 rounded border" :class="getSceneTypeColor(scene.type)" x-text="scene.type.replace('_', ' ').toUpperCase()"></span>
+                                            </div>
+                                            <h4 class="font-semibold text-gray-900 mb-1" x-text="scene.title"></h4>
+                                            <p class="text-sm text-gray-600 mb-2 whitespace-pre-line" x-text="scene.content"></p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.voice"></span>
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.duration + 's'"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>Note:</strong> This is a preview. The actual video will have more detailed content parsed from your document.
+                                        Use the <a href="/builder" class="underline font-semibold hover:text-blue-600">Builder</a> for scene-by-scene editing.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button @click="generateSingle()" :disabled="loading || !canGenerate('single')"
+                            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                        <span x-show="!loading" class="flex items-center justify-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span x-text="single.languageMode === 'multiple' ? 'Generate in ' + single.targetLanguages.length + ' Languages' : 'Generate Video'"></span>
+                        </span>
+                        <span x-show="loading" class="flex items-center justify-center gap-2">
+                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Generating...</span>
+                        </span>
+                    </button>
+
+                    <!-- Validation Message -->
+                    <div x-show="!canGenerate('single')" class="mt-3 text-center text-sm text-red-600">
+                        <span x-show="single.inputMethod === 'document' && !single.documentPath">Please enter a document path</span>
+                        <span x-show="single.inputMethod === 'youtube' && !single.youtubeUrl">Please enter a YouTube URL</span>
+                        <span x-show="single.inputMethod === 'yaml' && !single.yamlPath">Please enter a YAML file path</span>
+                    </div>
+                </div>
+
+                <!-- VIDEO SET MODE -->
+                <div x-show="mode === 'set'" x-cloak class="p-6">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                        <span class="text-2xl">📚</span>
+                        Video Set Configuration
+                    </h2>
+
+                    <!-- Input Method Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Content Source</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" @click="set.inputMethod = 'manual'"
+                                    :class="set.inputMethod === 'manual' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-purple-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>✍️</span>
+                                    <span>Manual</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Enter details manually</div>
+                            </button>
+                            <button type="button" @click="set.inputMethod = 'document'"
+                                    :class="set.inputMethod === 'document' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-purple-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>📄</span>
+                                    <span>Document</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Parse course content</div>
+                            </button>
+                            <button type="button" @click="set.inputMethod = 'youtube'"
+                                    :class="set.inputMethod === 'youtube' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-purple-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>📺</span>
+                                    <span>YouTube</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">From playlist/channel</div>
+                            </button>
+                            <button type="button" @click="set.inputMethod = 'yaml'"
+                                    :class="set.inputMethod === 'yaml' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300'"
+                                    class="p-3 border-2 rounded-lg text-left hover:border-purple-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span>📝</span>
+                                    <span>YAML</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">From YAML file</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Input -->
+                    <div x-show="set.inputMethod === 'manual'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Set Name</label>
+                        <input x-model="set.name" type="text" placeholder="Tutorial Series or Course Name"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">This will be the title of your video collection</p>
+                    </div>
+
+                    <!-- Document Input -->
+                    <div x-show="set.inputMethod === 'document'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Document Path or URL</label>
+                        <input x-model="set.documentPath" type="text" placeholder="course/README.md or https://github.com/user/course"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Will be parsed into multiple videos automatically</p>
+                    </div>
+
+                    <!-- YouTube Input -->
+                    <div x-show="set.inputMethod === 'youtube'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">YouTube Playlist or Channel URL</label>
+                        <input x-model="set.youtubeUrl" type="text" placeholder="https://youtube.com/playlist?list=..."
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Each video in playlist will be converted</p>
+                    </div>
+
+                    <!-- YAML Input -->
+                    <div x-show="set.inputMethod === 'yaml'" class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">YAML File Path</label>
+                        <input x-model="set.yamlPath" type="text" placeholder="inputs/course_set.yaml"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <p class="text-xs text-gray-500 mt-1">Path to YAML configuration with multiple videos</p>
+                    </div>
+
+                    <!-- 1️⃣ LANGUAGE CONFIGURATION (FIRST!) -->
+                    <div class="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">🌍</span>
+                            1. Language Configuration
+                        </h3>
+
+                        <!-- Language Mode Selection -->
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <button type="button" @click="set.languageMode = 'single'"
+                                    :class="set.languageMode === 'single' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-300' : 'border-gray-300'"
+                                    class="p-4 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span class="text-2xl">📍</span>
+                                    <span>Single Language</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Generate in one language only</div>
+                            </button>
+                            <button type="button" @click="set.languageMode = 'multiple'"
+                                    :class="set.languageMode === 'multiple' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-300' : 'border-gray-300'"
+                                    class="p-4 border-2 rounded-lg text-left hover:border-purple-400 transition-all">
+                                <div class="font-semibold flex items-center gap-2">
+                                    <span class="text-2xl">🌍</span>
+                                    <span>Multiple Languages</span>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">Auto-translate to many languages</div>
+                            </button>
+                        </div>
+
+                        <!-- Single Language Mode -->
+                        <div x-show="set.languageMode === 'single'" class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Select Language</label>
+                                <select x-model="set.primaryLanguage"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <option :value="lang.code" x-text="`${lang.name} (${lang.name_local})`"></option>
+                                    </template>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Multiple Language Mode -->
+                        <div x-show="set.languageMode === 'multiple'" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Source Language</label>
+                                <select x-model="set.sourceLanguage"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <option :value="lang.code" x-text="`${lang.name} (${lang.name_local})`"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Target Languages (<span x-text="set.targetLanguages.length"></span> selected)
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <button type="button" @click="set.targetLanguages = ['en', 'es']" class="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded">EN+ES</button>
+                                    <button type="button" @click="set.targetLanguages = ['en', 'es', 'fr', 'de', 'it']" class="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded">European</button>
+                                    <button type="button" @click="set.targetLanguages = ['en', 'ja', 'zh', 'ko']" class="px-3 py-1 text-xs bg-purple-100 hover:bg-purple-200 rounded">Asian</button>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                            <input type="checkbox"
+                                                   :checked="set.targetLanguages.includes(lang.code)"
+                                                   @change="toggleLanguage('set', lang.code)"
+                                                   class="rounded text-purple-500">
+                                            <span x-text="lang.code.toUpperCase()"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Translation Method</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer text-sm"
+                                           :class="set.translationMethod === 'claude' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'">
+                                        <input type="radio" x-model="set.translationMethod" value="claude" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">⭐ Claude API</div>
+                                            <div class="text-xs text-gray-600">High quality</div>
+                                        </div>
+                                    </label>
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer text-sm"
+                                           :class="set.translationMethod === 'google' ? 'border-purple-500 bg-purple-50' : 'border-gray-200'">
+                                        <input type="radio" x-model="set.translationMethod" value="google" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">Google Translate</div>
+                                            <div class="text-xs text-gray-600">Free & fast</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2️⃣ VOICE CONFIGURATION (Adapts to Language Choice) -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">🎙️</span>
+                            2. Voice Configuration
+                        </h3>
+
+                        <!-- Single Language: Simple Voice Picker -->
+                        <div x-show="set.languageMode === 'single'">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Narrator Voice for <span x-text="allLanguages.find(l => l.code === set.primaryLanguage)?.name || 'selected language'"></span>
+                            </label>
+                            <div class="flex items-center gap-2">
+                                <select x-model="set.primaryVoice"
+                                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                    <template x-for="voice in getVoicesForLang(set.primaryLanguage)" :key="voice.id">
+                                        <option :value="voice.id" x-text="voice.name"></option>
+                                    </template>
+                                </select>
+                                <button @click="previewVoice(set.primaryVoice, $event.target)" type="button"
+                                        class="preview-btn-compact" title="Preview voice">
+                                    <span class="preview-icon">🔊</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 italic">💡 This voice will be used for all videos</p>
+                        </div>
+
+                        <!-- Multiple Languages: Voice per Language -->
+                        <div x-show="set.languageMode === 'multiple'">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                Voice per Language (<span x-text="set.targetLanguages.length"></span> languages)
+                            </label>
+                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-white">
+                                <template x-for="lang in set.targetLanguages" :key="lang">
+                                    <div class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors">
+                                        <span class="font-mono text-sm font-bold w-10 text-purple-700" x-text="lang.toUpperCase()"></span>
+                                        <span class="text-sm w-32 text-gray-700" x-text="allLanguages.find(l => l.code === lang)?.name || lang"></span>
+                                        <select x-model="set.languageVoices[lang]"
+                                                @change="initializeLanguageVoice('set', lang)"
+                                                class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                            <template x-for="voice in getVoicesForLang(lang)" :key="voice.id">
+                                                <option :value="voice.id" x-text="voice.name"></option>
+                                            </template>
+                                        </select>
+                                        <button @click="previewVoice(set.languageVoices[lang], $event.target)" type="button"
+                                                class="preview-btn-compact" title="Preview voice">
+                                            <span class="preview-icon">🔊</span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-2 italic">💡 Each language will use its assigned voice</p>
+                        </div>
+                    </div>
+
+                    <!-- 3️⃣ VIDEO SETTINGS -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">⚙️</span>
+                            3. Video Settings
+                        </h3>
+
+                        <div class="space-y-4">
+                            <!-- Number of Videos - ALWAYS SHOW -->
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        📊 Number of Videos in Set
+                                    </label>
+                                    <span x-show="set.inputMethod !== 'manual'" class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full font-medium">
+                                        Can override auto-detect
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <input x-model.number="set.videoCount" @input="updateVideoList('set')" type="range" min="1" max="20" step="1"
+                                           class="flex-1 h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer">
+                                    <span class="text-sm font-semibold text-gray-900 bg-white px-3 py-1 rounded-lg border border-purple-300 min-w-[80px] text-center" x-text="set.videoCount + ' videos'"></span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>1 video</span>
+                                    <span>20 videos</span>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-2 italic" x-show="set.inputMethod !== 'manual'">
+                                    ℹ️ Document/YouTube/YAML will auto-detect video count, but you can override it here
+                                </p>
+                            </div>
+
+                            <!-- Duration per Video -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Default Duration per Video
+                                </label>
+                                <div class="flex items-center gap-4">
+                                    <input x-model.number="set.duration" type="range" min="30" max="300" step="10"
+                                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <span class="text-sm font-medium text-gray-700 w-16 text-right" x-text="set.duration + 's'"></span>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>30s</span>
+                                    <span>5 min</span>
+                                </div>
+                            </div>
+
+                            <!-- AI Enhancement -->
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <div class="font-medium text-sm text-gray-900">Claude AI Script Enhancement</div>
+                                            <span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">BETA</span>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mb-1.5">Improves narration script quality and naturalness</div>
+                                        <div class="text-xs text-gray-600 font-medium">💰 ~$0.03/video • ⏱️ +3-5s per scene</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer ml-3">
+                                        <input type="checkbox" x-model="set.useAI" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                                    </label>
+                                </div>
+
+                                <!-- API Key Notice (conditional) -->
+                                <div x-show="set.useAI" x-transition class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                    <div class="flex items-start gap-2">
+                                        <span class="text-lg">⚠️</span>
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-sm text-amber-900 mb-1">Requires ANTHROPIC_API_KEY</div>
+                                            <div class="text-xs text-amber-800">Set in environment variables or .env file</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accent Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                                <div class="flex gap-3">
+                                    <button type="button" @click="set.color = 'blue'" :class="set.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform"></button>
+                                    <button type="button" @click="set.color = 'purple'" :class="set.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform"></button>
+                                    <button type="button" @click="set.color = 'orange'" :class="set.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform"></button>
+                                    <button type="button" @click="set.color = 'green'" :class="set.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform"></button>
+                                    <button type="button" @click="set.color = 'pink'" :class="set.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform"></button>
+                                    <button type="button" @click="set.color = 'cyan'" :class="set.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform"></button>
+                                <p class="text-xs text-gray-500 mt-2 italic">💡 Hover over colors for psychology guide</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Per-Video Configuration - CUSTOMIZE EACH VIDEO -->
+                    <div class="mb-6">
+                        <div class="bg-white border-2 border-purple-200 rounded-xl overflow-hidden">
+                            <button @click="set.showAdvanced = !set.showAdvanced" type="button"
+                                    class="w-full px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-150 transition-all flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">🎬</span>
+                                    <span class="font-semibold text-gray-900">Customize Each Video</span>
+                                    <span class="text-xs bg-purple-500 text-white px-2 py-0.5 rounded-full">Full Control</span>
+                                    <span class="text-xs text-gray-600">(<span x-text="set.videos.length"></span> videos)</span>
+                                </div>
+                                <svg class="w-5 h-5 transition-transform" :class="set.showAdvanced ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+
+                            <div x-show="set.showAdvanced" x-collapse class="p-4 border-t border-purple-200 bg-gradient-to-b from-purple-50/30 to-white">
+                                <!-- Info Banner -->
+                                <div class="mb-4 p-3 bg-purple-100 border border-purple-300 rounded-lg">
+                                    <div class="flex items-start gap-2 text-sm">
+                                        <span class="text-purple-600">💡</span>
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-purple-900">Customize every video individually:</div>
+                                            <ul class="text-xs text-purple-800 mt-1 space-y-0.5">
+                                                <li>• Set unique titles for each video</li>
+                                                <li>• Add 1-4 voice tracks per video for conversations</li>
+                                                <li>• Override duration for different pacing</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Video List -->
+                                <div class="space-y-4">
+                                    <template x-for="(video, vIdx) in set.videos" :key="vIdx">
+                                        <div class="border-2 border-purple-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h4 class="font-bold text-gray-900 flex items-center gap-2">
+                                                    <span class="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white text-sm flex items-center justify-center font-bold shadow-md" x-text="vIdx + 1"></span>
+                                                    <span class="text-base">Video <span x-text="vIdx + 1"></span></span>
+                                                    <span class="text-xs text-gray-500">of <span x-text="set.videos.length"></span></span>
+                                                </h4>
+                                            </div>
+
+                                            <!-- Video Title -->
+                                            <div class="mb-4">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                                                <input x-model="video.title" type="text" :placeholder="'Video ' + (vIdx + 1)"
+                                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                            </div>
+
+                                            <!-- Multi-Voice Tracks (Optional - For Conversations) -->
+                                            <div class="mb-4">
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <label class="block text-sm font-medium text-gray-700">
+                                                        🎙️ Multi-Voice Tracks (<span x-text="video.voiceTracks.length"></span>)
+                                                    </label>
+                                                    <button @click="addVoiceTrack('set', vIdx)" type="button"
+                                                            :disabled="video.voiceTracks.length >= 4"
+                                                            class="text-sm bg-purple-500 hover:bg-purple-600 disabled:bg-gray-300 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
+                                                        + Add Track
+                                                    </button>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    <template x-for="(voice, voiceIdx) in video.voiceTracks" :key="voiceIdx">
+                                                        <div class="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                                                            <span class="text-xs font-semibold text-purple-700 w-14">Track <span x-text="voiceIdx + 1"></span></span>
+                                                            <select x-model="video.voiceTracks[voiceIdx]"
+                                                                    class="flex-1 px-3 py-2 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                                                <template x-for="voice in getAllAvailableVoices('set')" :key="voice.id">
+                                                                    <option :value="voice.id" x-text="voice.label"></option>
+                                                                </template>
+                                                            </select>
+                                                            <button @click="previewVoice(video.voiceTracks[voiceIdx], $event.target)" type="button"
+                                                                    class="preview-btn-compact"
+                                                                    title="Preview voice">
+                                                                <span class="preview-icon">🔊</span>
+                                                            </button>
+                                                            <button @click="removeVoiceTrack('set', vIdx, voiceIdx)" type="button"
+                                                                    :disabled="video.voiceTracks.length === 1"
+                                                                    class="text-red-500 hover:text-red-700 disabled:opacity-20 disabled:cursor-not-allowed text-lg px-2 font-bold">
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <p class="text-xs text-gray-500 mt-2 italic">💡 For conversation/interview style: voices rotate across scenes in each language</p>
+                                            </div>
+
+                                            <!-- Duration Override -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    Duration Override
+                                                    <span class="text-xs text-gray-500 font-normal">(leave blank to use global default)</span>
+                                                </label>
+                                                <div class="flex items-center gap-3">
+                                                    <input x-model.number="video.duration" type="number" min="30" max="300" placeholder="Use global default"
+                                                           class="flex-1 px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                                    <span class="text-xs text-gray-500">seconds</span>
+                                                </div>
+                                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                                    <span>Min: 30s</span>
+                                                    <span>Max: 300s (5 min)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multilingual Toggle -->
+                    <div class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                                    <span class="text-xl">🌍</span>
+                                    Multilingual Generation
+                                </h3>
+                                <p class="text-sm text-gray-600">Generate all videos in multiple languages</p>
+                            </div>
+                            <!-- Source Language -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Source Language</label>
+                                <select x-model="set.sourceLanguage" @change="updateVoiceOptions('set')"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <option :value="lang.code" x-text="`${lang.name} (${lang.name_local})`"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Target Languages -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Target Languages (<span x-text="set.targetLanguages.length"></span> selected)
+                                </label>
+                                <div class="flex gap-2 mb-2">
+                                    <button @click="set.targetLanguages = ['en', 'es']" class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">EN+ES</button>
+                                    <button @click="set.targetLanguages = ['en', 'es', 'fr', 'de', 'it']" class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">European</button>
+                                    <button @click="set.targetLanguages = ['en', 'ja', 'zh', 'ko']" class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded">Asian</button>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                                    <template x-for="lang in allLanguages" :key="lang.code">
+                                        <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                            <input type="checkbox"
+                                                   :checked="set.targetLanguages.includes(lang.code)"
+                                                   @change="toggleLanguage('set', lang.code)"
+                                                   class="rounded text-green-500">
+                                            <span x-text="lang.code.toUpperCase()"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Translation Method -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Translation Method</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer text-sm"
+                                           :class="set.translationMethod === 'claude' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
+                                        <input type="radio" x-model="set.translationMethod" value="claude" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">⭐ Claude API</div>
+                                            <div class="text-xs text-gray-600">High quality</div>
+                                        </div>
+                                    </label>
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer text-sm"
+                                           :class="set.translationMethod === 'google' ? 'border-green-500 bg-green-50' : 'border-gray-200'">
+                                        <input type="radio" x-model="set.translationMethod" value="google" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">Google Translate</div>
+                                            <div class="text-xs text-gray-600">Free & fast</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Voice per Language -->
+                            <div x-show="set.targetLanguages.length > 0">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">🎙️ Voice per Language</label>
+                                <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-white">
+                                    <template x-for="lang in set.targetLanguages" :key="lang">
+                                        <div class="flex items-center gap-3 p-2 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition-colors">
+                                            <span class="font-mono text-sm font-bold w-10 text-purple-700" x-text="lang.toUpperCase()"></span>
+                                            <span class="text-sm w-32 text-gray-700" x-text="allLanguages.find(l => l.code === lang)?.name || lang"></span>
+                                            <select x-model="set.languageVoices[lang]"
+                                                    @change="initializeLanguageVoice('set', lang)"
+                                                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                                <template x-for="voice in getVoicesForLang(lang)" :key="voice.id">
+                                                    <option :value="voice.id" x-text="voice.name"></option>
+                                                </template>
+                                            </select>
+                                            <button @click="previewVoice(set.languageVoices[lang], $event.target)" type="button"
+                                                    class="preview-btn-compact"
+                                                    title="Preview this voice">
+                                                <span class="preview-icon">🔊</span>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <p class="text-xs text-gray-600 mt-2 italic">💡 Each language can have a unique voice for natural localization</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generation Summary -->
+                    <div class="mb-6 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                        <h3 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                            <span>📋</span>
+                            Generation Summary
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Videos</div>
+                                <div class="font-medium text-gray-900" x-text="set.videos.length + ' videos'"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Avg Duration</div>
+                                <div class="font-medium text-gray-900" x-text="set.duration + 's'"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Total Voice Tracks</div>
+                                <div class="font-medium text-gray-900" x-text="set.videos.reduce((sum, v) => sum + v.voiceTracks.length, 0)"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Languages</div>
+                                <div class="font-medium text-gray-900" x-text="set.languageMode === 'multiple' ? set.targetLanguages.length + ' langs' : '1 lang'"></div>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2 text-xs text-purple-800">
+                            <span x-show="set.useAI">✓ AI Enhancement</span>
+                            <span x-show="set.languageMode === 'multiple'">✓ Multilingual (<span x-text="set.targetLanguages.length"></span> langs)</span>
+                            <span x-show="set.videos.some(v => v.voiceTracks.length > 1)">✓ Multi-voice in some videos</span>
+                        </div>
+                        <div x-show="set.languageMode === 'multiple'" class="mt-2 p-2 bg-purple-100 rounded text-xs text-purple-800">
+                            <strong>Total videos to generate:</strong> <span x-text="set.videos.length * set.targetLanguages.length"></span>
+                        </div>
+                    </div>
+
+                    <!-- Preview Button (Document Input Only) -->
+                    <div x-show="set.inputMethod === 'document'" class="mb-4">
+                        <button @click="parsePreview()" :disabled="previewLoading || !set.documentPath"
+                                class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all">
+                            <span x-show="!previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                <span>Preview Scenes</span>
+                            </span>
+                            <span x-show="previewLoading" class="flex items-center justify-center gap-2">
+                                <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Parsing...</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Scene Preview Panel (Shared with Single Mode) -->
+                    <div x-show="showPreview && previewScenes.length > 0" class="mb-4 border-2 border-purple-200 rounded-xl overflow-hidden bg-white shadow-lg">
+                        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                                </svg>
+                                <h3 class="font-bold">Scene Preview (<span x-text="previewScenes.length"></span> scenes)</h3>
+                            </div>
+                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="p-4 max-h-96 overflow-y-auto">
+                            <template x-for="scene in previewScenes" :key="scene.number">
+                                <div class="mb-3 border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                                    <div class="p-3 flex items-start gap-3">
+                                        <div class="flex-shrink-0 text-2xl" x-text="getSceneTypeIcon(scene.type)"></div>
+                                        <div class="flex-grow">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="text-xs font-bold text-gray-500">Scene <span x-text="scene.number"></span></span>
+                                                <span class="text-xs px-2 py-1 rounded border" :class="getSceneTypeColor(scene.type)" x-text="scene.type.replace('_', ' ').toUpperCase()"></span>
+                                            </div>
+                                            <h4 class="font-semibold text-gray-900 mb-1" x-text="scene.title"></h4>
+                                            <p class="text-sm text-gray-600 mb-2 whitespace-pre-line" x-text="scene.content"></p>
+                                            <div class="flex items-center gap-4 text-xs text-gray-500">
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.voice"></span>
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span x-text="scene.duration + 's'"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                                <div class="flex items-start gap-2">
+                                    <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>Note:</strong> This is a preview. The actual video will have more detailed content parsed from your document.
+                                        Use the <a href="/builder" class="underline font-semibold hover:text-blue-600">Builder</a> for scene-by-scene editing.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button @click="generateSet()" :disabled="loading || !canGenerate('set')"
+                            class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                        <span x-show="!loading" class="flex items-center justify-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path>
+                            </svg>
+                            <span x-text="set.languageMode === 'multiple' ? 'Generate ' + set.videos.length + ' Videos × ' + set.targetLanguages.length + ' Languages' : 'Generate ' + set.videos.length + ' Videos'"></span>
+                        </span>
+                        <span x-show="loading" class="flex items-center justify-center gap-2">
+                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Generating...</span>
+                        </span>
+                    </button>
+
+                    <!-- Validation Message -->
+                    <div x-show="!canGenerate('set')" class="mt-3 text-center text-sm text-red-600">
+                        <span x-show="set.inputMethod === 'document' && !set.documentPath">Please enter a document path</span>
+                        <span x-show="set.inputMethod === 'youtube' && !set.youtubeUrl">Please enter a YouTube URL</span>
+                        <span x-show="set.inputMethod === 'yaml' && !set.yamlPath">Please enter a YAML file path</span>
+                        <span x-show="set.inputMethod === 'manual' && !set.name">Please enter a set name</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Info & Examples Box -->
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-6">
+            <h3 class="font-bold text-blue-900 mb-4 text-lg flex items-center gap-2">
+                <span class="text-2xl">💡</span>
+                Features & Examples
+            </h3>
+
+            <!-- Feature Grid -->
+            <div class="grid md:grid-cols-2 gap-4 mb-5">
+                <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-blue-500">
+                    <div class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <span>🎙️</span>
+                        Multi-Voice Support
+                    </div>
+                    <p class="text-sm text-blue-800 mb-2">Add multiple narrator voices to a single video</p>
+                    <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <strong>Example:</strong> Andrew introduces, Aria explains code, Brandon concludes
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-purple-500">
+                    <div class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <span>🎬</span>
+                        Per-Video Control
+                    </div>
+                    <p class="text-sm text-blue-800 mb-2">Customize title, voices, duration for each video</p>
+                    <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <strong>Example:</strong> Video 1 = 60s with Andrew, Video 2 = 120s with Aria + Ava
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-green-500">
+                    <div class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <span>🌍</span>
+                        Auto-Translation
+                    </div>
+                    <p class="text-sm text-blue-800 mb-2">Generate videos in 28+ languages simultaneously</p>
+                    <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <strong>Example:</strong> Create once in EN, get ES, FR, DE versions automatically
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-orange-500">
+                    <div class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <span>📄</span>
+                        Smart Parsing
+                    </div>
+                    <p class="text-sm text-blue-800 mb-2">Auto-convert docs, YouTube videos, YAML configs</p>
+                    <div class="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                        <strong>Example:</strong> Paste GitHub README → instant video course
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Tips -->
+            <div class="bg-white rounded-lg p-4 border-2 border-blue-300">
+                <div class="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <span>🚀</span>
+                    Pro Tips
+                </div>
+                <ul class="text-sm text-blue-800 space-y-1">
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500">•</span>
+                        <span>Use <strong>multiple voices</strong> to create conversations or interviews</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500">•</span>
+                        <span>Set different <strong>durations per video</strong> for varied pacing</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500">•</span>
+                        <span>Enable <strong>AI Enhancement</strong> for richer narration and explanations</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <span class="text-blue-500">•</span>
+                        <span>Use <strong>Quick Templates</strong> above to get started instantly</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function videoCreator() {
+    return {
+        mode: 'single',
+        step: 1,
+        loading: false,
+        allLanguages: [],
+
+        // Scene preview state
+        showPreview: false,
+        previewScenes: [],
+        previewLoading: false,
+
+        single: {
+            inputMethod: 'manual',
+            title: '',
+            documentPath: '',
+            youtubeUrl: '',
+            yamlPath: '',
+
+            // LANGUAGE-FIRST APPROACH
+            languageMode: 'single',  // 'single' or 'multiple'
+            primaryLanguage: 'en',   // For single language mode
+            primaryVoice: 'male',    // For single language mode
+            sourceLanguage: 'en',    // For multiple language mode
+            targetLanguages: ['en'], // For multiple language mode
+            languageVoices: {},      // For multiple language mode
+            translationMethod: 'claude',
+
+            duration: 60,
+            useAI: false,
+            color: 'blue',
+            showAdvanced: false,
+            videos: [{
+                title: '',
+                voiceTracks: ['male'],  // For multi-voice conversations
+                duration: null,
+                scenes: [],
+                showScenes: false
+            }]
+        },
+
+        set: {
+            inputMethod: 'manual',
+            name: '',
+            videoCount: 3,
+            documentPath: '',
+            youtubeUrl: '',
+            yamlPath: '',
+
+            // LANGUAGE-FIRST APPROACH
+            languageMode: 'single',  // 'single' or 'multiple'
+            primaryLanguage: 'en',   // For single language mode
+            primaryVoice: 'male',    // For single language mode
+            sourceLanguage: 'en',    // For multiple language mode
+            targetLanguages: ['en'], // For multiple language mode
+            languageVoices: {},      // For multiple language mode
+            translationMethod: 'claude',
+
+            duration: 60,
+            useAI: false,
+            color: 'purple',
+            showAdvanced: false,
+            videos: [
+                { title: 'Video 1', voiceTracks: ['male'], duration: null, scenes: [], showScenes: false },
+                { title: 'Video 2', voiceTracks: ['male'], duration: null, scenes: [], showScenes: false },
+                { title: 'Video 3', voiceTracks: ['male'], duration: null, scenes: [], showScenes: false }
+            ]
+        },
+
+        async init() {
+            // Fetch languages
+            const response = await fetch('/api/languages');
+            const data = await response.json();
+            this.allLanguages = data.languages;
+
+            // Initialize default language voices
+            this.initializeLanguageVoice('single', 'en');
+            this.initializeLanguageVoice('set', 'en');
+
+            // Watch for language preset changes
+            this.$watch('single.targetLanguages', (newLangs) => {
+                newLangs.forEach(lang => this.initializeLanguageVoice('single', lang));
+            });
+            this.$watch('set.targetLanguages', (newLangs) => {
+                newLangs.forEach(lang => this.initializeLanguageVoice('set', lang));
+            });
+        },
+
+        toggleLanguage(mode, code) {
+            const config = mode === 'single' ? this.single : this.set;
+            const index = config.targetLanguages.indexOf(code);
+            if (index === -1) {
+                config.targetLanguages.push(code);
+                // Initialize voice for new language
+                this.initializeLanguageVoice(mode, code);
+            } else {
+                if (config.targetLanguages.length > 1) {
+                    config.targetLanguages.splice(index, 1);
+                    // Remove voice mapping
+                    delete config.languageVoices[code];
+                }
+            }
+        },
+
+        getVoicesForLang(langCode) {
+            // Voice mappings for different languages
+            const voiceMap = {
+                'en': [
+                    { id: 'male', name: 'Andrew (Male) - Professional' },
+                    { id: 'male_warm', name: 'Brandon (Warm) - Engaging' },
+                    { id: 'female', name: 'Aria (Female) - Clear' },
+                    { id: 'female_friendly', name: 'Ava (Friendly) - Pleasant' }
+                ],
+                'es': [
+                    { id: 'male_spanish', name: 'Diego (Spanish Male)' },
+                    { id: 'female_spanish', name: 'Maria (Spanish Female)' }
+                ],
+                'fr': [
+                    { id: 'male_french', name: 'Pierre (French Male)' },
+                    { id: 'female_french', name: 'Claire (French Female)' }
+                ],
+                'de': [
+                    { id: 'male_german', name: 'Hans (German Male)' },
+                    { id: 'female_german', name: 'Anna (German Female)' }
+                ],
+                'it': [
+                    { id: 'male_italian', name: 'Marco (Italian Male)' },
+                    { id: 'female_italian', name: 'Sofia (Italian Female)' }
+                ],
+                'pt': [
+                    { id: 'male_portuguese', name: 'João (Portuguese Male)' },
+                    { id: 'female_portuguese', name: 'Ana (Portuguese Female)' }
+                ],
+                'ja': [
+                    { id: 'male_japanese', name: 'Takumi (Japanese Male)' },
+                    { id: 'female_japanese', name: 'Sakura (Japanese Female)' }
+                ],
+                'zh': [
+                    { id: 'male_chinese', name: 'Wei (Chinese Male)' },
+                    { id: 'female_chinese', name: 'Li (Chinese Female)' }
+                ],
+                'ko': [
+                    { id: 'male_korean', name: 'Min-jun (Korean Male)' },
+                    { id: 'female_korean', name: 'Seo-yeon (Korean Female)' }
+                ],
+                'ar': [
+                    { id: 'male_arabic', name: 'Ahmed (Arabic Male)' },
+                    { id: 'female_arabic', name: 'Fatima (Arabic Female)' }
+                ],
+                'hi': [
+                    { id: 'male_hindi', name: 'Raj (Hindi Male)' },
+                    { id: 'female_hindi', name: 'Priya (Hindi Female)' }
+                ],
+                'ru': [
+                    { id: 'male_russian', name: 'Dmitri (Russian Male)' },
+                    { id: 'female_russian', name: 'Natasha (Russian Female)' }
+                ]
+            };
+
+            // Return language-specific voices or default English voices
+            return voiceMap[langCode] || voiceMap['en'];
+        },
+
+        initializeLanguageVoice(mode, langCode) {
+            const config = mode === 'single' ? this.single : this.set;
+
+            // If not already set, initialize with default voice for that language
+            if (!config.languageVoices[langCode]) {
+                const voices = this.getVoicesForLang(langCode);
+                config.languageVoices[langCode] = voices[0].id;
+            }
+        },
+
+        updateVideoList(mode) {
+            const config = mode === 'single' ? this.single : this.set;
+            const currentCount = config.videos.length;
+            const targetCount = config.videoCount;
+
+            if (targetCount > currentCount) {
+                // Add videos with proper voice initialization
+                for (let i = currentCount; i < targetCount; i++) {
+                    // Get default voice for current language
+                    let defaultVoice = 'male';
+                    if (this.allLanguages && this.allLanguages.length > 0) {
+                        const targetLang = config.languageMode === 'single' ? config.primaryLanguage : config.sourceLanguage;
+                        const voices = this.getVoicesForLang(targetLang);
+                        defaultVoice = voices[0]?.id || 'male';
+                    }
+
+                    config.videos.push({
+                        title: `Video ${i + 1}`,
+                        voiceTracks: [defaultVoice],  // MUST initialize with voice!
+                        duration: null,
+                        scenes: [],
+                        showScenes: false
+                    });
+                }
+            } else if (targetCount < currentCount) {
+                // Remove videos
+                config.videos = config.videos.slice(0, targetCount);
+            }
+        },
+
+        addVoiceTrack(mode, videoIdx) {
+            const config = mode === 'single' ? this.single : this.set;
+            if (config.videos[videoIdx].voiceTracks.length < 4) {
+                config.videos[videoIdx].voiceTracks.push('male');
+            }
+        },
+
+        removeVoiceTrack(mode, videoIdx, voiceIdx) {
+            const config = mode === 'single' ? this.single : this.set;
+            if (config.videos[videoIdx].voiceTracks.length > 1) {
+                config.videos[videoIdx].voiceTracks.splice(voiceIdx, 1);
+            }
+        },
+
+        canGenerate(mode) {
+            const config = mode === 'single' ? this.single : this.set;
+
+            // Check based on input method
+            if (config.inputMethod === 'document') {
+                return config.documentPath && config.documentPath.length > 0;
+            } else if (config.inputMethod === 'youtube') {
+                return config.youtubeUrl && config.youtubeUrl.length > 0;
+            } else if (config.inputMethod === 'yaml') {
+                return config.yamlPath && config.yamlPath.length > 0;
+            } else {
+                // Manual mode
+                if (mode === 'single') {
+                    return true; // Always allow for single
+                } else {
+                    return config.name && config.name.length > 0;
+                }
+            }
+        },
+
+        async parsePreview() {
+            const config = this.mode === 'single' ? this.single : this.set;
+
+            // Only works for document input
+            if (config.inputMethod !== 'document' || !config.documentPath) {
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: 'Scene preview only available for document input',
+                        type: 'info'
+                    }
+                }));
+                return;
+            }
+
+            this.previewLoading = true;
+            this.previewScenes = [];
+
+            try {
+                // Simple client-side markdown parsing
+                // In a real implementation, we'd fetch and parse the document
+                // For now, we'll create a mock preview based on common patterns
+
+                const documentPath = config.documentPath.trim();
+
+                // Check if it's a URL or file path
+                let content = '';
+                if (documentPath.startsWith('http://') || documentPath.startsWith('https://')) {
+                    // For URLs, we'd need to fetch - for now show placeholder
+                    this.previewScenes = [
+                        {
+                            type: 'title',
+                            number: 1,
+                            title: 'Title Scene',
+                            content: 'Document from URL',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 5
+                        },
+                        {
+                            type: 'info',
+                            number: 2,
+                            title: 'Preview Limitation',
+                            content: 'URL preview coming soon. Click Generate to process the full document.',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 3
+                        }
+                    ];
+                } else {
+                    // For file paths, show a sample structure
+                    // In production, we'd read the file via API
+                    this.previewScenes = [
+                        {
+                            type: 'title',
+                            number: 1,
+                            title: 'Document Title',
+                            content: `From: ${documentPath}`,
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 5
+                        },
+                        {
+                            type: 'section',
+                            number: 2,
+                            title: 'Introduction',
+                            content: 'Scene will be generated from first section',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 10
+                        },
+                        {
+                            type: 'bullet_list',
+                            number: 3,
+                            title: 'Key Points',
+                            content: '• Point 1\n• Point 2\n• Point 3',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 15
+                        },
+                        {
+                            type: 'code',
+                            number: 4,
+                            title: 'Code Examples',
+                            content: 'Code blocks will be rendered with syntax highlighting',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 12
+                        },
+                        {
+                            type: 'conclusion',
+                            number: 5,
+                            title: 'Summary',
+                            content: 'Final scene with key takeaways',
+                            voice: config.languageMode === 'single' ? config.primaryVoice : config.languageVoices[config.sourceLanguage] || 'male',
+                            duration: 8
+                        }
+                    ];
+                }
+
+                this.showPreview = true;
+
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: `Preview generated: ${this.previewScenes.length} scenes`,
+                        type: 'success'
+                    }
+                }));
+
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: 'Preview failed: ' + error.message,
+                        type: 'error'
+                    }
+                }));
+            } finally {
+                this.previewLoading = false;
+            }
+        },
+
+        getSceneTypeColor(type) {
+            const colors = {
+                'title': 'bg-blue-100 text-blue-800 border-blue-300',
+                'section': 'bg-green-100 text-green-800 border-green-300',
+                'bullet_list': 'bg-purple-100 text-purple-800 border-purple-300',
+                'code': 'bg-gray-100 text-gray-800 border-gray-300',
+                'conclusion': 'bg-orange-100 text-orange-800 border-orange-300',
+                'info': 'bg-yellow-100 text-yellow-800 border-yellow-300'
+            };
+            return colors[type] || 'bg-gray-100 text-gray-800 border-gray-300';
+        },
+
+        getSceneTypeIcon(type) {
+            const icons = {
+                'title': '🎬',
+                'section': '📄',
+                'bullet_list': '📋',
+                'code': '💻',
+                'conclusion': '🎯',
+                'info': 'ℹ️'
+            };
+            return icons[type] || '📝';
+        },
+
+        previewVoice(voiceId, buttonElement) {
+            if (window.voicePreview) {
+                window.voicePreview.preview(voiceId, buttonElement);
+            } else {
+                console.warn('Voice preview not available');
+            }
+        },
+
+        getAllAvailableVoices(mode) {
+            const config = mode === 'single' ? this.single : this.set;
+            const voices = [];
+
+            if (config.languageMode === 'single') {
+                // Single language: show voices for that language
+                const langVoices = this.getVoicesForLang(config.primaryLanguage);
+                langVoices.forEach(v => {
+                    voices.push({
+                        ...v,
+                        label: v.name
+                    });
+                });
+            } else {
+                // Multiple languages: show voices from ALL selected languages
+                const seenVoices = new Set();
+                config.targetLanguages.forEach(lang => {
+                    const langName = this.allLanguages.find(l => l.code === lang)?.name || lang.toUpperCase();
+                    const langVoices = this.getVoicesForLang(lang);
+                    langVoices.forEach(v => {
+                        if (!seenVoices.has(v.id)) {
+                            voices.push({
+                                ...v,
+                                label: `${v.name} (${langName})`,
+                                language: lang
+                            });
+                            seenVoices.add(v.id);
+                        }
+                    });
+                });
+            }
+
+            return voices;
+        },
+
+        loadTemplate(templateName) {
+            // Preset templates for common use cases
+            const templates = {
+                tutorial: {
+                    mode: 'set',
+                    set: {
+                        name: 'Tutorial Series',
+                        videoCount: 3,
+                        color: 'blue',
+                        duration: 90,
+                        multilingual: true,
+                        targetLanguages: ['en', 'es'],
+                        videos: [
+                            { title: 'Introduction', voices: ['male'], duration: 60 },
+                            { title: 'Main Content', voices: ['male', 'female'], duration: 120 },
+                            { title: 'Conclusion', voices: ['male'], duration: 45 }
+                        ]
+                    }
+                },
+                course: {
+                    mode: 'set',
+                    set: {
+                        name: 'Complete Course',
+                        videoCount: 10,
+                        color: 'purple',
+                        duration: 180,
+                        multilingual: false,
+                        videos: Array(10).fill(null).map((_, i) => ({
+                            title: `Lesson ${i + 1}`,
+                            voices: i % 2 === 0 ? ['male'] : ['female'],
+                            duration: null
+                        }))
+                    }
+                },
+                demo: {
+                    mode: 'single',
+                    single: {
+                        title: 'Quick Demo',
+                        color: 'green',
+                        duration: 30,
+                        multilingual: false,
+                        videos: [{
+                            title: 'Quick Demo',
+                            voices: ['male_warm'],
+                            duration: 30
+                        }]
+                    }
+                },
+                global: {
+                    mode: 'set',
+                    set: {
+                        name: 'Global Marketing Campaign',
+                        videoCount: 5,
+                        color: 'cyan',
+                        duration: 45,
+                        multilingual: true,
+                        targetLanguages: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'zh', 'ko', 'ar'],
+                        translationMethod: 'claude',
+                        videos: Array(5).fill(null).map((_, i) => ({
+                            title: `Campaign Video ${i + 1}`,
+                            voices: ['male', 'female'],
+                            duration: 45
+                        }))
+                    }
+                }
+            };
+
+            const template = templates[templateName];
+            if (!template) return;
+
+            // Apply template
+            this.mode = template.mode;
+            this.step = 2;
+
+            if (template.mode === 'single' && template.single) {
+                Object.assign(this.single, template.single);
+            } else if (template.mode === 'set' && template.set) {
+                Object.assign(this.set, template.set);
+            }
+
+            // Show success message
+            window.dispatchEvent(new CustomEvent('show-message', {
+                detail: {
+                    message: `Template "${templateName}" loaded successfully!`,
+                    type: 'success'
+                }
+            }));
+        },
+
+        async generateSingle() {
+            this.loading = true;
+            try {
+                let endpoint, payload;
+
+                // Handle different input methods
+                if (this.single.inputMethod === 'document') {
+                    endpoint = '/api/parse/document';
+                    payload = {
+                        content: this.single.documentPath,
+                        accent_color: this.single.color,
+                        voice: 'male'
+                    };
+                } else if (this.single.inputMethod === 'youtube') {
+                    endpoint = '/api/parse/youtube';
+                    payload = {
+                        url: this.single.youtubeUrl,
+                        accent_color: this.single.color,
+                        duration: 60
+                    };
+                } else if (this.single.inputMethod === 'yaml') {
+                    // For YAML, we still use generate endpoint with file reference
+                    endpoint = this.single.languageMode === 'multiple' ? '/api/generate/multilingual' : '/api/generate';
+                    payload = this.single.languageMode === 'multiple' ? {
+                        video_set: {
+                            set_id: 'yaml_' + Date.now(),
+                            set_name: this.single.yamlPath,
+                            videos: [],
+                            accent_color: this.single.color,
+                            yaml_path: this.single.yamlPath
+                        },
+                        target_languages: this.single.targetLanguages,
+                        source_language: this.single.sourceLanguage,
+                        translation_method: this.single.translationMethod,
+                        language_voices: this.single.languageVoices
+                    } : {
+                        video_set: {
+                            set_id: 'yaml_' + Date.now(),
+                            set_name: this.single.yamlPath,
+                            videos: [],
+                            accent_color: this.single.color,
+                            yaml_path: this.single.yamlPath,
+                            languages: [this.single.sourceLanguage]
+                        }
+                    };
+                } else {
+                    // Manual input - use per-video configuration
+                    const videoData = {
+                        video_id: 'single_' + Date.now(),
+                        title: this.single.videos[0].title || this.single.title || 'Single Video',
+                        voices: this.single.videos[0].voiceTracks,
+                        duration: this.single.videos[0].duration || this.single.duration,
+                        scenes: []
+                    };
+
+                    endpoint = this.single.languageMode === 'multiple' ? '/api/generate/multilingual' : '/api/generate';
+                    payload = this.single.languageMode === 'multiple' ? {
+                        video_set: {
+                            set_id: 'single_' + Date.now(),
+                            set_name: videoData.title,
+                            videos: [videoData],
+                            accent_color: this.single.color
+                        },
+                        target_languages: this.single.targetLanguages,
+                        source_language: this.single.sourceLanguage,
+                        translation_method: this.single.translationMethod,
+                        language_voices: this.single.languageVoices
+                    } : {
+                        video_set: {
+                            set_id: 'single_' + Date.now(),
+                            set_name: videoData.title,
+                            videos: [videoData],
+                            accent_color: this.single.color,
+                            languages: [this.single.sourceLanguage]
+                        }
+                    };
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    // Show success message before redirect
+                    window.dispatchEvent(new CustomEvent('show-message', {
+                        detail: {
+                            message: 'Video generation started! Redirecting to progress...',
+                            type: 'success'
+                        }
+                    }));
+                    setTimeout(() => {
+                        window.location.href = `/progress?task_id=${data.task_id}`;
+                    }, 800);
+                } else {
+                    // Handle both string and array detail formats from FastAPI
+                    let errorMessage = 'Generation failed';
+                    if (data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            errorMessage = data.detail.map(err => err.msg || JSON.stringify(err)).join(', ');
+                        } else if (typeof data.detail === 'string') {
+                            errorMessage = data.detail;
+                        } else {
+                            errorMessage = JSON.stringify(data.detail);
+                        }
+                    }
+                    window.dispatchEvent(new CustomEvent('show-message', {
+                        detail: {
+                            message: 'Error: ' + errorMessage,
+                            type: 'error'
+                        }
+                    }));
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: 'Error: ' + error.message,
+                        type: 'error'
+                    }
+                }));
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async generateSet() {
+            this.loading = true;
+            try {
+                let endpoint, payload;
+
+                // Handle different input methods
+                if (this.set.inputMethod === 'document') {
+                    endpoint = '/api/parse/document';
+                    payload = {
+                        content: this.set.documentPath,
+                        accent_color: this.set.color,
+                        voice: 'male',
+                        generate_set: true,
+                        video_count: this.set.videoCount  // Pass user's video count selection
+                    };
+                } else if (this.set.inputMethod === 'youtube') {
+                    endpoint = '/api/parse/youtube';
+                    payload = {
+                        url: this.set.youtubeUrl,
+                        accent_color: this.set.color,
+                        duration: 60,
+                        generate_set: true
+                    };
+                } else if (this.set.inputMethod === 'yaml') {
+                    endpoint = this.set.languageMode === 'multiple' ? '/api/generate/multilingual' : '/api/generate';
+                    payload = this.set.languageMode === 'multiple' ? {
+                        video_set: {
+                            set_id: 'yaml_set_' + Date.now(),
+                            set_name: this.set.yamlPath,
+                            videos: [],
+                            accent_color: this.set.color,
+                            yaml_path: this.set.yamlPath
+                        },
+                        target_languages: this.set.targetLanguages,
+                        source_language: this.set.sourceLanguage,
+                        translation_method: this.set.translationMethod,
+                        language_voices: this.set.languageVoices
+                    } : {
+                        video_set: {
+                            set_id: 'yaml_set_' + Date.now(),
+                            set_name: this.set.yamlPath,
+                            videos: [],
+                            accent_color: this.set.color,
+                            yaml_path: this.set.yamlPath,
+                            languages: [this.set.sourceLanguage]
+                        }
+                    };
+                } else {
+                    // Manual input - use per-video configuration
+                    const videosData = this.set.videos.map((video, i) => ({
+                        video_id: `video_${i+1}`,
+                        title: video.title || `Video ${i+1}`,
+                        voices: video.voiceTracks,
+                        duration: video.duration || this.set.duration,
+                        scenes: []
+                    }));
+
+                    endpoint = this.set.languageMode === 'multiple' ? '/api/generate/multilingual' : '/api/generate';
+                    payload = this.set.languageMode === 'multiple' ? {
+                        video_set: {
+                            set_id: 'set_' + Date.now(),
+                            set_name: this.set.name || 'Video Set',
+                            videos: videosData,
+                            accent_color: this.set.color
+                        },
+                        target_languages: this.set.targetLanguages,
+                        source_language: this.set.sourceLanguage,
+                        translation_method: this.set.translationMethod,
+                        language_voices: this.set.languageVoices
+                    } : {
+                        video_set: {
+                            set_id: 'set_' + Date.now(),
+                            set_name: this.set.name || 'Video Set',
+                            videos: videosData,
+                            accent_color: this.set.color,
+                            languages: [this.set.sourceLanguage]
+                        }
+                    };
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    // Show success message before redirect
+                    window.dispatchEvent(new CustomEvent('show-message', {
+                        detail: {
+                            message: `Generating ${this.set.videos.length} video${this.set.videos.length > 1 ? 's' : ''}! Redirecting...`,
+                            type: 'success'
+                        }
+                    }));
+                    setTimeout(() => {
+                        window.location.href = `/progress?task_id=${data.task_id}`;
+                    }, 800);
+                } else {
+                    // Handle both string and array detail formats from FastAPI
+                    let errorMessage = 'Generation failed';
+                    if (data.detail) {
+                        if (Array.isArray(data.detail)) {
+                            errorMessage = data.detail.map(err => err.msg || JSON.stringify(err)).join(', ');
+                        } else if (typeof data.detail === 'string') {
+                            errorMessage = data.detail;
+                        } else {
+                            errorMessage = JSON.stringify(data.detail);
+                        }
+                    }
+                    window.dispatchEvent(new CustomEvent('show-message', {
+                        detail: {
+                            message: 'Error: ' + errorMessage,
+                            type: 'error'
+                        }
+                    }));
+                }
+            } catch (error) {
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: {
+                        message: 'Error: ' + error.message,
+                        type: 'error'
+                    }
+                }));
+            } finally {
+                this.loading = false;
+            }
+        }
+    };
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+{% endblock %}

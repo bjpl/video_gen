@@ -1,0 +1,25 @@
+video:
+  id: "introduction"
+  title: "Introduction"
+  description: "Series overview and what you'll learn"
+
+scenes:
+  - type: title
+    title: "Tutorial Series"
+    subtitle: "Introduction"
+    key_message: "Learn programming from scratch"
+
+  - type: list
+    header: "What You'll Learn"
+    description: "Course Overview"
+    items:
+      - title: "Installation"
+        description: "Set up your environment"
+      - title: "Basics"
+        description: "Core concepts"
+      - title: "Practice"
+        description: "Hands-on projects"
+
+  - type: outro
+    main_text: "Let's Get Started"
+    sub_text: "Next: Installation"

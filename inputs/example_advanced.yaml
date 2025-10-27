@@ -1,0 +1,81 @@
+# Example Input: Advanced Video with Custom Narration
+# ====================================================
+# This shows FULL CONTROL - you can override generated narration
+# Mix auto-generated and custom narration as needed
+
+video:
+  id: "advanced_tutorial"
+  title: "Advanced Tutorial"
+  description: "Deep dive into advanced features"
+  accent_color: purple
+  voice: male
+  version: "v2.0"
+  target_duration: 90  # Optional: suggest target length
+
+scenes:
+  # Scene 1: Custom narration
+  - type: title
+    id: scene_01_intro
+    title: "Advanced Tutorial"
+    subtitle: "Deep Dive into Features"
+    narration: "Advanced tutorial. Your deep dive into powerful features and optimization techniques."
+    # ^ Custom narration provided - system won't auto-generate
+
+  # Scene 2: Auto-generated narration
+  - type: command
+    id: scene_02_setup
+    header: "Environment Setup"
+    description: "Configure Your Workspace"
+    topic: "Setting up the optimal development environment"
+    commands:
+      - "$ export PATH=$PATH:/opt/tool/bin"
+      - "$ tool config --advanced"
+      - "$ tool verify"
+      - "→ Environment ready"
+    key_points:
+      - Proper path configuration
+      - Advanced settings enabled
+      - Verification complete
+    min_duration: 8.0
+    max_duration: 12.0
+    voice: male
+    # ^ No custom narration - system will generate from topic + key_points
+
+  # Scene 3: Mix of provided and generated
+  - type: list
+    id: scene_03_features
+    header: "Advanced Features"
+    description: "Power User Capabilities"
+    items:
+      - title: "Parallel Execution"
+        description: "Run multiple tasks simultaneously"
+      - title: "Smart Caching"
+        description: "Automatic optimization"
+      - title: "Plugin System"
+        description: "Extend functionality"
+      - title: "API Integration"
+        description: "Connect with external tools"
+    # System generates: "Advanced features for power users. Key capabilities include
+    # parallel execution, smart caching, plugin system, and A P I integration. Plus..."
+
+  # Scene 4: Documentation reference
+  - type: command
+    id: scene_04_resources
+    header: "Resources & Documentation"
+    description: "Where to Learn More"
+    commands:
+      - "# Read the docs"
+      - "$ man tool"
+      - "$ tool --help"
+      - ""
+      - "# Online resources"
+      - "→ github.com/user/tool"
+      - "→ tool.readthedocs.io"
+    narration: "Comprehensive documentation is available through the manual pages and help command. Online resources include the GitHub repository and Read the Docs site with tutorials and examples."
+
+  # Scene 5: Outro
+  - type: outro
+    id: scene_05_outro
+    main_text: "Master the Advanced Features"
+    sub_text: "See ADVANCED_GUIDE.md"
+    key_message: "You're now ready to use advanced capabilities effectively"

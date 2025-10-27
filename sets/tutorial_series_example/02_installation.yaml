@@ -1,0 +1,34 @@
+video:
+  id: "installation"
+  title: "Installation"
+  description: "Setting up your development environment"
+
+scenes:
+  - type: title
+    title: "Installation"
+    subtitle: "Set Up Your Environment"
+
+  - type: command
+    header: "Install Tools"
+    description: "Quick Setup"
+    commands:
+      - "$ curl -o install.sh https://example.com/install"
+      - "$ chmod +x install.sh"
+      - "$ ./install.sh"
+      - "→ Installation complete!"
+    key_points:
+      - Download installer
+      - Run setup script
+      - Verify installation
+
+  - type: command
+    header: "Verify Installation"
+    description: "Check Everything Works"
+    commands:
+      - "$ tool --version"
+      - "$ tool test"
+      - "→ All tests passed!"
+
+  - type: outro
+    main_text: "Ready to Code"
+    sub_text: "Next: First Steps"

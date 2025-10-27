@@ -1,0 +1,59 @@
+Month,Classes,Percentage,Avg per Week,Notes
+January 2024,175,30.7%,~35,"Strong start - highest month"
+February 2024,75,13.2%,~15,"Significant decrease from January"
+March 2024,79,13.9%,~16,"Slight recovery"
+April 2024,144,25.3%,~29,"Strong rebound"
+May 2024,97,17.0%,~19,"Moderate level"
+TOTAL,570,100%,~23,"Average across all months"
+
+Teacher Name,Total Classes,Percentage,Primary Months,Notes
+Roxana Uzcategui,163,28.6%,"Feb-May",Your primary teacher
+Blanca Lucia Arteaga,65,11.4%,"April-May",Morning sessions
+María Daniela Contreras,61,10.7%,"March-May",Afternoon focus
+Jorgina Lugo,52,9.1%,January,January specialist
+Valeria Alexandra Castillo,49,8.6%,"Jan-Feb",Early months
+Julieta Zarza,38,6.7%,April,April focus
+Angel Reinaldo Rodriguez,29,5.1%,January,Morning classes
+Josefina Escalera,20,3.5%,April,Evening sessions
+Michelle Veronica Ramos,19,3.3%,"Feb-Mar",Weekend classes
+José Pastor Riera,18,3.2%,January,Afternoon slots
+Vanessa Siso,19,3.3%,January,Mixed schedule
+Hernán González,9,1.6%,"Jan-Feb",Limited sessions
+Other Teachers (35+),48,8.4%,Various,Trial sessions
+
+Day of Week,Estimated Classes,Percentage,Pattern
+Monday,90,15.8%,Strong weekday start
+Tuesday,95,16.7%,Peak weekday
+Wednesday,80,14.0%,Mid-week
+Thursday,75,13.2%,Steady
+Friday,70,12.3%,End of week
+Saturday,45,7.9%,Weekend low
+Sunday,115,20.2%,Weekend high
+TOTAL,570,100%,Evening/weekend preference
+
+Time Slot,Estimated Classes,Percentage,Notes
+8:00-10:00 AM,35,6.1%,Early morning
+10:00-12:00 PM,55,9.6%,Late morning
+12:00-2:00 PM,30,5.3%,Lunch time
+2:00-4:00 PM,20,3.5%,Early afternoon
+4:00-6:00 PM,120,21.1%,Evening start
+6:00-8:00 PM,230,40.4%,Peak time
+8:00-10:00 PM,80,14.0%,Late evening
+TOTAL,570,100%,Evening preference clear
+
+Class Type,Classes,Percentage,Duration,Total Hours
+Real World Class,560,98.2%,30 min,280 hours
+DELE Exam Prep,10,1.8%,60 min,10 hours
+TOTAL,570,100%,Various,290 hours
+
+Summary Statistics,Value,Details
+Total Classes,570,January-May 2024
+Total Hours,~285 hours,Based on 30min average
+Study Period,5 months,~150 days
+Avg Classes/Day,3.8,Consistent dedication
+Avg Classes/Week,~23,Strong weekly commitment
+Different Teachers,45+,Diverse experience
+Top 3 Teachers,289 classes,"51% with core 3"
+Evening Classes,~350,"61% after 4 PM"
+Weekend Classes,~160,"28% Sat-Sun"
+Growth Rate,"-44%","Jan to May (175→97)"

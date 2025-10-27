@@ -1,0 +1,71 @@
+{
+  "video_id": "test_video_001",
+  "title": "Test Video",
+  "total_duration": 9.83,
+  "total_scenes": 3,
+  "voices_config": [
+    "en-US-ChristopherNeural"
+  ],
+  "audio_dir": "C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\audio\\unified_system\\test_video_001_audio",
+  "accent_color": [
+    59,
+    130,
+    246
+  ],
+  "scenes": [
+    {
+      "scene_id": "scene_1",
+      "type": "title",
+      "voice": "en-US-ChristopherNeural",
+      "start_time": 0,
+      "end_time": 3.0,
+      "duration": 3.0,
+      "audio_duration": 1.9,
+      "padding": 1.1,
+      "narration_preview": "Welcome to our test video",
+      "visual_content": {
+        "title": "Welcome",
+        "parsed_content": {
+          "success": false,
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "scene_id": "scene_2",
+      "type": "command",
+      "voice": "en-US-ChristopherNeural",
+      "start_time": 3.0,
+      "end_time": 6.83,
+      "duration": 3.83,
+      "audio_duration": 2.83,
+      "padding": 1.0,
+      "narration_preview": "This is the main content of our video",
+      "visual_content": {
+        "title": "Main Content",
+        "parsed_content": {
+          "success": false,
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "scene_id": "scene_3",
+      "type": "outro",
+      "voice": "en-US-ChristopherNeural",
+      "start_time": 6.83,
+      "end_time": 9.83,
+      "duration": 3.0,
+      "audio_duration": 1.32,
+      "padding": 1.68,
+      "narration_preview": "Thank you for watching",
+      "visual_content": {
+        "title": "Summary",
+        "parsed_content": {
+          "success": false,
+          "metadata": {}
+        }
+      }
+    }
+  ]
+}

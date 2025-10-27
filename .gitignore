@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Video generation outputs
+audio/
+videos/
+scripts/drafts/
+scripts/temp_*/
+*.mp4
+*.mp3
+*.wav
+
+# Temporary files
+temp_*/
+*.tmp
+*.log
+*.cache
+profile.stats
+*.backup
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Keep example outputs (if any)
+!examples/**/*.mp4
+!examples/**/*.mp3
+
+# Environment and sensitive files
+.env
+.env.local
+.env.*.local
+
+# Project-specific output directories
+output/state/
+output/logs/
+.translation_cache/
+
+# Test outputs
+.coverage
+coverage.json
+htmlcov/
+.pytest_cache/

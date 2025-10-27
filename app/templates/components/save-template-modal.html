@@ -1,0 +1,99 @@
+<!-- Save Template Modal -->
+<div x-show="showSaveTemplateModal"
+     x-cloak
+     @keydown.escape.window="showSaveTemplateModal = false"
+     class="fixed inset-0 z-50 overflow-y-auto"
+     style="display: none;">
+
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+         @click="showSaveTemplateModal = false"></div>
+
+    <!-- Modal -->
+    <div class="flex min-h-screen items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all"
+             @click.away="showSaveTemplateModal = false">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span class="text-2xl">💾</span>
+                    Save as Template
+                </h3>
+                <button @click="showSaveTemplateModal = false"
+                        class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Description -->
+            <p class="text-sm text-gray-600 mb-4">
+                Save your current configuration as a reusable template. You can load it later with one click!
+            </p>
+
+            <!-- Form -->
+            <form @submit.prevent="saveTemplate()">
+                <!-- Template Name -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Template Name <span class="text-red-500">*</span>
+                    </label>
+                    <input x-model="templateForm.name"
+                           type="text"
+                           required
+                           placeholder="My Awesome Template"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Template Description -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Description
+                    </label>
+                    <textarea x-model="templateForm.description"
+                              rows="3"
+                              placeholder="E.g., Tutorial series with 5 videos in EN and ES"
+                              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+
+                <!-- Current Config Summary -->
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="text-xs font-semibold text-blue-900 mb-2">What will be saved:</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-blue-800">
+                        <div>
+                            <span class="font-medium">Mode:</span>
+                            <span x-text="mode === 'single' ? 'Single Video' : 'Video Set'"></span>
+                        </div>
+                        <div>
+                            <span class="font-medium">Videos:</span>
+                            <span x-text="mode === 'single' ? '1' : (set ? set.videos.length : '0')"></span>
+                        </div>
+                        <div>
+                            <span class="font-medium">Input:</span>
+                            <span x-text="(mode === 'single' ? single : set).inputMethod"></span>
+                        </div>
+                        <div>
+                            <span class="font-medium">Multilingual:</span>
+                            <span x-text="(mode === 'single' ? single : set).multilingual ? 'Yes' : 'No'"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex gap-3">
+                    <button type="button"
+                            @click="showSaveTemplateModal = false"
+                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium">
+                        Save Template
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

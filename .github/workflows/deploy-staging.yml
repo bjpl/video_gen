@@ -1,0 +1,180 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ staging, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        pytest tests/ \
+          -m "not slow" \
+          --cov=video_gen \
+          --cov=app \
+          --cov-report=xml \
+          --cov-fail-under=75 \
+          -v
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: coverage.xml
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.your-domain.com
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+    - name: Add known hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to staging
+      run: |
+        ssh ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'ENDSSH'
+          set -e
+
+          # Navigate to application
+          cd /home/video-gen/video_gen
+
+          # Pull latest changes
+          git fetch origin
+          git checkout ${{ github.ref_name }}
+          git pull origin ${{ github.ref_name }}
+
+          # Activate virtualenv
+          source venv/bin/activate
+
+          # Update dependencies
+          pip install -r requirements.txt
+
+          # Run quick tests
+          pytest tests/ -m "not slow" -q || exit 1
+
+          # Restart service
+          sudo systemctl restart video-gen-staging
+
+          # Wait for service to start
+          sleep 5
+
+          # Verify health
+          curl -f http://localhost:8002/api/health || exit 1
+
+          echo "Deployment successful!"
+        ENDSSH
+
+    - name: Verify deployment
+      run: |
+        # Wait for service to be fully ready
+        sleep 10
+
+        # Check health endpoint
+        response=$(curl -s https://staging.your-domain.com/api/health)
+        status=$(echo $response | jq -r '.status')
+
+        if [ "$status" != "healthy" ]; then
+          echo "Deployment verification failed: service not healthy"
+          exit 1
+        fi
+
+        echo "Deployment verified successfully!"
+
+    - name: Smoke tests
+      run: |
+        # Test key endpoints
+        curl -f https://staging.your-domain.com/api/voices
+        curl -f https://staging.your-domain.com/api/colors
+        curl -f https://staging.your-domain.com/api/scene-types
+        curl -f https://staging.your-domain.com/api/languages
+        echo "Smoke tests passed!"
+
+    - name: Notify deployment
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: 'Staging deployment ${{ job.status }}'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  rollback-staging:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+
+    - name: Rollback deployment
+      run: |
+        ssh ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'ENDSSH'
+          set -e
+
+          cd /home/video-gen/video_gen
+
+          # Rollback to previous commit
+          git reset --hard HEAD~1
+
+          # Restart service
+          sudo systemctl restart video-gen-staging
+
+          echo "Rollback completed"
+        ENDSSH
+
+    - name: Notify rollback
+      uses: 8398a7/action-slack@v3
+      with:
+        status: 'warning'
+        text: 'Staging deployment rolled back due to failure'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}

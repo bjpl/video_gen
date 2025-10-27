@@ -1,0 +1,66 @@
+# Tutorial Series Example - Set Configuration
+# ============================================
+# Complete tutorial series with consistent branding
+
+set:
+  id: "tutorial_series_example"
+  name: "Tutorial Series 2024"
+  description: "Complete beginner-friendly tutorial series"
+  version: "v2.0"
+
+  # Set-level defaults applied to all videos
+  defaults:
+    accent_color: blue
+    voice: male
+    target_duration: 60
+    min_scene_duration: 3.0
+    max_scene_duration: 15.0
+
+  # Output configuration
+  output:
+    base_dir: "../output/tutorial_series_example"
+    audio_dir: "audio"
+    video_dir: "videos"
+    script_dir: "scripts"
+    report_dir: "reports"
+
+  # Naming conventions
+  naming:
+    prefix: "tutorial"
+    use_numbers: true
+    separator: "-"
+    # Results in: tutorial-01-introduction, tutorial-02-installation, etc.
+
+  # Processing options
+  processing:
+    parallel_audio: true
+    auto_cleanup: false
+    gpu_encoding: true
+
+  # Videos in this set (processed in order)
+  videos:
+    - file: "01_introduction.yaml"
+      priority: 1
+
+    - file: "02_installation.yaml"
+      priority: 2
+
+    - file: "03_first_steps.yaml"
+      priority: 3
+      overrides:
+        # This video uses different settings
+        accent_color: green
+        voice: female
+
+    - file: "04_conclusion.yaml"
+      priority: 4
+
+  # Metadata
+  metadata:
+    author: "Your Name"
+    series_url: "https://example.com/tutorials"
+    license: "CC BY 4.0"
+    tags:
+      - tutorial
+      - beginner
+      - programming

@@ -1,0 +1,99 @@
+# Documentation Template
+# Template for creating video documentation of software, APIs, or technical topics
+#
+# Variables:
+#   ${project_name} - Name of project being documented
+#   ${feature} - Specific feature being documented
+#   ${version} - Version of the software
+
+video_id: ${video_id}
+title: ${project_name} - ${feature}
+description: Documentation for ${feature} in ${project_name} v${version}
+accent_color: ${accent_color|blue}
+voice: ${voice|male}
+
+scenes:
+  # Title
+  - scene_id: title
+    scene_type: title
+    narration: |
+      ${project_name} documentation: ${feature}
+      Version ${version}
+    visual_content:
+      title: ${project_name}
+      subtitle: ${feature} Documentation
+      background: technical
+
+  # Overview
+  - scene_id: overview
+    scene_type: list
+    narration: |
+      ${overview_narration}
+    visual_content:
+      header: Overview
+      items: ${overview_points}
+
+  # Installation/Setup
+  - scene_id: setup
+    scene_type: command
+    narration: |
+      Let's start with the setup process.
+      ${setup_narration}
+    visual_content:
+      header: Installation
+      commands: ${setup_commands}
+
+  # Basic usage
+  - scene_id: basic_usage
+    scene_type: command
+    narration: |
+      Here's how to use the basic features.
+      ${basic_usage_narration}
+    visual_content:
+      header: Basic Usage
+      commands: ${basic_usage_commands}
+
+  # Advanced features
+  - scene_id: advanced
+    scene_type: list
+    narration: |
+      Now let's explore the advanced capabilities.
+      ${advanced_narration}
+    visual_content:
+      header: Advanced Features
+      items: ${advanced_features}
+
+  # Code example
+  - scene_id: code_example
+    scene_type: code_comparison
+    narration: |
+      Here's a complete example.
+      ${code_example_narration}
+    visual_content:
+      title: Complete Example
+      before:
+        label: Basic
+        code: ${basic_code}
+      after:
+        label: Advanced
+        code: ${advanced_code}
+
+  # Common issues
+  - scene_id: troubleshooting
+    scene_type: problem
+    narration: |
+      Let's address some common issues.
+      ${troubleshooting_narration}
+    visual_content:
+      title: Troubleshooting
+      problem_text: ${common_issues}
+
+  # Resources
+  - scene_id: resources
+    scene_type: outro
+    narration: |
+      For more information, check out these resources.
+    visual_content:
+      title: Additional Resources
+      message: ${resources_message}
+      links: ${resource_links}

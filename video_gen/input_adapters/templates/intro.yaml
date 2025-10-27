@@ -1,0 +1,62 @@
+# Intro Template
+# A short, punchy intro video template perfect for channel intros or topic introductions
+#
+# Variables:
+#   ${title} - Main title
+#   ${tagline} - Catchy tagline/slogan
+#   ${topic} - What this is about
+#   ${hook} - Opening hook/question
+
+video_id: ${video_id}
+title: ${title}
+description: ${description}
+accent_color: ${accent_color|cyan}
+voice: ${voice|male}
+
+scenes:
+  # Hook scene
+  - scene_id: hook
+    scene_type: title
+    narration: |
+      ${hook}
+    visual_content:
+      title: ${hook_title}
+      subtitle: ""
+      background: dynamic
+    min_duration: 2.0
+    max_duration: 5.0
+
+  # Main title
+  - scene_id: title
+    scene_type: title
+    narration: |
+      ${title}. ${tagline}
+    visual_content:
+      title: ${title}
+      subtitle: ${tagline}
+      background: gradient
+    min_duration: 3.0
+    max_duration: 6.0
+
+  # Quick overview
+  - scene_id: overview
+    scene_type: list
+    narration: |
+      ${overview_narration}
+    visual_content:
+      header: What You'll Get
+      items: ${features}
+      style: animated
+    min_duration: 3.0
+    max_duration: 8.0
+
+  # Call to action
+  - scene_id: cta
+    scene_type: outro
+    narration: |
+      Ready to dive in? Let's get started!
+    visual_content:
+      title: Let's Begin
+      message: ${cta_message}
+    min_duration: 2.0
+    max_duration: 4.0

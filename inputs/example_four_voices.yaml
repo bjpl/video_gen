@@ -1,0 +1,69 @@
+# Example: Using All Four Voice Options
+# ======================================
+# Demonstrates how to use all available voices for variety in video series
+
+video:
+  id: "voice_variety_demo"
+  title: "Voice Variety Demo"
+  description: "Showcasing all four neural TTS voices"
+  accent_color: cyan
+  voice: male  # Default voice (Andrew - professional)
+  version: "v2.0"
+
+scenes:
+  # Scene 1: Male professional (Andrew)
+  - type: title
+    title: "Voice Variety"
+    subtitle: "Four Professional Voices"
+    key_message: "Choose the perfect voice for your content"
+    voice: male  # en-US-AndrewMultilingualNeural (confident, professional)
+
+  # Scene 2: Male warm (Brandon)
+  - type: list
+    header: "Male Voice Options"
+    description: "Two Distinct Styles"
+    items:
+      - title: "Andrew"
+        description: "Professional, confident - ideal for technical content"
+      - title: "Brandon"
+        description: "Warm, engaging - perfect for marketing and friendly content"
+    voice: male_warm  # en-US-BrandonMultilingualNeural (warm, engaging)
+
+  # Scene 3: Female clear (Aria)
+  - type: list
+    header: "Female Voice Options"
+    description: "Clear Communication"
+    items:
+      - title: "Aria"
+        description: "Clear, crisp - excellent for education and documentation"
+      - title: "Ava"
+        description: "Friendly, pleasant - great for onboarding and help content"
+    voice: female  # en-US-AriaNeural (clear, crisp)
+
+  # Scene 4: Female friendly (Ava)
+  - type: quote
+    quote_text: "The right voice can make complex topics feel approachable and engaging"
+    attribution: "Content Creator's Wisdom"
+    context: "Choosing the perfect narrator"
+    voice: female_friendly  # en-US-AvaMultilingualNeural (friendly, pleasant)
+
+  # Scene 5: Back to professional male (Andrew)
+  - type: outro
+    main_text: "Choose Your Voice"
+    sub_text: "See VOICE_GUIDE.md"
+    key_message: "Match voice to content and audience"
+    voice: male  # Back to Andrew for professional close
+
+# Voice Selection Guide:
+# ─────────────────────────────────────────────────────────────
+# male            → Andrew (Professional, confident)
+# male_warm       → Brandon (Warm, engaging)
+# female          → Aria (Clear, crisp)
+# female_friendly → Ava (Friendly, pleasant)
+#
+# Use Cases:
+# - Technical tutorials: male or female
+# - Marketing content: male_warm or female_friendly
+# - Documentation: female or male
+# - Onboarding: female_friendly or male_warm
+# - Professional demos: male or female

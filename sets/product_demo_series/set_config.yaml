@@ -1,0 +1,62 @@
+# Product Demo Series - Set Configuration
+# =========================================
+# Marketing-focused product demonstration videos
+
+set:
+  id: "product_demo_series"
+  name: "Product Demo Series Q1 2024"
+  description: "Engaging product feature demonstrations for marketing"
+  version: "v2.0"
+
+  # Different defaults - more engaging style
+  defaults:
+    accent_color: purple
+    voice: female_friendly  # Friendlier voice for marketing
+    target_duration: 45     # Shorter, punchier videos
+    min_scene_duration: 2.5
+    max_scene_duration: 10.0
+
+  output:
+    base_dir: "../output/product_demo_series"
+    audio_dir: "audio"
+    video_dir: "videos"
+    script_dir: "scripts"
+    report_dir: "reports"
+
+  naming:
+    prefix: "demo"
+    use_numbers: false       # No numbers for marketing videos
+    separator: "_"
+    # Results in: demo_feature_highlights, demo_quick_start, etc.
+
+  processing:
+    parallel_audio: true
+    auto_cleanup: true       # Clean up temp files
+    gpu_encoding: true
+
+  videos:
+    - file: "feature_highlights.yaml"
+      priority: 1
+      overrides:
+        accent_color: pink   # Eye-catching color for highlights
+
+    - file: "quick_start.yaml"
+      priority: 2
+      overrides:
+        accent_color: green  # Success/action color
+
+    - file: "advanced_capabilities.yaml"
+      priority: 3
+      overrides:
+        voice: male          # Professional voice for advanced features
+        accent_color: blue
+
+  metadata:
+    author: "Marketing Team"
+    campaign: "Q1 2024 Product Launch"
+    license: "All Rights Reserved"
+    tags:
+      - product
+      - demo
+      - marketing
+      - features

@@ -1,0 +1,61 @@
+# Video 1: System Introduction
+# ==============================
+# Introduces the video generation system
+
+video:
+  id: "01_video_gen_intro"
+  title: "Video Gen - System Introduction"
+  description: "Professional video production from any source"
+  accent_color: cyan
+  voice: male
+  version: "v2.0"
+
+scenes:
+  - type: title
+    title: "Video Gen"
+    subtitle: "Professional Video Production System"
+    key_message: "Create videos from any source in minutes"
+    voice: male
+
+  - type: list
+    header: "What is Video Gen?"
+    description: "Complete Automated Workflow"
+    topic: "A production-ready system for creating professional videos"
+    items:
+      - title: "Three Input Methods"
+        description: "Documents, YouTube, or Interactive Wizard"
+      - title: "Six Scene Types"
+        description: "Title, command, list, outro, code comparison, quote"
+      - title: "Four Professional Voices"
+        description: "Neural TTS with male and female options"
+      - title: "Perfect Audio Sync"
+        description: "Audio-first architecture guarantees synchronization"
+    voice: female
+
+  - type: quote
+    quote_text: "From idea to professional video in minutes, not hours"
+    attribution: "Video Gen Philosophy"
+    context: "The core promise of the system"
+    voice: male_warm
+
+  - type: command
+    header: "Quick Example"
+    description: "Create Video in One Command"
+    topic: "See how easy it is to create professional videos"
+    commands:
+      - "$ python create_video.py --wizard"
+      - "# Answer a few questions"
+      - "$ python generate_all_videos_unified_v2.py"
+      - "$ python generate_videos_from_timings_v3_simple.py"
+      - "→ Professional video ready!"
+    key_points:
+      - Four simple commands
+      - Automated generation
+      - Professional results
+    voice: female
+
+  - type: outro
+    main_text: "Ready to Create Videos?"
+    sub_text: "See GETTING_STARTED.md"
+    key_message: "Your journey to professional video creation starts here"
+    voice: male

@@ -1,0 +1,63 @@
+# Video/Audio Production System - Complete Dependencies
+# ======================================================
+
+# Core image processing (11.x required by moviepy 2.2.1)
+Pillow>=11.3.0,<12.0.0
+
+# Plotting and visualization (thumbnail generation)
+matplotlib>=3.9.0
+
+# Text-to-speech (neural voices)
+edge-tts>=7.2.3
+
+# Numerical operations (fast blending)
+numpy>=1.24.0
+
+# FFmpeg binaries (video encoding)
+imageio-ffmpeg>=0.4.9
+
+# Video editing library
+moviepy>=2.1.1
+
+# YAML parsing (input files)
+PyYAML>=6.0.3
+
+# HTTP requests (document fetching)
+requests>=2.32.5
+
+# YouTube transcript fetching
+youtube-transcript-api>=1.2.3
+
+# YouTube API (for search - optional, requires API key)
+google-api-python-client>=2.100.0
+
+# Installation:
+# pip install -r requirements.txt
+#
+# Minimal install (without YouTube features):
+# pip install Pillow edge-tts numpy imageio-ffmpeg PyYAML requests
+
+# AI-powered features (optional but recommended)
+# Claude API for:
+# - Enhanced narration generation
+# - High-quality translation (28+ languages)
+anthropic>=0.71.0
+
+# Environment variables (CRITICAL)
+python-dotenv>=1.1.0
+
+# Alternative translation (free fallback) - REMOVED due to dependency conflicts
+# googletrans==4.0.0-rc1  # Conflicts with httpx, use Claude API instead
+
+# Web UI dependencies (FastAPI + HTMX + Alpine.js)
+fastapi>=0.118.0
+uvicorn[standard]>=0.37.0
+jinja2>=3.1.6
+python-multipart>=0.0.6
+pydantic>=2.12.2
+pydantic-settings>=2.11.0
+
+# Testing
+pytest>=8.4.2
+pytest-asyncio>=1.2.0
+httpx==0.25.2  # Pinned for Starlette TestClient compatibility

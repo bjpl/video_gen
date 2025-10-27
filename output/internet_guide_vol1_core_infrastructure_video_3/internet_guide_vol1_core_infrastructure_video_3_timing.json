@@ -1,0 +1,198 @@
+{
+  "video_id": "internet_guide_vol1_core_infrastructure_video_3",
+  "title": "Physical Infrastructure Layer",
+  "total_duration": 119.12,
+  "total_scenes": 5,
+  "voices_config": [
+    "male"
+  ],
+  "audio_dir": "C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\audio\\unified_system\\internet_guide_vol1_core_infrastructure_video_3_audio",
+  "accent_color": [
+    59,
+    130,
+    246
+  ],
+  "scenes": [
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_3_title",
+      "type": "title",
+      "voice": "male",
+      "start_time": 0,
+      "end_time": 9.62,
+      "duration": 9.62,
+      "audio_duration": 8.62,
+      "padding": 1.0,
+      "narration_preview": "Welcome! Let's dive into the Physical Infrastructure Layer \u2013 this is the actual foundation that powe",
+      "visual_content": {
+        "title": "How the Internet Works",
+        "subtitle": "Physical Infrastructure Layer",
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "Internet Infrastructure",
+              "Network Physical Layer"
+            ],
+            "keywords": [
+              "Physical Infrastructure Layer",
+              "Internet connectivity"
+            ],
+            "complexity": "simple"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_3_list_0",
+      "type": "list",
+      "voice": "male",
+      "start_time": 9.62,
+      "end_time": 15.129999999999999,
+      "duration": 5.51,
+      "audio_duration": 4.51,
+      "padding": 1.0,
+      "narration_preview": "Now let's dive into the physical infrastructure layer and see what makes it all work",
+      "visual_content": {
+        "header": "Physical Infrastructure Layer",
+        "description": "The physical infrastructure of the internet is a vast, complex system spanning the entire globe",
+        "items": [
+          "It includes everything from massive undersea cables connecting continents to the Wi-Fi router in your home",
+          "This infrastructure represents trillions of dollars of investment and decades of construction, yet most of it remains invisible to users"
+        ],
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "Physical infrastructure",
+              "Network architecture fundamentals"
+            ],
+            "keywords": [
+              "infrastructure",
+              "physical layer",
+              "network components"
+            ],
+            "complexity": "medium"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_3_list_1",
+      "type": "list",
+      "voice": "male",
+      "start_time": 15.129999999999999,
+      "end_time": 61.370000000000005,
+      "duration": 46.24,
+      "audio_duration": 45.24,
+      "padding": 1.0,
+      "narration_preview": "In this section, we're diving into the global cable network that connects our world. Let's kick thin",
+      "visual_content": {
+        "header": "The Global Cable Network",
+        "description": "The backbone of the internet consists of fiber optic cables that can carry terabits of data per seco",
+        "items": [
+          "Single-mode fiber: Uses laser light traveling in a single path",
+          "Used for long-distance transmission (up to 100km without amplification)",
+          "Can carry 400 Gbps per wavelength, with 80+ wavelengths per fiber",
+          "Total capacity: 30+ Tbps per fiber pair",
+          "Multi-mode fiber: Light travels in multiple paths"
+        ],
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "Global cable network infrastructure",
+              "Single-mode fiber technology"
+            ],
+            "keywords": [
+              "single-mode fiber",
+              "laser light",
+              "wavelength",
+              "gigabits",
+              "amplification"
+            ],
+            "complexity": "medium"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_3_list_2",
+      "type": "list",
+      "voice": "male",
+      "start_time": 61.370000000000005,
+      "end_time": 101.66,
+      "duration": 40.29,
+      "audio_duration": 39.29,
+      "padding": 1.0,
+      "narration_preview": "This section explores last mile infrastructure, and we'll kick things off with ADSL, which stands fo",
+      "visual_content": {
+        "header": "Last Mile Infrastructure",
+        "description": "The \"last mile\" (or \"first mile\" from the user's perspective) is often the bottleneck in internet co",
+        "items": [
+          "ADSL (Asymmetric DSL): Different upload/download speeds",
+          "Distance sensitive: Speed decreases with distance from DSLAM",
+          "Maximum range: 5.5km from telephone exchange",
+          "Uses frequency division: 0-4kHz (voice), 25-138kHz (upload), 138kHz-1.1MHz (download)",
+          "VDSL/VDSL2 (Very-high-bit-rate DSL):"
+        ],
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "Last mile infrastructure",
+              "ADSL technology"
+            ],
+            "keywords": [
+              "ADSL",
+              "DSLAM",
+              "Asymmetric DSL",
+              "telephone exchange",
+              "distance sensitive"
+            ],
+            "complexity": "medium"
+          }
+        }
+      }
+    },
+    {
+      "scene_id": "internet_guide_vol1_core_infrastructure_video_3_outro",
+      "type": "outro",
+      "voice": "male",
+      "start_time": 101.66,
+      "end_time": 119.12,
+      "duration": 17.46,
+      "audio_duration": 16.46,
+      "padding": 1.0,
+      "narration_preview": "Thanks for watching! Want to go deeper? I've dropped links to the complete documentation in the desc",
+      "visual_content": {
+        "main_text": "Learn More",
+        "sub_text": "See Full Documentation",
+        "parsed_content": {
+          "success": true,
+          "metadata": {
+            "method": "ai",
+            "ai_enabled": true,
+            "topics": [
+              "documentation usage",
+              "technical reference materials"
+            ],
+            "keywords": [
+              "documentation",
+              "configuration",
+              "troubleshooting"
+            ],
+            "complexity": "simple"
+          }
+        }
+      }
+    }
+  ]
+}
