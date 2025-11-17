@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["python39", "nodejs-18_x"]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[phases.build]
+cmds = ["echo 'Build complete - video_gen ready for deployment'"]
+
+[start]
+cmd = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
