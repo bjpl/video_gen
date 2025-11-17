@@ -1,0 +1,430 @@
+/**
+ * Component Styles - P1 UX Improvements
+ *
+ * Reusable UI components with accessibility and responsive design
+ */
+
+/* ========================================
+   VALIDATION STYLES
+   ======================================== */
+
+.validation-error {
+    display: flex;
+    align-items: start;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background-color: #FEE2E2;
+    border: 1px solid #FCA5A5;
+    border-radius: 0.375rem;
+    color: #991B1B;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.validation-error::before {
+    content: '⚠️';
+    flex-shrink: 0;
+}
+
+.validation-success {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background-color: #D1FAE5;
+    border: 1px solid #6EE7B7;
+    border-radius: 0.375rem;
+    color: #065F46;
+    font-size: 0.875rem;
+}
+
+.validation-success::before {
+    content: '✓';
+    flex-shrink: 0;
+    font-weight: bold;
+}
+
+/* Input field validation states */
+input.border-red-500,
+textarea.border-red-500 {
+    border-width: 2px;
+    border-color: #EF4444;
+}
+
+input.border-green-500,
+textarea.border-green-500 {
+    border-width: 2px;
+    border-color: #10B981;
+}
+
+input.border-red-500:focus,
+textarea.border-red-500:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #EF4444;
+    ring-opacity: 0.5;
+}
+
+input.border-green-500:focus,
+textarea.border-green-500:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #10B981;
+    ring-opacity: 0.5;
+}
+
+/* ========================================
+   TOOLTIP STYLES
+   ======================================== */
+
+.tooltip-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+    color: #6B7280;
+    transition: color 0.2s;
+}
+
+.tooltip-trigger:hover {
+    color: #2563EB;
+}
+
+.tooltip-content {
+    position: absolute;
+    z-index: 50;
+    min-width: 16rem;
+    max-width: 20rem;
+    padding: 0.75rem;
+    background-color: #1F2937;
+    color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+/* Tooltip positioning */
+.tooltip-content.tooltip-top {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 0.5rem;
+}
+
+.tooltip-content.tooltip-bottom {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 0.5rem;
+}
+
+.tooltip-content.tooltip-left {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 0.5rem;
+}
+
+.tooltip-content.tooltip-right {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 0.5rem;
+}
+
+/* Tooltip arrow */
+.tooltip-content::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+}
+
+.tooltip-content.tooltip-top::before {
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-top-color: #1F2937;
+}
+
+.tooltip-content.tooltip-bottom::before {
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-bottom-color: #1F2937;
+}
+
+.tooltip-content.tooltip-left::before {
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-left-color: #1F2937;
+}
+
+.tooltip-content.tooltip-right::before {
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-right-color: #1F2937;
+}
+
+/* Tooltip transitions */
+.tooltip-enter {
+    opacity: 0;
+    transform: translateY(0.25rem);
+}
+
+.tooltip-enter-active {
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.tooltip-enter-to {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ========================================
+   COST ESTIMATOR STYLES
+   ======================================== */
+
+.cost-estimator-panel {
+    background: linear-gradient(to bottom right, #EFF6FF, #DBEAFE);
+    border: 2px solid #BFDBFE;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+}
+
+.cost-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    padding: 0.75rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s;
+}
+
+.cost-breakdown-item:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.cost-item-label {
+    flex: 1;
+}
+
+.cost-item-title {
+    font-weight: 500;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.cost-item-details {
+    font-size: 0.75rem;
+    color: #6B7280;
+}
+
+.cost-item-amount {
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.cost-total {
+    border-top: 2px solid #3B82F6;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.cost-total-label {
+    font-weight: 700;
+    color: #111827;
+}
+
+.cost-total-amount {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.cost-savings-note {
+    font-size: 0.75rem;
+    background-color: #D1FAE5;
+    color: #065F46;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    margin-top: 0.5rem;
+}
+
+.cost-optimization-tip {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background-color: #FEF3C7;
+    border-left: 4px solid #F59E0B;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.cost-optimization-tip .icon {
+    flex-shrink: 0;
+    font-size: 1.25rem;
+}
+
+.cost-optimization-tip .content {
+    flex: 1;
+}
+
+.cost-optimization-tip .title {
+    font-weight: 600;
+    color: #92400E;
+    margin-bottom: 0.25rem;
+}
+
+.cost-optimization-tip .description {
+    font-size: 0.875rem;
+    color: #78350F;
+}
+
+.cost-optimization-tip .savings {
+    font-weight: 600;
+    color: #16A34A;
+}
+
+/* ========================================
+   FILE UPLOAD STYLES
+   ======================================== */
+
+.file-upload-zone {
+    position: relative;
+    border: 2px dashed #D1D5DB;
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.file-upload-zone:hover {
+    border-color: #3B82F6;
+    background-color: #EFF6FF;
+}
+
+.file-upload-zone.dragging {
+    border-color: #2563EB;
+    background-color: #DBEAFE;
+    transform: scale(1.02);
+}
+
+.file-upload-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.file-upload-text {
+    color: #6B7280;
+    font-size: 0.875rem;
+}
+
+.file-upload-browse {
+    color: #2563EB;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.file-upload-browse:hover {
+    color: #1D4ED8;
+    text-decoration: underline;
+}
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+
+@media (max-width: 640px) {
+    .tooltip-content {
+        max-width: 90vw;
+    }
+
+    .cost-breakdown-item {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .cost-item-amount {
+        align-self: flex-end;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+/* Focus visible for keyboard navigation */
+.tooltip-trigger:focus-visible {
+    outline: 2px solid #2563EB;
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .tooltip-content {
+        border: 2px solid white;
+    }
+
+    .validation-error {
+        border-width: 2px;
+    }
+
+    .validation-success {
+        border-width: 2px;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .tooltip-enter-active,
+    .cost-breakdown-item,
+    .file-upload-zone {
+        transition: none;
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.text-muted {
+    color: #6B7280;
+}
+
+.text-error {
+    color: #DC2626;
+}
+
+.text-success {
+    color: #16A34A;
+}
+
+.text-warning {
+    color: #F59E0B;
+}
+
+.bg-info {
+    background-color: #DBEAFE;
+}
+
+.bg-success {
+    background-color: #D1FAE5;
+}
+
+.bg-warning {
+    background-color: #FEF3C7;
+}
+
+.bg-error {
+    background-color: #FEE2E2;
+}

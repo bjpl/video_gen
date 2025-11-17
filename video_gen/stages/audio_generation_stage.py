@@ -28,11 +28,12 @@ class AudioGenerationStage(Stage):
         super().__init__("audio_generation", event_emitter)
 
     async def execute(self, context: Dict[str, Any]) -> StageResult:
-        """Execute audio generation with voice rotation support."""
+        """Execute audio generation with voice rotation and per-language voice support."""
 
         # Validate context
         self.validate_context(context, ["video_config"])
         video_config: VideoConfig = context["video_config"]
+        target_language = context.get("target_language")  # Optional: for multilingual support
 
         # Create output directory
         output_dir = config.audio_dir / "unified_system"
@@ -42,9 +43,24 @@ class AudioGenerationStage(Stage):
 
         self.logger.info(f"Generating audio for {len(video_config.scenes)} scenes")
 
-        # Get available voices for rotation
-        available_voices = video_config.voices if video_config.voices else ["male"]
-        self.logger.info(f"Voice rotation enabled with voices: {available_voices}")
+        # Determine voice configuration based on language
+        if target_language and video_config.language_voices:
+            # Use per-language voice if configured
+            language_voice = video_config.language_voices.get(target_language)
+            if language_voice:
+                available_voices = [language_voice]
+                self.logger.info(
+                    f"Using language-specific voice for {target_language}: {language_voice}"
+                )
+            else:
+                available_voices = video_config.voices if video_config.voices else ["male"]
+                self.logger.info(
+                    f"No specific voice for {target_language}, using default rotation: {available_voices}"
+                )
+        else:
+            # Use standard voice rotation
+            available_voices = video_config.voices if video_config.voices else ["male"]
+            self.logger.info(f"Voice rotation enabled with voices: {available_voices}")
 
         # Generate audio for each scene with voice rotation
         total_duration = 0.0

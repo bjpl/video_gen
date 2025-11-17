@@ -55,3 +55,7 @@ class PipelineError(VideoGenError):
 
 class OutputHandlerError(VideoGenError):
     """Raised when output handling fails."""
+
+
+class TranslationError(StageError):
+    """Raised when translation fails."""

@@ -20,6 +20,17 @@
     <!-- Voice Preview Script -->
     <script src="/static/voice-preview.js"></script>
 
+    <!-- P1 Enhancements (Week 2 - Cognitive Load Reduction) -->
+    <link rel="stylesheet" href="/static/presets.css">
+    <script src="/static/js/presets.js"></script>
+    <script src="/static/js/smart-defaults.js"></script>
+    <script src="/static/js/p1-enhancements.js"></script>
+
+    <!-- P1 & P2 Enhancements (Week 2 - Error Prevention & Cost Awareness) -->
+    <link rel="stylesheet" href="/static/css/components.css">
+    <script src="/static/js/validation.js"></script>
+    <script src="/static/js/cost-estimator.js"></script>
+
     <!-- Tailwind Config -->
     <script>
         tailwind.config = {
@@ -46,6 +57,19 @@
 
     <style>
         [x-cloak] { display: none !important; }
+
+        /* Screen reader only - for accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
 
         /* Smooth page transitions */
         * {

@@ -1,0 +1,273 @@
+/**
+ * Preset Packages Styling
+ * Week 2 P1 - Cognitive Load Reduction
+ */
+
+/* Preset Cards */
+.preset-card {
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.preset-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.preset-card.selected {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #ebf4ff 0%, #e0f2fe 100%);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Preset Icon */
+.preset-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.preset-card:hover .preset-icon {
+    animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-15px); }
+    50% { transform: translateY(-7px); }
+    75% { transform: translateY(-12px); }
+}
+
+/* Preset Features List */
+.preset-features {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0;
+}
+
+.preset-features li {
+    font-size: 0.875rem;
+    color: #4b5563;
+    padding: 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preset-features li::before {
+    content: '✓';
+    color: #10b981;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Preset Cost Badge */
+.preset-cost {
+    display: inline-block;
+    background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+    color: #92400e;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    margin-top: 0.5rem;
+}
+
+/* Recommended Badge */
+.recommended-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+    color: #854d0e;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: pulse-badge 2s ease-in-out infinite;
+}
+
+.recommended-badge::before {
+    content: '⭐';
+    font-size: 1rem;
+}
+
+@keyframes pulse-badge {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+}
+
+/* Time Estimate Display */
+.time-estimate-panel {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #93c5fd;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.time-estimate-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+.time-estimate-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.time-breakdown {
+    font-size: 0.75rem;
+    color: #4b5563;
+    margin-top: 0.5rem;
+}
+
+/* Content Type Detection Badge */
+.content-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+    color: #166534;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.content-type-icon {
+    font-size: 1.25rem;
+}
+
+/* Preset Customization Panel */
+.preset-customize-panel {
+    background: #fefce8;
+    border-left: 4px solid #eab308;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+.preset-customize-panel h4 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #854d0e;
+    margin-bottom: 0.5rem;
+}
+
+/* Preset Grid Layout */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 640px) {
+    .preset-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .preset-icon {
+        font-size: 2.5rem;
+    }
+
+    .time-estimate-value {
+        font-size: 1.25rem;
+    }
+}
+
+/* Tooltip for Recommendations */
+.recommendation-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.recommendation-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #1f2937;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 0.5rem;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.75rem;
+}
+
+.recommendation-tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Preset Use Cases */
+.preset-use-cases {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.preset-use-cases h5 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.preset-use-cases ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.preset-use-cases li {
+    font-size: 0.7rem;
+    color: #6b7280;
+    padding: 0.125rem 0;
+}
+
+.preset-use-cases li::before {
+    content: '→ ';
+    color: #9ca3af;
+}
+
+/* Animation for preset selection */
+@keyframes preset-select {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.preset-card.selecting {
+    animation: preset-select 0.4s ease;
+}

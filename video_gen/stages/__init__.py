@@ -8,6 +8,7 @@ from .validation_stage import ValidationStage
 from .input_stage import InputStage
 from .parsing_stage import ParsingStage
 from .script_generation_stage import ScriptGenerationStage
+from .translation_stage import TranslationStage
 from .audio_generation_stage import AudioGenerationStage
 from .video_generation_stage import VideoGenerationStage
 from .output_stage import OutputStage
@@ -17,6 +18,7 @@ __all__ = [
     "InputStage",
     "ParsingStage",
     "ScriptGenerationStage",
+    "TranslationStage",
     "AudioGenerationStage",
     "VideoGenerationStage",
     "OutputStage",

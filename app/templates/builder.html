@@ -414,17 +414,23 @@
                                 <div class="flex space-x-2">
                                     <button @click="moveScene(index, -1)"
                                             :disabled="index === 0"
-                                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">
-                                        ↑
+                                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                                            aria-label="Move scene up">
+                                        <span aria-hidden="true">↑</span>
+                                        <span class="sr-only">Move scene up</span>
                                     </button>
                                     <button @click="moveScene(index, 1)"
                                             :disabled="index === scenes.length - 1"
-                                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30">
-                                        ↓
+                                            class="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                                            aria-label="Move scene down">
+                                        <span aria-hidden="true">↓</span>
+                                        <span class="sr-only">Move scene down</span>
                                     </button>
                                     <button @click="removeScene(index)"
-                                            class="p-1 text-red-400 hover:text-red-600">
-                                        ×
+                                            class="p-1 text-red-400 hover:text-red-600"
+                                            aria-label="Remove scene">
+                                        <span aria-hidden="true">×</span>
+                                        <span class="sr-only">Remove scene</span>
                                     </button>
                                 </div>
                             </div>

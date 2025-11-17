@@ -109,8 +109,150 @@
             </div>
         </div>
 
-        <!-- Tab Navigation (Step 1: Choose Type) -->
+        <!-- P1: PRESET PACKAGES -->
         <div x-show="step === 1" class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-3">
+                <h2 class="text-white font-semibold flex items-center gap-2">
+                    <span>⚡</span>
+                    Choose a Preset or Start from Scratch
+                </h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-4 text-sm">
+                    Save time with our pre-configured packages designed for common use cases.
+                    Each preset includes optimal language, voice, and visual settings.
+                </p>
+
+                <!-- Preset Grid -->
+                <div class="preset-grid">
+                    <!-- Corporate Preset -->
+                    <div @click="applyPreset('corporate'); selectedPreset = 'corporate'"
+                         :class="selectedPreset === 'corporate' ? 'selected' : ''"
+                         class="preset-card border-2 rounded-xl p-6 bg-white hover:shadow-lg transition-all">
+                        <div class="preset-icon">💼</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Corporate Presentation</h3>
+                        <p class="text-sm text-gray-600 mb-3">Professional multi-language business videos</p>
+
+                        <!-- Features -->
+                        <ul class="preset-features">
+                            <li>4 languages (EN/ES/FR/DE)</li>
+                            <li>Professional male voice</li>
+                            <li>Blue theme (corporate)</li>
+                            <li>1.5-3 min duration</li>
+                            <li>AI-enhanced narration</li>
+                        </ul>
+
+                        <!-- Cost Badge -->
+                        <div class="preset-cost">~$0.02-0.05 per video</div>
+
+                        <!-- Use Cases (Expandable) -->
+                        <details class="preset-use-cases">
+                            <summary class="cursor-pointer">Best for...</summary>
+                            <ul>
+                                <li>Company updates and announcements</li>
+                                <li>Product launches and demos</li>
+                                <li>Training and onboarding</li>
+                                <li>Investor presentations</li>
+                                <li>Marketing collateral</li>
+                            </ul>
+                        </details>
+                    </div>
+
+                    <!-- Creative Preset -->
+                    <div @click="applyPreset('creative'); selectedPreset = 'creative'"
+                         :class="selectedPreset === 'creative' ? 'selected' : ''"
+                         class="preset-card border-2 rounded-xl p-6 bg-white hover:shadow-lg transition-all">
+                        <div class="preset-icon">🎨</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Creative Tutorial</h3>
+                        <p class="text-sm text-gray-600 mb-3">Engaging, visual educational content</p>
+
+                        <ul class="preset-features">
+                            <li>1 language (English)</li>
+                            <li>Warm female voice</li>
+                            <li>Purple theme (creative)</li>
+                            <li>3-5 min duration</li>
+                            <li>AI-enhanced scripts</li>
+                        </ul>
+
+                        <div class="preset-cost">~$0.03-0.06 per video</div>
+
+                        <details class="preset-use-cases">
+                            <summary class="cursor-pointer">Best for...</summary>
+                            <ul>
+                                <li>How-to tutorials and guides</li>
+                                <li>Educational course content</li>
+                                <li>Creative skill sharing</li>
+                                <li>DIY and craft instructions</li>
+                                <li>Cooking and recipe videos</li>
+                            </ul>
+                        </details>
+                    </div>
+
+                    <!-- Educational Preset -->
+                    <div @click="applyPreset('educational'); selectedPreset = 'educational'"
+                         :class="selectedPreset === 'educational' ? 'selected' : ''"
+                         class="preset-card border-2 rounded-xl p-6 bg-white hover:shadow-lg transition-all">
+                        <div class="preset-icon">🎓</div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Educational Course</h3>
+                        <p class="text-sm text-gray-600 mb-3">Structured learning content for courses</p>
+
+                        <ul class="preset-features">
+                            <li>2 languages (EN/ES)</li>
+                            <li>Friendly female voice</li>
+                            <li>Green theme (learning)</li>
+                            <li>4-6 min duration</li>
+                            <li>Quiz & checkpoint scenes</li>
+                        </ul>
+
+                        <div class="preset-cost">~$0.04-0.08 per video</div>
+
+                        <details class="preset-use-cases">
+                            <summary class="cursor-pointer">Best for...</summary>
+                            <ul>
+                                <li>Online course modules</li>
+                                <li>Lecture supplements</li>
+                                <li>Student assignments</li>
+                                <li>Educational YouTube content</li>
+                                <li>Training programs</li>
+                            </ul>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Customize Message -->
+                <div class="preset-customize-panel" x-show="selectedPreset !== null">
+                    <h4>✓ Preset Selected!</h4>
+                    <p class="text-xs text-gray-700">
+                        You can customize any settings below before generating.
+                        <button @click="selectedPreset = null; step = 2" class="text-blue-600 hover:text-blue-700 underline">
+                            Continue to customize →
+                        </button>
+                    </p>
+                </div>
+
+                <!-- OR separator -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-4 bg-white text-gray-500 font-medium">OR</span>
+                    </div>
+                </div>
+
+                <!-- Manual configuration button -->
+                <div class="text-center">
+                    <button @click="selectedPreset = null"
+                            class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold rounded-lg transition-colors">
+                        ⚙️ Start from Scratch (Full Control)
+                    </button>
+                    <p class="text-xs text-gray-500 mt-2">Configure every detail manually</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation (Step 1: Choose Type) -->
+        <div x-show="step === 1 && selectedPreset === null" class="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
             <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3">
                 <h2 class="text-white font-semibold">Step 1: Choose Creation Type</h2>
             </div>
@@ -245,16 +387,35 @@
                     <!-- Document Input -->
                     <div x-show="single.inputMethod === 'document'" class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Document Path or URL</label>
-                        <input x-model="single.documentPath" type="text" placeholder="README.md or https://github.com/user/repo"
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <input x-model="single.documentPath"
+                               @change="detectAndApplyDefaults?.(single.documentPath)"
+                               x-validate="file_path"
+                               type="text"
+                               placeholder="README.md or https://github.com/user/repo"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               aria-label="Document file path or URL">
                         <p class="text-xs text-gray-500 mt-1">Local file path or GitHub repository URL</p>
+
+                        <!-- P1: Show detected content type -->
+                        <div x-show="detectedContentType !== null" class="content-type-badge mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
+                            <span class="content-type-icon text-lg">🔍</span>
+                            <div class="text-xs">
+                                <strong>Detected:</strong>
+                                <span x-text="detectedContentType?.name"></span>
+                                <span class="text-blue-600">— Smart defaults applied!</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- YouTube Input -->
                     <div x-show="single.inputMethod === 'youtube'" class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">YouTube URL</label>
-                        <input x-model="single.youtubeUrl" type="text" placeholder="https://youtube.com/watch?v=..."
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <input x-model="single.youtubeUrl"
+                               x-validate="youtube_url"
+                               type="text"
+                               placeholder="https://youtube.com/watch?v=..."
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               aria-label="YouTube video URL">
                         <p class="text-xs text-gray-500 mt-1">Video will be transcribed and converted to scenes</p>
                     </div>
 
@@ -382,7 +543,10 @@
                                 <select x-model="single.primaryVoice"
                                         class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                                     <template x-for="voice in getVoicesForLang(single.primaryLanguage)" :key="voice.id">
-                                        <option :value="voice.id" x-text="voice.name"></option>
+                                        <option :value="voice.id">
+                                            <span x-text="voice.name"></span>
+                                            <span x-show="isRecommended?.('voice', voice.id)" x-text="' ⭐ Recommended'"></span>
+                                        </option>
                                     </template>
                                 </select>
                                 <button @click="previewVoice(single.primaryVoice, $event.target)" type="button"
@@ -423,6 +587,88 @@
 
                     <!-- 3️⃣ VIDEO SETTINGS -->
                     <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <!-- P1: TIME ESTIMATION -->
+                        <div x-show="estimatedTime !== null" class="time-estimate-panel mb-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="time-estimate-icon">⏱️</span>
+                                    <div>
+                                        <div class="font-bold text-gray-900 text-sm">Estimated Generation Time</div>
+                                        <div class="time-estimate-value" x-text="estimatedTime?.display"></div>
+                                        <div class="time-breakdown" x-text="getTimeBreakdown?.()"></div>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-600">
+                                    <div>Updates in real-time</div>
+                                    <div>as you configure</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- P2: COST ESTIMATOR PANEL -->
+                        <div x-data="costEstimator()"
+                             x-init="$watch('$root.single', () => updateEstimate({
+                                 use_ai_narration: $root.single.useAI,
+                                 target_languages: $root.single.languageMode === 'multiple' ? $root.single.targetLanguages : [$root.single.primaryLanguage],
+                                 translation_method: $root.single.translationMethod || 'google',
+                                 estimatedScenesPerVideo: 5,
+                                 videos: [{scenes: [{}, {}, {}, {}, {}]}]
+                             }), {deep: true}); updateEstimate({
+                                 use_ai_narration: $root.single.useAI,
+                                 target_languages: [$root.single.primaryLanguage],
+                                 estimatedScenesPerVideo: 5
+                             })"
+                             class="cost-estimator-panel mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-2xl">💰</span>
+                                    <div>
+                                        <h4 class="font-bold text-gray-900">Estimated Cost</h4>
+                                        <p class="text-xs text-gray-600">Real-time pricing based on your configuration</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-3xl font-bold" :class="getCostColor(estimate.total)" x-text="formatCost(estimate.total)"></div>
+                                    <div class="text-xs text-gray-500">per video</div>
+                                </div>
+                            </div>
+
+                            <!-- Cost Breakdown -->
+                            <div class="space-y-2 mb-4">
+                                <template x-for="item in estimate.breakdown" :key="item.item">
+                                    <div class="cost-breakdown-item">
+                                        <div class="cost-item-label">
+                                            <div class="cost-item-title" x-text="item.item"></div>
+                                            <div class="cost-item-details" x-text="item.details"></div>
+                                        </div>
+                                        <div class="cost-item-amount" :class="getCostColor(item.cost)" x-text="formatCost(item.cost)"></div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Optimization Tips -->
+                            <div x-show="tips.length > 0" class="space-y-2">
+                                <h5 class="text-sm font-semibold text-gray-700 mb-2">💡 Cost Optimization Tips</h5>
+                                <template x-for="tip in tips" :key="tip.category">
+                                    <div class="cost-optimization-tip" x-show="tip.priority !== 'info'">
+                                        <div class="icon" x-text="tip.icon"></div>
+                                        <div class="content">
+                                            <div class="title" x-text="tip.category"></div>
+                                            <div class="description" x-text="tip.tip"></div>
+                                            <div x-show="tip.savings > 0" class="savings">
+                                                Save <span x-text="formatCost(tip.savings)"></span> — <span x-text="tip.action"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Free Tier Message -->
+                            <div x-show="estimate.total === 0" class="cost-savings-note">
+                                <strong>🎉 Free Tier!</strong> You're using template-based narration and Edge-TTS which are completely free.
+                            </div>
+                        </div>
+
                         <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <span>⚙️</span>
                             Global Settings
@@ -435,8 +681,17 @@
                                     Default Duration (can override per video)
                                 </label>
                                 <div class="flex items-center gap-4">
-                                    <input x-model.number="single.duration" type="range" min="30" max="300" step="10"
-                                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                                    <input x-model.number="single.duration"
+                                           x-validate="duration"
+                                           type="range"
+                                           min="30"
+                                           max="300"
+                                           step="10"
+                                           class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                           aria-label="Video duration in seconds"
+                                           aria-valuemin="30"
+                                           aria-valuemax="300"
+                                           :aria-valuenow="single.duration">
                                     <span class="text-sm font-medium text-gray-700 w-16 text-right" x-text="single.duration + 's'"></span>
                                 </div>
                                 <div class="flex justify-between text-xs text-gray-500 mt-1">
@@ -460,6 +715,11 @@
                                         <input type="checkbox" x-model="single.useAI" class="sr-only peer">
                                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                                     </label>
+                                    <!-- P1: Recommended Badge for AI Narration -->
+                                    <span x-show="isRecommended?.('aiNarration', true)"
+                                          class="recommended-badge ml-2 text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
+                                        ⭐ Recommended for quality
+                                    </span>
                                 </div>
 
                                 <!-- API Key Notice (conditional) -->
@@ -478,7 +738,12 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
                                 <div class="flex gap-3">
-                                    <button type="button" @click="single.color = 'blue'" :class="single.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" title="Blue: Professional, trustworthy (best for corporate, finance, healthcare)"></button>
+                                    <button type="button" @click="single.color = 'blue'" :class="single.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="relative w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" title="Blue: Professional, trustworthy (best for corporate, finance, healthcare)">
+                                        <span x-show="isRecommended?.('color', 'blue')"
+                                              class="recommended-badge absolute -top-2 -right-2 text-xs bg-yellow-400 text-yellow-900 rounded-full w-5 h-5 flex items-center justify-center">
+                                            ⭐
+                                        </span>
+                                    </button>
                                     <button type="button" @click="single.color = 'purple'" :class="single.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform" title="Purple: Premium, sophisticated (best for high-end products, creative)"></button>
                                     <button type="button" @click="single.color = 'orange'" :class="single.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform" title="Orange: Energetic, creative (best for creative, marketing, youth)"></button>
                                     <button type="button" @click="single.color = 'green'" :class="single.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform" title="Green: Success, growth (best for environmental, health, finance)"></button>
@@ -1010,8 +1275,18 @@
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <input x-model.number="set.videoCount" @input="updateVideoList('set')" type="range" min="1" max="20" step="1"
-                                           class="flex-1 h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer">
+                                    <input x-model.number="set.videoCount"
+                                           @input="updateVideoList('set')"
+                                           x-validate="video_count"
+                                           type="range"
+                                           min="1"
+                                           max="20"
+                                           step="1"
+                                           class="flex-1 h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer"
+                                           aria-label="Number of videos to generate"
+                                           aria-valuemin="1"
+                                           aria-valuemax="20"
+                                           :aria-valuenow="set.videoCount">
                                     <span class="text-sm font-semibold text-gray-900 bg-white px-3 py-1 rounded-lg border border-purple-300 min-w-[80px] text-center" x-text="set.videoCount + ' videos'"></span>
                                 </div>
                                 <div class="flex justify-between text-xs text-gray-500 mt-1">
@@ -1517,7 +1792,7 @@
 
 <script>
 function videoCreator() {
-    return {
+    const baseCreator = {
         mode: 'single',
         step: 1,
         loading: false,
@@ -1602,6 +1877,14 @@ function videoCreator() {
             this.$watch('set.targetLanguages', (newLangs) => {
                 newLangs.forEach(lang => this.initializeLanguageVoice('set', lang));
             });
+
+            // P1: Watch for configuration changes to update time estimate
+            this.$watch('single', () => this.updateTimeEstimate?.(), { deep: true });
+            this.$watch('set', () => this.updateTimeEstimate?.(), { deep: true });
+            this.$watch('mode', () => this.updateTimeEstimate?.());
+
+            // Initialize first time estimate
+            this.updateTimeEstimate?.();
         },
 
         toggleLanguage(mode, code) {
@@ -2277,6 +2560,9 @@ function videoCreator() {
             }
         }
     };
+
+    // Apply P1 enhancements if available (presets, smart defaults, time estimates, recommended badges)
+    return window.addP1Enhancements ? window.addP1Enhancements(baseCreator) : baseCreator;
 }
 </script>
 

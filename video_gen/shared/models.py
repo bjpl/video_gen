@@ -85,6 +85,7 @@ class VideoConfig:
     accent_color: str = "blue"
     version: str = "v2.0"
     voices: List[str] = field(default_factory=lambda: ["male"])  # Support multiple voices for rotation
+    language_voices: Optional[Dict[str, str]] = None  # Per-language voice assignment: {"es": "male_warm", "fr": "female"}
 
     # Runtime fields
     total_duration: float = 0.0
