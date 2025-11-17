@@ -634,53 +634,51 @@ function unifiedCreator() {
             this.generationStatus = 'Preparing video generation...';
 
             try {
-                // Prepare form data
-                const formData = new FormData();
-                formData.append('video_id', this.config.videoId);
-                formData.append('duration', this.config.duration);
-                formData.append('use_ai_narration', this.config.useAI);
-                formData.append('primary_voice', this.config.primaryVoice);
-                formData.append('color', this.config.color);
+                let endpoint = '';
+                let payload = {};
 
-                // Add input data
-                if (this.inputType === 'url') {
-                    formData.append('source_url', this.inputData.url);
-                } else if (this.inputType === 'file') {
-                    formData.append('file', this.inputData.file);
+                // Determine which API endpoint to use based on input method
+                if (this.inputMethod === 'youtube' || (this.inputType === 'url' && this.inputData.url.includes('youtube'))) {
+                    endpoint = '/api/parse/youtube';
+                    payload = {
+                        url: this.inputData.url,
+                        duration: this.config.duration,
+                        accent_color: this.config.color
+                    };
+                } else if (this.inputMethod === 'document' || this.inputType === 'file' || this.inputType === 'text') {
+                    endpoint = '/api/parse/document';
+                    payload = {
+                        content: this.inputData.text || this.inputData.fileName || this.inputData.url,
+                        accent_color: this.config.color,
+                        voice: this.config.primaryVoice,
+                        video_count: 1,
+                        generate_set: false
+                    };
                 } else {
-                    formData.append('text_content', this.inputData.text);
+                    throw new Error('Unknown input method');
                 }
 
-                // Language settings
-                if (this.config.languageMode === 'multiple') {
-                    formData.append('target_languages', JSON.stringify(this.config.targetLanguages));
-                }
-
-                // Submit via HTMX or fetch
                 this.generationProgress = 20;
                 this.generationStatus = 'Processing content...';
 
-                const response = await fetch('/api/generate', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
-                this.generationProgress = 60;
+                this.generationProgress = 40;
                 this.generationStatus = 'Generating video...';
 
                 if (response.ok) {
                     const result = await response.json();
-                    this.generatedJobId = result.job_id;
+                    this.generatedJobId = result.task_id;
 
-                    this.generationProgress = 100;
-                    this.generationStatus = 'Complete!';
-                    this.generationComplete = true;
-
-                    window.dispatchEvent(new CustomEvent('show-message', {
-                        detail: { message: 'Video generated successfully!', type: 'success' }
-                    }));
+                    // Poll for completion
+                    await this.pollJobStatus(result.task_id);
                 } else {
-                    throw new Error('Generation failed');
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Generation failed');
                 }
             } catch (error) {
                 this.generationProgress = 0;
@@ -689,6 +687,42 @@ function unifiedCreator() {
                     detail: { message: 'Failed to generate video: ' + error.message, type: 'error' }
                 }));
             }
+        },
+
+        async pollJobStatus(taskId) {
+            const maxAttempts = 60; // 2 minutes max
+            let attempts = 0;
+
+            while (attempts < maxAttempts) {
+                try {
+                    const response = await fetch(`/api/tasks/${taskId}`);
+                    if (response.ok) {
+                        const status = await response.json();
+
+                        this.generationProgress = status.progress || 50;
+                        this.generationStatus = status.message || 'Processing...';
+
+                        if (status.status === 'complete') {
+                            this.generationProgress = 100;
+                            this.generationStatus = 'Complete!';
+                            this.generationComplete = true;
+                            window.dispatchEvent(new CustomEvent('show-message', {
+                                detail: { message: 'Video generated successfully!', type: 'success' }
+                            }));
+                            return;
+                        } else if (status.status === 'failed') {
+                            throw new Error(status.errors || 'Generation failed');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
+                attempts++;
+            }
+
+            throw new Error('Generation timeout');
         },
 
         reset() {
