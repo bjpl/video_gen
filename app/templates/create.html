@@ -13,7 +13,7 @@
 
     <!-- Header -->
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">🎬 Quick Start Video Creation</h1>
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">🎬 Quick Start Video Creation</h2>
         <p class="text-gray-600">Generate professional videos with AI narration and translation in just a few clicks</p>
     </div>
 
@@ -786,7 +786,8 @@
                                         </label>
                                         <button @click="addVoiceTrack('single', 0)" type="button"
                                                 :disabled="single.videos[0].voiceTracks.length >= 4"
-                                                class="text-sm bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">
+                                                class="text-sm bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-3 py-1.5 rounded-lg font-medium transition-colors"
+                                                aria-label="Add voice track">
                                             + Add Track
                                         </button>
                                     </div>
@@ -807,8 +808,11 @@
                                                 </button>
                                                 <button @click="removeVoiceTrack('single', 0, vIdx)" type="button"
                                                         :disabled="single.videos[0].voiceTracks.length === 1"
-                                                        class="text-red-500 hover:text-red-700 disabled:opacity-20 disabled:cursor-not-allowed text-lg px-2 font-bold">
+                                                        class="text-red-500 hover:text-red-700 disabled:opacity-20 disabled:cursor-not-allowed text-lg px-2 font-bold"
+                                                        aria-label="Remove voice track"
+                                                        title="Remove this voice track">
                                                     ×
+                                                    <span class="sr-only">Remove voice track</span>
                                                 </button>
                                             </div>
                                         </template>
@@ -943,10 +947,12 @@
                                 </svg>
                                 <h3 class="font-bold">Scene Preview (<span x-text="previewScenes.length"></span> scenes)</h3>
                             </div>
-                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors" aria-label="Close preview" title="Close preview">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Close icon">
+                                    <title>Close</title>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
+                                <span class="sr-only">Close preview</span>
                             </button>
                         </div>
                         <div class="p-4 max-h-96 overflow-y-auto">
@@ -1346,13 +1352,25 @@
                             <!-- Accent Color -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
-                                <div class="flex gap-3">
-                                    <button type="button" @click="set.color = 'blue'" :class="set.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform"></button>
-                                    <button type="button" @click="set.color = 'purple'" :class="set.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform"></button>
-                                    <button type="button" @click="set.color = 'orange'" :class="set.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform"></button>
-                                    <button type="button" @click="set.color = 'green'" :class="set.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform"></button>
-                                    <button type="button" @click="set.color = 'pink'" :class="set.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform"></button>
-                                    <button type="button" @click="set.color = 'cyan'" :class="set.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform"></button>
+                                <div class="flex gap-3" role="group" aria-label="Accent color selection">
+                                    <button type="button" @click="set.color = 'blue'" :class="set.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" aria-label="Blue color" title="Blue - Professional, trustworthy">
+                                        <span class="sr-only">Blue</span>
+                                    </button>
+                                    <button type="button" @click="set.color = 'purple'" :class="set.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform" aria-label="Purple color" title="Purple - Premium, sophisticated">
+                                        <span class="sr-only">Purple</span>
+                                    </button>
+                                    <button type="button" @click="set.color = 'orange'" :class="set.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform" aria-label="Orange color" title="Orange - Energetic, creative">
+                                        <span class="sr-only">Orange</span>
+                                    </button>
+                                    <button type="button" @click="set.color = 'green'" :class="set.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform" aria-label="Green color" title="Green - Success, growth">
+                                        <span class="sr-only">Green</span>
+                                    </button>
+                                    <button type="button" @click="set.color = 'pink'" :class="set.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform" aria-label="Pink color" title="Pink - Playful, modern">
+                                        <span class="sr-only">Pink</span>
+                                    </button>
+                                    <button type="button" @click="set.color = 'cyan'" :class="set.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform" aria-label="Cyan color" title="Cyan - Tech, innovation">
+                                        <span class="sr-only">Cyan</span>
+                                    </button>
                                 <p class="text-xs text-gray-500 mt-2 italic">💡 Hover over colors for psychology guide</p>
                                 </div>
                             </div>
@@ -1439,8 +1457,11 @@
                                                             </button>
                                                             <button @click="removeVoiceTrack('set', vIdx, voiceIdx)" type="button"
                                                                     :disabled="video.voiceTracks.length === 1"
-                                                                    class="text-red-500 hover:text-red-700 disabled:opacity-20 disabled:cursor-not-allowed text-lg px-2 font-bold">
+                                                                    class="text-red-500 hover:text-red-700 disabled:opacity-20 disabled:cursor-not-allowed text-lg px-2 font-bold"
+                                                                    aria-label="Remove voice track"
+                                                                    title="Remove this voice track">
                                                                 ×
+                                                                <span class="sr-only">Remove voice track</span>
                                                             </button>
                                                         </div>
                                                     </template>
@@ -1630,10 +1651,12 @@
                                 </svg>
                                 <h3 class="font-bold">Scene Preview (<span x-text="previewScenes.length"></span> scenes)</h3>
                             </div>
-                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button @click="showPreview = false" class="hover:bg-purple-400 rounded p-1 transition-colors" aria-label="Close preview" title="Close preview">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Close icon">
+                                    <title>Close</title>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
+                                <span class="sr-only">Close preview</span>
                             </button>
                         </div>
                         <div class="p-4 max-h-96 overflow-y-auto">

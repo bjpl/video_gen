@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Video Generation System{% endblock %}
+
+{% block content %}
+<div x-data="{ hoveredCard: null }">
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+        <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            Professional Videos from <span class="gradient-text">Any Source</span>
+        </h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+            Choose your input method and let our 6-stage pipeline transform your content into
+            professional videos with AI narration in 29 languages.
+        </p>
+
+        <!-- Quick Stats -->
+        <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Lightning bolt icon">
+                    <title>Pipeline icon</title>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span><strong>6-stage</strong> pipeline</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Globe icon">
+                    <title>Language support icon</title>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span><strong>29</strong> languages</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Scene types icon">
+                    <title>Scene types icon</title>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                </svg>
+                <span><strong>12</strong> scene types</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Method Cards -->
+    <div class="max-w-6xl mx-auto mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Choose Your Input Method</h2>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Document Input Card -->
+            <div
+                @mouseenter="hoveredCard = 'document'"
+                @mouseleave="hoveredCard = null"
+                class="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-blue-400 cursor-pointer transform hover:-translate-y-1"
+            >
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white">
+                    <div class="text-5xl mb-3" aria-hidden="true">📄</div>
+                    <h3 class="text-xl font-bold mb-2">Document</h3>
+                    <p class="text-blue-100 text-sm">Text or Markdown</p>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 text-sm mb-4 leading-relaxed">
+                        Upload or paste text content. Automatically parsed into structured sections.
+                    </p>
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-blue-500 mt-0.5">✓</span>
+                            <span>Plain text or Markdown</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-blue-500 mt-0.5">✓</span>
+                            <span>Auto-section detection</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-blue-500 mt-0.5">✓</span>
+                            <span>Best for: Articles, reports</span>
+                        </div>
+                    </div>
+                    <a
+                        href="/create?method=document"
+                        class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                    >
+                        Get Started →
+                    </a>
+                </div>
+            </div>
+
+            <!-- YouTube Input Card -->
+            <div
+                @mouseenter="hoveredCard = 'youtube'"
+                @mouseleave="hoveredCard = null"
+                class="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-red-400 cursor-pointer transform hover:-translate-y-1"
+            >
+                <div class="bg-gradient-to-br from-red-500 to-red-600 p-6 text-white">
+                    <div class="text-5xl mb-3" aria-hidden="true">📺</div>
+                    <h3 class="text-xl font-bold mb-2">YouTube</h3>
+                    <p class="text-red-100 text-sm">Video Transcripts</p>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 text-sm mb-4 leading-relaxed">
+                        Enter a YouTube URL. We'll fetch the transcript and create summary videos.
+                    </p>
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-red-500 mt-0.5">✓</span>
+                            <span>Auto-transcript extraction</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-red-500 mt-0.5">✓</span>
+                            <span>Key point summarization</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-red-500 mt-0.5">✓</span>
+                            <span>Best for: Video summaries</span>
+                        </div>
+                    </div>
+                    <a
+                        href="/create?method=youtube"
+                        class="block w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                    >
+                        Get Started →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Wizard Input Card -->
+            <div
+                @mouseenter="hoveredCard = 'wizard'"
+                @mouseleave="hoveredCard = null"
+                class="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-purple-400 cursor-pointer transform hover:-translate-y-1"
+            >
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 text-white">
+                    <div class="text-5xl mb-3" aria-hidden="true">🧙</div>
+                    <h3 class="text-xl font-bold mb-2">Wizard</h3>
+                    <p class="text-purple-100 text-sm">Interactive Builder</p>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 text-sm mb-4 leading-relaxed">
+                        Build videos scene-by-scene with full control over every detail.
+                    </p>
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-purple-500 mt-0.5">✓</span>
+                            <span>12+ scene types</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-purple-500 mt-0.5">✓</span>
+                            <span>Complete customization</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-purple-500 mt-0.5">✓</span>
+                            <span>Best for: Custom layouts</span>
+                        </div>
+                    </div>
+                    <a
+                        href="/builder"
+                        class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                    >
+                        Get Started →
+                    </a>
+                </div>
+            </div>
+
+            <!-- YAML Input Card -->
+            <div
+                @mouseenter="hoveredCard = 'yaml'"
+                @mouseleave="hoveredCard = null"
+                class="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-gray-100 hover:border-green-400 cursor-pointer transform hover:-translate-y-1"
+            >
+                <div class="bg-gradient-to-br from-green-500 to-green-600 p-6 text-white">
+                    <div class="text-5xl mb-3" aria-hidden="true">📋</div>
+                    <h3 class="text-xl font-bold mb-2">YAML</h3>
+                    <p class="text-green-100 text-sm">Configuration File</p>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 text-sm mb-4 leading-relaxed">
+                        Upload YAML config for reproducible, version-controlled video generation.
+                    </p>
+                    <div class="space-y-2 mb-6">
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-green-500 mt-0.5">✓</span>
+                            <span>Complete control via config</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-green-500 mt-0.5">✓</span>
+                            <span>Version control friendly</span>
+                        </div>
+                        <div class="flex items-start gap-2 text-xs text-gray-600">
+                            <span class="text-green-500 mt-0.5">✓</span>
+                            <span>Best for: Automation, CI/CD</span>
+                        </div>
+                    </div>
+                    <a
+                        href="/create?method=yaml"
+                        class="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+                    >
+                        Get Started →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links Section -->
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 border border-blue-100">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Need help choosing?</h3>
+                    <p class="text-gray-600 text-sm">View examples, documentation, or check recent jobs.</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="/progress" class="bg-white hover:bg-gray-50 text-gray-700 font-semibold py-2 px-4 rounded-lg border border-gray-200 transition-colors text-sm">
+                        📊 View Jobs
+                    </a>
+                    <a href="/create" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm">
+                        🚀 Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

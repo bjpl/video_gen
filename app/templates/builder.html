@@ -16,7 +16,7 @@
     <!-- Header -->
     <div class="mb-8">
         <h2 class="text-3xl font-bold text-gray-900 mb-2">🧙 Advanced Scene Builder</h2>
-        <p class="text-gray-600">Build your video by adding and arranging scenes with complete control</p>
+        <p class="text-gray-600" role="doc-subtitle">Build your video by adding and arranging scenes with complete control</p>
     </div>
 
     <!-- Progress Steps -->
@@ -44,23 +44,31 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Video Information</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Video ID</label>
+                <label for="builder-video-id" class="block text-sm font-medium text-gray-700 mb-2">Video ID</label>
                 <input type="text"
+                       id="builder-video-id"
                        x-model="videoSet.set_id"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                       placeholder="my_video">
+                       placeholder="my_video"
+                       aria-label="Video ID"
+                       aria-describedby="video-id-help">
+                <p id="video-id-help" class="sr-only">Enter a unique identifier for your video</p>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                <label for="builder-video-title" class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
                 <input type="text"
+                       id="builder-video-title"
                        x-model="videoSet.set_name"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                       placeholder="My Awesome Video">
+                       placeholder="My Awesome Video"
+                       aria-label="Video title">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
-                <select x-model="videoSet.accent_color"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                <label for="builder-accent-color" class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                <select id="builder-accent-color"
+                        x-model="videoSet.accent_color"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        aria-label="Accent color">
                     <option value="blue">Blue - Professional, trustworthy (corporate, finance)</option>
                     <option value="purple">Purple - Premium, sophisticated (high-end, creative)</option>
                     <option value="orange">Orange - Energetic, creative (marketing, youth)</option>
@@ -88,15 +96,21 @@
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Multilingual Settings</h3>
-            <label class="flex items-center space-x-2 cursor-pointer">
+            <label for="multilingual-enabled-checkbox" class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox"
+                       id="multilingual-enabled-checkbox"
                        x-model="multilingualEnabled"
-                       class="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500">
+                       class="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+                       aria-label="Enable multilingual mode">
                 <span class="text-sm font-medium text-gray-700">Enable Multilingual Mode</span>
             </label>
         </div>
 
-        <div x-show="multilingualEnabled" class="space-y-6">
+        <div x-show="multilingualEnabled"
+             @keydown.escape.window="if (multilingualEnabled) multilingualEnabled = false"
+             class="space-y-6"
+             role="region"
+             aria-label="Multilingual settings">
             <!-- Source Language -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -636,17 +650,22 @@
 
     <!-- Loading Modal -->
     <div x-show="generating"
+         @keydown.escape.window="generating = false"
          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="loading-modal-title"
          style="display: none;">
         <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
             <div class="text-center">
-                <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" role="img" aria-label="Loading spinner">
+                    <title>Loading</title>
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Generating Video</h3>
+                <h3 id="loading-modal-title" class="text-lg font-semibold text-gray-900 mb-2">Generating Video</h3>
                 <p class="text-gray-600 mb-4" x-text="progress.message"></p>
-                <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="w-full bg-gray-200 rounded-full h-2" role="progressbar" :aria-valuenow="progress.progress" aria-valuemin="0" aria-valuemax="100">
                     <div class="bg-primary-600 h-2 rounded-full transition-all duration-300"
                          :style="`width: ${progress.progress}%`"></div>
                 </div>

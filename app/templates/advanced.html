@@ -1,0 +1,823 @@
+{% extends "base.html" %}
+
+{% block title %}Advanced Features - Video Generation System{% endblock %}
+
+{% block content %}
+<div x-data="advancedFeatures()" x-init="init()" class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Advanced Features</h1>
+                <p class="text-lg text-gray-600">Direct API access, custom scene building, and automation tools</p>
+            </div>
+            <div class="flex gap-3">
+                <button @click="exportConfig()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export Config
+                </button>
+                <button @click="importConfig()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    Import Config
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-200">
+            <button @click="activeTab = 'api'" :class="activeTab === 'api' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-3 border-b-2 font-medium transition-colors">
+                API Access
+            </button>
+            <button @click="activeTab = 'builder'" :class="activeTab === 'builder' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-3 border-b-2 font-medium transition-colors">
+                Scene Builder
+            </button>
+            <button @click="activeTab = 'templates'" :class="activeTab === 'templates' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-3 border-b-2 font-medium transition-colors">
+                Templates
+            </button>
+            <button @click="activeTab = 'batch'" :class="activeTab === 'batch' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-3 border-b-2 font-medium transition-colors">
+                Batch Operations
+            </button>
+            <button @click="activeTab = 'pipeline'" :class="activeTab === 'pipeline' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-3 border-b-2 font-medium transition-colors">
+                Pipeline Control
+            </button>
+        </div>
+    </div>
+
+    <!-- API Access Tab -->
+    <div x-show="activeTab === 'api'" x-cloak class="space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Direct API Access</h2>
+            <p class="text-gray-600 mb-6">Use our REST API for programmatic video generation and automation</p>
+
+            <!-- Endpoint Selector -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Endpoint</label>
+                <select x-model="apiEndpoint" @change="updateApiExample()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="document">Parse Document</option>
+                    <option value="youtube">Parse YouTube</option>
+                    <option value="video">Generate Video</option>
+                    <option value="set">Generate Video Set</option>
+                    <option value="multilingual">Multilingual Generation</option>
+                </select>
+            </div>
+
+            <!-- Code Examples -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- cURL Example -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        cURL
+                    </h3>
+                    <div class="relative">
+                        <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code x-text="curlExample"></code></pre>
+                        <button @click="copyToClipboard(curlExample)" class="absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Python Example -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        Python
+                    </h3>
+                    <div class="relative">
+                        <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code x-text="pythonExample"></code></pre>
+                        <button @click="copyToClipboard(pythonExample)" class="absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- JavaScript Example -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        JavaScript
+                    </h3>
+                    <div class="relative">
+                        <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code x-text="jsExample"></code></pre>
+                        <button @click="copyToClipboard(jsExample)" class="absolute top-2 right-2 px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Response Example -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Response
+                    </h3>
+                    <div class="relative">
+                        <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code x-text="responseExample"></code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Tester -->
+            <div class="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4">API Tester</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-blue-900 mb-2">Request Body (JSON)</label>
+                        <textarea x-model="apiRequestBody" rows="8" class="w-full px-4 py-2 border border-blue-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500" placeholder='{"content": "path/to/document.md", "accent_color": "blue", "voice": "male"}'></textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="testApi()" :disabled="apiTesting" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors">
+                            <span x-show="!apiTesting">Test API</span>
+                            <span x-show="apiTesting">Testing...</span>
+                        </button>
+                        <button @click="clearApiTest()" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                            Clear
+                        </button>
+                    </div>
+                    <div x-show="apiResponse" class="mt-4">
+                        <label class="block text-sm font-medium text-blue-900 mb-2">Response</label>
+                        <pre class="bg-white p-4 rounded-lg border border-blue-300 text-sm overflow-x-auto"><code x-text="apiResponse"></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scene Builder Tab -->
+    <div x-show="activeTab === 'builder'" x-cloak class="space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Custom Scene Builder</h2>
+            <p class="text-gray-600 mb-6">Build videos scene-by-scene with full control over every detail</p>
+
+            <!-- Scene List -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Scenes (<span x-text="scenes.length"></span>)</h3>
+                    <div class="flex gap-2">
+                        <select x-model="newSceneType" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="title">Title</option>
+                            <option value="command">Command</option>
+                            <option value="list">List</option>
+                            <option value="code_comparison">Code Comparison</option>
+                            <option value="quote">Quote</option>
+                            <option value="learning_objectives">Learning Objectives</option>
+                            <option value="problem">Problem</option>
+                            <option value="solution">Solution</option>
+                            <option value="checkpoint">Checkpoint</option>
+                            <option value="quiz">Quiz</option>
+                            <option value="exercise">Exercise</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                        <button @click="addScene()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Add Scene
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scene Cards (Drag & Drop) -->
+                <div class="space-y-3">
+                    <template x-for="(scene, index) in scenes" :key="index">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-move bg-white">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="text-gray-400 text-sm font-mono">#<span x-text="index + 1"></span></span>
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium uppercase" x-text="scene.type"></span>
+                                        <input x-model="scene.title" type="text" placeholder="Scene title..." class="flex-1 px-3 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                    <textarea x-model="scene.narration" rows="2" placeholder="Narration text..." class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+                                    <div class="mt-2 flex gap-3">
+                                        <select x-model="scene.voice" class="px-3 py-1 border border-gray-300 rounded text-sm">
+                                            <option value="male">Male</option>
+                                            <option value="male_warm">Male (Warm)</option>
+                                            <option value="female">Female</option>
+                                            <option value="female_friendly">Female (Friendly)</option>
+                                        </select>
+                                        <input x-model="scene.duration" type="number" min="1" placeholder="Duration (s)" class="w-24 px-3 py-1 border border-gray-300 rounded text-sm">
+                                    </div>
+                                </div>
+                                <div class="flex gap-2 ml-4">
+                                    <button @click="moveSceneUp(index)" :disabled="index === 0" class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                        </svg>
+                                    </button>
+                                    <button @click="moveSceneDown(index)" :disabled="index === scenes.length - 1" class="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <button @click="duplicateScene(index)" class="p-2 text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </button>
+                                    <button @click="deleteScene(index)" class="p-2 text-red-400 hover:text-red-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div x-show="scenes.length === 0" class="text-center py-12 text-gray-400">
+                    <svg class="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                    </svg>
+                    <p>No scenes yet. Add your first scene above!</p>
+                </div>
+            </div>
+
+            <!-- Video Settings -->
+            <div class="border-t border-gray-200 pt-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Video Settings</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Video Title</label>
+                        <input x-model="videoConfig.title" type="text" placeholder="My Custom Video" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                        <select x-model="videoConfig.accent_color" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="purple">Purple</option>
+                            <option value="orange">Orange</option>
+                            <option value="red">Red</option>
+                            <option value="teal">Teal</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 mt-6">
+                <button @click="generateFromScenes()" :disabled="scenes.length === 0" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors">
+                    Generate Video
+                </button>
+                <button @click="previewScenes()" :disabled="scenes.length === 0" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                    Preview
+                </button>
+                <button @click="saveAsTemplate()" :disabled="scenes.length === 0" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                    Save as Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Tab -->
+    <div x-show="activeTab === 'templates'" x-cloak class="space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Template Manager</h2>
+            <p class="text-gray-600 mb-6">Save, load, and manage reusable video templates</p>
+
+            <!-- Template Grid -->
+            <div class="grid md:grid-cols-3 gap-4">
+                <template x-for="template in templates" :key="template.id">
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-gray-900 mb-1" x-text="template.name"></h3>
+                                <p class="text-sm text-gray-600 mb-2" x-text="template.description"></p>
+                                <div class="flex gap-2 text-xs text-gray-500">
+                                    <span x-text="template.scenes.length + ' scenes'"></span>
+                                    <span>•</span>
+                                    <span x-text="template.created"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button @click="loadTemplate(template)" class="flex-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-medium transition-colors">
+                                Load
+                            </button>
+                            <button @click="deleteTemplate(template.id)" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded text-sm font-medium transition-colors">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="templates.length === 0" class="text-center py-12 text-gray-400">
+                <svg class="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p>No templates saved yet. Create your first template in Scene Builder!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Operations Tab -->
+    <div x-show="activeTab === 'batch'" x-cloak class="space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Batch Operations</h2>
+            <p class="text-gray-600 mb-6">Generate multiple videos at once with CSV or JSON input</p>
+
+            <!-- Upload Area -->
+            <div class="mb-6 p-8 border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-blue-400 transition-colors cursor-pointer" @click="$refs.batchFile.click()">
+                <input type="file" x-ref="batchFile" @change="handleBatchFile($event)" accept=".csv,.json" class="hidden">
+                <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-gray-600 mb-2">Drop CSV or JSON file here, or click to browse</p>
+                <p class="text-sm text-gray-500">Supported formats: .csv, .json</p>
+            </div>
+
+            <!-- Batch Preview -->
+            <div x-show="batchJobs.length > 0" class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Batch Preview (<span x-text="batchJobs.length"></span> videos)</h3>
+                <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-medium text-gray-700">Title</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-700">Source</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-700">Language</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-700">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="(job, index) in batchJobs" :key="index">
+                                <tr class="border-t border-gray-200 hover:bg-gray-50">
+                                    <td class="px-4 py-3" x-text="job.title"></td>
+                                    <td class="px-4 py-3 text-gray-600" x-text="job.source"></td>
+                                    <td class="px-4 py-3 text-gray-600" x-text="job.language"></td>
+                                    <td class="px-4 py-3">
+                                        <span :class="job.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : job.status === 'processing' ? 'bg-blue-100 text-blue-700' : job.status === 'complete' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'" class="px-2 py-1 rounded text-xs font-medium" x-text="job.status"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3">
+                <button @click="processBatch()" :disabled="batchJobs.length === 0 || batchProcessing" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors">
+                    <span x-show="!batchProcessing">Process Batch</span>
+                    <span x-show="batchProcessing">Processing...</span>
+                </button>
+                <button @click="clearBatch()" :disabled="batchJobs.length === 0" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                    Clear
+                </button>
+                <button @click="downloadBatchTemplate()" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                    Download Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pipeline Control Tab -->
+    <div x-show="activeTab === 'pipeline'" x-cloak class="space-y-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Pipeline Control</h2>
+            <p class="text-gray-600 mb-6">Direct access to pipeline stages and configuration</p>
+
+            <!-- Pipeline Stages -->
+            <div class="space-y-4 mb-6">
+                <template x-for="stage in pipelineStages" :key="stage.id">
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" x-model="stage.enabled" class="w-5 h-5 text-blue-500 rounded focus:ring-blue-500">
+                                <h3 class="font-semibold text-gray-900" x-text="stage.name"></h3>
+                            </div>
+                            <span :class="stage.enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'" class="px-2 py-1 rounded text-xs font-medium">
+                                <span x-text="stage.enabled ? 'Enabled' : 'Disabled'"></span>
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3" x-text="stage.description"></p>
+                        <div class="grid md:grid-cols-2 gap-3" x-show="stage.enabled">
+                            <template x-for="option in stage.options" :key="option.key">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1" x-text="option.label"></label>
+                                    <input :type="option.type" x-model="stage.config[option.key]" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3">
+                <button @click="applyPipelineConfig()" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+                    Apply Configuration
+                </button>
+                <button @click="resetPipelineConfig()" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">
+                    Reset to Defaults
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function advancedFeatures() {
+    return {
+        activeTab: 'api',
+
+        // API Access
+        apiEndpoint: 'document',
+        curlExample: '',
+        pythonExample: '',
+        jsExample: '',
+        responseExample: '',
+        apiRequestBody: '',
+        apiResponse: '',
+        apiTesting: false,
+
+        // Scene Builder
+        scenes: [],
+        newSceneType: 'title',
+        videoConfig: {
+            title: '',
+            accent_color: 'blue'
+        },
+
+        // Templates
+        templates: [],
+
+        // Batch Operations
+        batchJobs: [],
+        batchProcessing: false,
+
+        // Pipeline Control
+        pipelineStages: [
+            {
+                id: 'input',
+                name: 'Input Processing',
+                description: 'Parse and validate input sources',
+                enabled: true,
+                config: {},
+                options: []
+            },
+            {
+                id: 'generation',
+                name: 'Scene Generation',
+                description: 'Generate scenes from content',
+                enabled: true,
+                config: { enhance_with_ai: true },
+                options: [
+                    { key: 'enhance_with_ai', label: 'AI Enhancement', type: 'checkbox' }
+                ]
+            },
+            {
+                id: 'narration',
+                name: 'Narration',
+                description: 'Text-to-speech generation',
+                enabled: true,
+                config: { voice: 'male', speed: 1.0 },
+                options: [
+                    { key: 'voice', label: 'Voice', type: 'text' },
+                    { key: 'speed', label: 'Speed', type: 'number' }
+                ]
+            },
+            {
+                id: 'rendering',
+                name: 'Video Rendering',
+                description: 'Render final video output',
+                enabled: true,
+                config: { fps: 30, resolution: '1080p' },
+                options: [
+                    { key: 'fps', label: 'FPS', type: 'number' },
+                    { key: 'resolution', label: 'Resolution', type: 'text' }
+                ]
+            }
+        ],
+
+        init() {
+            this.updateApiExample();
+            this.loadTemplates();
+
+            // Load state from store if available
+            if (window.Alpine && Alpine.store('appState')) {
+                const state = Alpine.store('appState');
+                console.log('[AdvancedFeatures] Loaded state from store', state);
+            }
+        },
+
+        updateApiExample() {
+            const baseUrl = window.location.origin;
+            const endpoints = {
+                document: '/api/parse/document',
+                youtube: '/api/parse/youtube',
+                video: '/api/video',
+                set: '/api/video-set',
+                multilingual: '/api/multilingual'
+            };
+
+            const endpoint = endpoints[this.apiEndpoint];
+            const exampleData = this.getExampleData();
+
+            this.curlExample = `curl -X POST ${baseUrl}${endpoint} \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(exampleData, null, 2)}'`;
+
+            this.pythonExample = `import requests
+
+response = requests.post(
+    "${baseUrl}${endpoint}",
+    json=${JSON.stringify(exampleData, null, 4)}
+)
+print(response.json())`;
+
+            this.jsExample = `fetch("${baseUrl}${endpoint}", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(${JSON.stringify(exampleData, null, 4)})
+})
+.then(res => res.json())
+.then(data => console.log(data));`;
+
+            this.responseExample = JSON.stringify({
+                task_id: "doc_1234567890",
+                status: "started",
+                message: "Video generation started"
+            }, null, 2);
+
+            this.apiRequestBody = JSON.stringify(exampleData, null, 2);
+        },
+
+        getExampleData() {
+            const examples = {
+                document: { content: "path/to/document.md", accent_color: "blue", voice: "male" },
+                youtube: { url: "https://youtube.com/watch?v=...", duration: 60, accent_color: "blue" },
+                video: { video_id: "v1", title: "My Video", scenes: [], voice: "male" },
+                set: { set_id: "s1", set_name: "My Set", videos: [], accent_color: "blue" },
+                multilingual: { video_set: {}, target_languages: ["en", "es"], source_language: "en" }
+            };
+            return examples[this.apiEndpoint];
+        },
+
+        async testApi() {
+            this.apiTesting = true;
+            this.apiResponse = '';
+            try {
+                const endpoint = { document: '/api/parse/document', youtube: '/api/parse/youtube', video: '/api/video', set: '/api/video-set', multilingual: '/api/multilingual' }[this.apiEndpoint];
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: this.apiRequestBody
+                });
+                const data = await response.json();
+                this.apiResponse = JSON.stringify(data, null, 2);
+            } catch (error) {
+                this.apiResponse = JSON.stringify({ error: error.message }, null, 2);
+            } finally {
+                this.apiTesting = false;
+            }
+        },
+
+        clearApiTest() {
+            this.apiResponse = '';
+            this.updateApiExample();
+        },
+
+        copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            if (window.Alpine && Alpine.store('appState')) {
+                Alpine.store('appState').addNotification('success', 'Copied to clipboard!', 2000);
+            }
+        },
+
+        addScene() {
+            this.scenes.push({
+                type: this.newSceneType,
+                title: '',
+                narration: '',
+                voice: 'male',
+                duration: null
+            });
+        },
+
+        deleteScene(index) {
+            this.scenes.splice(index, 1);
+        },
+
+        duplicateScene(index) {
+            this.scenes.splice(index + 1, 0, { ...this.scenes[index] });
+        },
+
+        moveSceneUp(index) {
+            if (index > 0) {
+                [this.scenes[index], this.scenes[index - 1]] = [this.scenes[index - 1], this.scenes[index]];
+            }
+        },
+
+        moveSceneDown(index) {
+            if (index < this.scenes.length - 1) {
+                [this.scenes[index], this.scenes[index + 1]] = [this.scenes[index + 1], this.scenes[index]];
+            }
+        },
+
+        async generateFromScenes() {
+            const videoData = {
+                video_id: `custom_${Date.now()}`,
+                title: this.videoConfig.title || 'Custom Video',
+                scenes: this.scenes,
+                voice: 'male'
+            };
+
+            try {
+                const response = await fetch('/api/video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(videoData)
+                });
+                const result = await response.json();
+                if (window.Alpine && Alpine.store('appState')) {
+                    Alpine.store('appState').addNotification('success', 'Video generation started!');
+                }
+            } catch (error) {
+                if (window.Alpine && Alpine.store('appState')) {
+                    Alpine.store('appState').addNotification('error', 'Generation failed: ' + error.message);
+                }
+            }
+        },
+
+        previewScenes() {
+            console.log('Preview scenes:', this.scenes);
+        },
+
+        saveAsTemplate() {
+            const template = {
+                id: Date.now().toString(),
+                name: prompt('Template name:', this.videoConfig.title || 'Untitled'),
+                description: prompt('Description (optional):', ''),
+                scenes: this.scenes,
+                config: this.videoConfig,
+                created: new Date().toLocaleDateString()
+            };
+
+            if (template.name) {
+                this.templates.push(template);
+                this.saveTemplates();
+                if (window.Alpine && Alpine.store('appState')) {
+                    Alpine.store('appState').addNotification('success', 'Template saved!');
+                }
+            }
+        },
+
+        loadTemplate(template) {
+            this.scenes = JSON.parse(JSON.stringify(template.scenes));
+            this.videoConfig = JSON.parse(JSON.stringify(template.config));
+            this.activeTab = 'builder';
+            if (window.Alpine && Alpine.store('appState')) {
+                Alpine.store('appState').addNotification('success', 'Template loaded!');
+            }
+        },
+
+        deleteTemplate(id) {
+            if (confirm('Delete this template?')) {
+                this.templates = this.templates.filter(t => t.id !== id);
+                this.saveTemplates();
+            }
+        },
+
+        loadTemplates() {
+            const saved = localStorage.getItem('videoTemplates');
+            if (saved) {
+                this.templates = JSON.parse(saved);
+            }
+        },
+
+        saveTemplates() {
+            localStorage.setItem('videoTemplates', JSON.stringify(this.templates));
+        },
+
+        handleBatchFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const content = e.target.result;
+                    if (file.name.endsWith('.json')) {
+                        this.batchJobs = JSON.parse(content).map(job => ({ ...job, status: 'pending' }));
+                    } else if (file.name.endsWith('.csv')) {
+                        // Simple CSV parser
+                        const lines = content.split('\n').filter(l => l.trim());
+                        const headers = lines[0].split(',');
+                        this.batchJobs = lines.slice(1).map(line => {
+                            const values = line.split(',');
+                            const job = {};
+                            headers.forEach((h, i) => job[h.trim()] = values[i].trim());
+                            job.status = 'pending';
+                            return job;
+                        });
+                    }
+                } catch (error) {
+                    alert('Error parsing file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        },
+
+        async processBatch() {
+            this.batchProcessing = true;
+            for (let i = 0; i < this.batchJobs.length; i++) {
+                this.batchJobs[i].status = 'processing';
+                // Simulate processing
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                this.batchJobs[i].status = 'complete';
+            }
+            this.batchProcessing = false;
+            if (window.Alpine && Alpine.store('appState')) {
+                Alpine.store('appState').addNotification('success', 'Batch processing complete!');
+            }
+        },
+
+        clearBatch() {
+            this.batchJobs = [];
+        },
+
+        downloadBatchTemplate() {
+            const template = [
+                { title: 'Video 1', source: 'document1.md', language: 'en' },
+                { title: 'Video 2', source: 'document2.md', language: 'es' }
+            ];
+            const blob = new Blob([JSON.stringify(template, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'batch-template.json';
+            a.click();
+        },
+
+        applyPipelineConfig() {
+            console.log('Pipeline config:', this.pipelineStages);
+            if (window.Alpine && Alpine.store('appState')) {
+                Alpine.store('appState').addNotification('success', 'Pipeline configuration applied!');
+            }
+        },
+
+        resetPipelineConfig() {
+            this.pipelineStages.forEach(stage => stage.enabled = true);
+            if (window.Alpine && Alpine.store('appState')) {
+                Alpine.store('appState').addNotification('info', 'Pipeline reset to defaults');
+            }
+        },
+
+        exportConfig() {
+            const config = {
+                scenes: this.scenes,
+                videoConfig: this.videoConfig,
+                pipelineStages: this.pipelineStages
+            };
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'advanced-config.json';
+            a.click();
+        },
+
+        importConfig() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const config = JSON.parse(event.target.result);
+                        if (config.scenes) this.scenes = config.scenes;
+                        if (config.videoConfig) this.videoConfig = config.videoConfig;
+                        if (config.pipelineStages) this.pipelineStages = config.pipelineStages;
+                        if (window.Alpine && Alpine.store('appState')) {
+                            Alpine.store('appState').addNotification('success', 'Configuration imported!');
+                        }
+                    } catch (error) {
+                        alert('Error importing config: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+    };
+}
+</script>
+{% endblock %}

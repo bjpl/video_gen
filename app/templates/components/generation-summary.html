@@ -1,0 +1,32 @@
+<!-- Generation Summary Component -->
+<!-- Usage: {% include 'components/generation-summary.html' with mode='single' %} -->
+
+<div class="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+    <h3 class="font-bold text-blue-900 mb-3 flex items-center gap-2">
+        <span>📋</span>
+        Generation Summary
+    </h3>
+    <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-white p-3 rounded-lg">
+            <div class="text-xs text-gray-500 uppercase">Input Method</div>
+            <div class="font-medium text-gray-900" x-text="{{ mode }}.inputMethod === 'manual' ? '✍️ Manual' : {{ mode }}.inputMethod === 'document' ? '📄 Document' : {{ mode }}.inputMethod === 'youtube' ? '📺 YouTube' : '📝 YAML'"></div>
+        </div>
+        <div class="bg-white p-3 rounded-lg">
+            <div class="text-xs text-gray-500 uppercase">Duration</div>
+            <div class="font-medium text-gray-900" x-text="({{ mode }}.videos[0].duration || {{ mode }}.duration) + 's'"></div>
+        </div>
+        <div class="bg-white p-3 rounded-lg">
+            <div class="text-xs text-gray-500 uppercase">Voice Tracks</div>
+            <div class="font-medium text-gray-900" x-text="{{ mode }}.videos[0].voiceTracks.length + ' voice' + ({{ mode }}.videos[0].voiceTracks.length > 1 ? 's' : '')"></div>
+        </div>
+        <div class="bg-white p-3 rounded-lg">
+            <div class="text-xs text-gray-500 uppercase">Languages</div>
+            <div class="font-medium text-gray-900" x-text="{{ mode }}.languageMode === 'multiple' ? {{ mode }}.targetLanguages.length + ' languages' : '1 language'"></div>
+        </div>
+    </div>
+    <div class="mt-3 flex items-center gap-2 text-xs text-blue-800">
+        <span x-show="{{ mode }}.useAI">✓ AI Enhancement</span>
+        <span x-show="{{ mode }}.languageMode === 'multiple'">✓ Multilingual (<span x-text="{{ mode }}.targetLanguages.length"></span> langs)</span>
+        <span x-show="{{ mode }}.videos[0].voiceTracks.length > 1">✓ Multi-voice (<span x-text="{{ mode }}.videos[0].voiceTracks.length"></span> tracks)</span>
+    </div>
+</div>

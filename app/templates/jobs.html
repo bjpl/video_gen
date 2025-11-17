@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Pipeline Jobs - Video Generation System{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="jobsMonitor()">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg p-6 text-white shadow-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold mb-2">🔄 Pipeline Monitor</h2>
+                <p class="text-slate-300">Real-time video generation job tracking</p>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold" x-text="stats.active"></div>
+                <div class="text-sm text-slate-400">Active Jobs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg p-4 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm">Active</p>
+                    <p class="text-2xl font-bold text-blue-600" x-text="stats.active">0</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">⚡</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg p-4 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm">Queued</p>
+                    <p class="text-2xl font-bold text-amber-600" x-text="stats.queued">0</p>
+                </div>
+                <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">⏳</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg p-4 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm">Completed</p>
+                    <p class="text-2xl font-bold text-green-600" x-text="stats.completed">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">✓</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg p-4 border border-slate-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-slate-600 text-sm">Failed</p>
+                    <p class="text-2xl font-bold text-red-600" x-text="stats.failed">0</p>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">✗</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Jobs -->
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 class="text-lg font-semibold text-slate-900">⚡ Active Jobs</h3>
+        </div>
+        <div class="divide-y divide-slate-200">
+            <template x-if="activeJobs.length === 0">
+                <div class="px-6 py-8 text-center text-slate-500">
+                    <div class="text-4xl mb-2">💤</div>
+                    <p>No active jobs. Start a new video generation to see real-time progress.</p>
+                </div>
+            </template>
+            <template x-for="job in activeJobs" :key="job.id">
+                <div class="p-6 hover:bg-slate-50 transition-colors">
+                    <!-- Job Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-1">
+                                <h4 class="font-semibold text-slate-900" x-text="job.document"></h4>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                                    <span x-text="job.current_stage"></span>
+                                </span>
+                            </div>
+                            <p class="text-sm text-slate-600">
+                                Job ID: <code class="text-xs bg-slate-100 px-2 py-1 rounded" x-text="job.id"></code>
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-600" x-text="job.progress + '%'"></div>
+                            <div class="text-xs text-slate-500" x-text="job.elapsed"></div>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Stages (CLI-inspired) -->
+                    <div class="bg-slate-900 rounded-lg p-4 font-mono text-sm mb-4">
+                        <div class="space-y-2">
+                            <template x-for="(stage, index) in job.stages" :key="index">
+                                <div class="flex items-center space-x-2">
+                                    <!-- Stage Icon -->
+                                    <span :class="getStageIcon(stage.status)" x-text="getStageSymbol(stage.status)"></span>
+
+                                    <!-- Stage Name -->
+                                    <span :class="getStageColor(stage.status)" x-text="stage.name"></span>
+
+                                    <!-- Stage Duration -->
+                                    <template x-if="stage.duration">
+                                        <span class="text-slate-500 text-xs" x-text="'(' + stage.duration + ')'"></span>
+                                    </template>
+
+                                    <!-- Progress Spinner -->
+                                    <template x-if="stage.status === 'active'">
+                                        <span class="text-blue-400 animate-pulse">⚡</span>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="relative">
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500"
+                                 :style="'width: ' + job.progress + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Queued Jobs -->
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 class="text-lg font-semibold text-slate-900">⏳ Queued Jobs</h3>
+        </div>
+        <div class="divide-y divide-slate-200">
+            <template x-if="queuedJobs.length === 0">
+                <div class="px-6 py-4 text-center text-slate-500">
+                    No jobs in queue
+                </div>
+            </template>
+            <template x-for="job in queuedJobs" :key="job.id">
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div>
+                        <h4 class="font-medium text-slate-900" x-text="job.document"></h4>
+                        <p class="text-sm text-slate-600">Position: <span x-text="job.queue_position"></span></p>
+                    </div>
+                    <span class="text-slate-400">⏳</span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Completed Jobs -->
+    <div class="bg-white rounded-lg shadow-sm border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-slate-900">✓ Completed Jobs</h3>
+            <button @click="showCompleted = !showCompleted" class="text-sm text-blue-600 hover:text-blue-700">
+                <span x-text="showCompleted ? 'Hide' : 'Show'"></span> (<span x-text="completedJobs.length"></span>)
+            </button>
+        </div>
+        <div x-show="showCompleted" class="divide-y divide-slate-200">
+            <template x-if="completedJobs.length === 0">
+                <div class="px-6 py-4 text-center text-slate-500">
+                    No completed jobs yet
+                </div>
+            </template>
+            <template x-for="job in completedJobs" :key="job.id">
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-1">
+                            <h4 class="font-medium text-slate-900" x-text="job.document"></h4>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+                                Completed
+                            </span>
+                        </div>
+                        <p class="text-sm text-slate-600">
+                            Duration: <span x-text="job.total_duration"></span>
+                        </p>
+                    </div>
+                    <a :href="'/videos/' + job.id" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        View →
+                    </a>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<script>
+function jobsMonitor() {
+    return {
+        stats: { active: 0, queued: 0, completed: 0, failed: 0 },
+        activeJobs: [],
+        queuedJobs: [],
+        completedJobs: [],
+        showCompleted: false,
+
+        init() {
+            this.fetchJobs();
+            // Poll every 2 seconds
+            setInterval(() => this.fetchJobs(), 2000);
+        },
+
+        async fetchJobs() {
+            try {
+                const response = await fetch('/api/videos/jobs');
+                const data = await response.json();
+
+                this.stats = data.stats;
+                this.activeJobs = data.active_jobs;
+                this.queuedJobs = data.queued_jobs;
+                this.completedJobs = data.completed_jobs;
+            } catch (error) {
+                console.error('Error fetching jobs:', error);
+            }
+        },
+
+        getStageSymbol(status) {
+            const symbols = {
+                'completed': '✓',
+                'active': '►',
+                'pending': '○',
+                'failed': '✗'
+            };
+            return symbols[status] || '○';
+        },
+
+        getStageIcon(status) {
+            const icons = {
+                'completed': 'text-green-400',
+                'active': 'text-blue-400',
+                'pending': 'text-slate-600',
+                'failed': 'text-red-400'
+            };
+            return icons[status] || 'text-slate-600';
+        },
+
+        getStageColor(status) {
+            const colors = {
+                'completed': 'text-green-400',
+                'active': 'text-blue-400 font-bold',
+                'pending': 'text-slate-500',
+                'failed': 'text-red-400'
+            };
+            return colors[status] || 'text-slate-500';
+        }
+    }
+}
+</script>
+{% endblock %}

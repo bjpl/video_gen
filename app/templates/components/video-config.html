@@ -1,0 +1,89 @@
+<!-- Video Settings Component -->
+<!-- Usage: {% include 'components/video-config.html' with mode='single' %} -->
+
+<div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <span>⚙️</span>
+        Global Settings
+    </h3>
+
+    <div class="space-y-4">
+        <!-- Default Duration -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Default Duration (can override per video)
+            </label>
+            <div class="flex items-center gap-4">
+                <input x-model.number="{{ mode }}.duration"
+                       x-validate="duration"
+                       type="range"
+                       min="30"
+                       max="300"
+                       step="10"
+                       class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                       aria-label="Video duration in seconds"
+                       aria-valuemin="30"
+                       aria-valuemax="300"
+                       :aria-valuenow="{{ mode }}.duration">
+                <span class="text-sm font-medium text-gray-700 w-16 text-right" x-text="{{ mode }}.duration + 's'"></span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>30s</span>
+                <span>5 min</span>
+            </div>
+        </div>
+
+        <!-- AI Enhancement -->
+        <div class="space-y-2">
+            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <div class="font-medium text-sm text-gray-900">Claude AI Script Enhancement</div>
+                        <span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-semibold">BETA</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-1.5">Improves narration script quality and naturalness</div>
+                    <div class="text-xs text-gray-600 font-medium">💰 ~$0.03/video • ⏱️ +3-5s per scene</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer ml-3">
+                    <input type="checkbox" x-model="{{ mode }}.useAI" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                </label>
+                <!-- P1: Recommended Badge for AI Narration -->
+                <span x-show="isRecommended?.('aiNarration', true)"
+                      class="recommended-badge ml-2 text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
+                    ⭐ Recommended for quality
+                </span>
+            </div>
+
+            <!-- API Key Notice (conditional) -->
+            <div x-show="{{ mode }}.useAI" x-transition class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div class="flex items-start gap-2">
+                    <span class="text-lg">⚠️</span>
+                    <div class="flex-1">
+                        <div class="font-semibold text-sm text-amber-900 mb-1">Requires ANTHROPIC_API_KEY</div>
+                        <div class="text-xs text-amber-800">Set in environment variables or .env file</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accent Color -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+            <div class="flex gap-3">
+                <button type="button" @click="{{ mode }}.color = 'blue'" :class="{{ mode }}.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="relative w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" title="Blue: Professional, trustworthy (best for corporate, finance, healthcare)">
+                    <span x-show="isRecommended?.('color', 'blue')"
+                          class="recommended-badge absolute -top-2 -right-2 text-xs bg-yellow-400 text-yellow-900 rounded-full w-5 h-5 flex items-center justify-center">
+                        ⭐
+                    </span>
+                </button>
+                <button type="button" @click="{{ mode }}.color = 'purple'" :class="{{ mode }}.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform" title="Purple: Premium, sophisticated (best for high-end products, creative)"></button>
+                <button type="button" @click="{{ mode }}.color = 'orange'" :class="{{ mode }}.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform" title="Orange: Energetic, creative (best for creative, marketing, youth)"></button>
+                <button type="button" @click="{{ mode }}.color = 'green'" :class="{{ mode }}.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform" title="Green: Success, growth (best for environmental, health, finance)"></button>
+                <button type="button" @click="{{ mode }}.color = 'pink'" :class="{{ mode }}.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform" title="Pink: Playful, modern (best for youth, creative, lifestyle)"></button>
+                <button type="button" @click="{{ mode }}.color = 'cyan'" :class="{{ mode }}.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform" title="Cyan: Tech, innovation (best for technology, science, modern)"></button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2 italic">💡 Hover over colors for psychology guide</p>
+        </div>
+    </div>
+</div>

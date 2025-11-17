@@ -14,6 +14,9 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
 
+    <!-- Alpine.js Global Store (load before Alpine initializes) -->
+    <script src="/static/js/store/app-state.js"></script>
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/style.css">
 
@@ -96,11 +99,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" role="img" aria-label="Video camera icon">
+                        <title>Video Generation System Logo</title>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                     </svg>
                     <div>
-                        <h1 class="text-xl font-bold text-gray-900">Video Generation System</h1>
+                        <div class="text-xl font-bold text-gray-900">Video Generation System</div>
                         <p class="text-sm text-gray-500">Professional videos from any source</p>
                     </div>
                 </div>
@@ -112,7 +116,10 @@
                         🎥 Create
                     </a>
                     <a href="/builder" class="text-purple-600 hover:text-purple-700 hover:bg-purple-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        🧙 Advanced
+                        🧙 Builder
+                    </a>
+                    <a href="/advanced" class="text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        ⚡ Advanced
                     </a>
                     <a href="/progress" class="text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         📊 Jobs

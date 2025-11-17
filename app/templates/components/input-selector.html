@@ -1,0 +1,44 @@
+<!-- Input Method Selection Component -->
+<!-- Usage: {% include 'components/input-selector.html' with mode='single' %} -->
+
+<div class="mb-6">
+    <label class="block text-sm font-medium text-gray-700 mb-3">Content Source</label>
+    <div class="grid grid-cols-2 gap-3">
+        <button type="button" @click="{{ mode }}.inputMethod = 'manual'"
+                :class="{{ mode }}.inputMethod === 'manual' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+            <div class="font-semibold flex items-center gap-2">
+                <span>✍️</span>
+                <span>Manual</span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">Enter title manually</div>
+        </button>
+        <button type="button" @click="{{ mode }}.inputMethod = 'document'"
+                :class="{{ mode }}.inputMethod === 'document' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+            <div class="font-semibold flex items-center gap-2">
+                <span>📄</span>
+                <span>Document</span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">Parse README/Markdown</div>
+        </button>
+        <button type="button" @click="{{ mode }}.inputMethod = 'youtube'"
+                :class="{{ mode }}.inputMethod === 'youtube' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+            <div class="font-semibold flex items-center gap-2">
+                <span>📺</span>
+                <span>YouTube</span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">From YouTube URL</div>
+        </button>
+        <button type="button" @click="{{ mode }}.inputMethod = 'yaml'"
+                :class="{{ mode }}.inputMethod === 'yaml' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300'"
+                class="p-3 border-2 rounded-lg text-left hover:border-blue-400 transition-all">
+            <div class="font-semibold flex items-center gap-2">
+                <span>📝</span>
+                <span>YAML</span>
+            </div>
+            <div class="text-xs text-gray-600 mt-1">From YAML file</div>
+        </button>
+    </div>
+</div>

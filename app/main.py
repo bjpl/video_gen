@@ -147,8 +147,8 @@ class MultilingualRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    """Main page - input method selection"""
-    return templates.TemplateResponse("index.html", {"request": request})
+    """Main page - modern home interface"""
+    return templates.TemplateResponse("home.html", {"request": request})
 
 @app.get("/builder", response_class=HTMLResponse)
 async def builder(request: Request):
@@ -162,13 +162,23 @@ async def multilingual(request: Request):
 
 @app.get("/progress", response_class=HTMLResponse)
 async def progress(request: Request):
-    """Progress tracking page"""
-    return templates.TemplateResponse("progress.html", {"request": request})
+    """Progress tracking page - modern jobs interface"""
+    return templates.TemplateResponse("jobs.html", {"request": request})
 
 @app.get("/create", response_class=HTMLResponse)
 async def create(request: Request):
     """Unified video creation page"""
     return templates.TemplateResponse("create.html", {"request": request})
+
+@app.get("/create-unified", response_class=HTMLResponse)
+async def create_unified(request: Request):
+    """New unified creation interface with Alpine.js store"""
+    return templates.TemplateResponse("create-unified.html", {"request": request})
+
+@app.get("/advanced", response_class=HTMLResponse)
+async def advanced(request: Request):
+    """Advanced features page for power users"""
+    return templates.TemplateResponse("advanced.html", {"request": request})
 
 # ============================================================================
 # Routes - API Endpoints

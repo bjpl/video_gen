@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto" x-data="unifiedCreator()" x-init="init()">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Video</h1>
+        <p class="text-gray-600">Professional video generation in 4 simple steps</p>
+    </div>
+
+    <!-- Status Messages -->
+    <div x-data="{ show: false, message: '', type: 'success' }"
+         @show-message.window="show = true; message = $event.detail.message; type = $event.detail.type; setTimeout(() => show = false, 5000)"
+         x-show="show"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-2"
+         x-transition:enter-end="opacity-100 transform translate-y-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed top-20 right-6 z-50 max-w-md"
+         style="display: none;">
+        <div class="rounded-lg shadow-2xl p-4 border-2"
+             :class="type === 'success' ? 'bg-green-50 border-green-200' : type === 'error' ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'">
+            <div class="flex items-center gap-3">
+                <div class="text-2xl" x-text="type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'"></div>
+                <div class="flex-1">
+                    <div class="font-semibold" :class="type === 'success' ? 'text-green-900' : type === 'error' ? 'text-red-900' : 'text-blue-900'" x-text="message"></div>
+                </div>
+                <button @click="show = false" class="text-gray-400 hover:text-gray-600">×</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wizard Stepper -->
+    <div class="bg-white rounded-lg shadow-lg mb-6 p-6">
+        <div class="flex items-center justify-between">
+            <template x-for="(stepInfo, index) in steps" :key="index">
+                <div class="flex items-center" :class="index < steps.length - 1 ? 'flex-1' : ''">
+                    <!-- Step Circle -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300"
+                             :class="currentStep > index + 1 ? 'bg-green-500 text-white' : currentStep === index + 1 ? 'bg-blue-500 text-white scale-110' : 'bg-gray-300 text-gray-600'">
+                            <span x-show="currentStep <= index + 1" x-text="index + 1"></span>
+                            <svg x-show="currentStep > index + 1" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="font-bold text-sm" :class="currentStep === index + 1 ? 'text-gray-900' : 'text-gray-500'" x-text="stepInfo.title"></div>
+                            <div class="text-xs text-gray-500" x-text="stepInfo.subtitle"></div>
+                        </div>
+                    </div>
+                    <!-- Connector Line -->
+                    <div x-show="index < steps.length - 1" class="flex-1 h-1 mx-4 rounded-full transition-all duration-500"
+                         :class="currentStep > index + 1 ? 'bg-green-500' : 'bg-gray-300'"></div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Step 1: Input -->
+        <div x-show="currentStep === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
+            <h2 class="text-2xl font-bold mb-4">📥 Choose Input Source</h2>
+
+            <!-- Input Type Selection -->
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <button @click="inputType = 'url'; inputError = ''" type="button"
+                        class="p-6 rounded-lg border-2 transition-all hover:shadow-lg"
+                        :class="inputType === 'url' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'">
+                    <div class="text-4xl mb-3">🔗</div>
+                    <div class="font-bold text-lg mb-1">URL</div>
+                    <div class="text-sm text-gray-600">Website or article</div>
+                </button>
+
+                <button @click="inputType = 'file'; inputError = ''" type="button"
+                        class="p-6 rounded-lg border-2 transition-all hover:shadow-lg"
+                        :class="inputType === 'file' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'">
+                    <div class="text-4xl mb-3">📄</div>
+                    <div class="font-bold text-lg mb-1">File</div>
+                    <div class="text-sm text-gray-600">Upload document</div>
+                </button>
+
+                <button @click="inputType = 'text'; inputError = ''" type="button"
+                        class="p-6 rounded-lg border-2 transition-all hover:shadow-lg"
+                        :class="inputType === 'text' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'">
+                    <div class="text-4xl mb-3">✍️</div>
+                    <div class="font-bold text-lg mb-1">Text</div>
+                    <div class="text-sm text-gray-600">Paste or type</div>
+                </button>
+            </div>
+
+            <!-- Input Fields -->
+            <div class="space-y-4">
+                <!-- URL Input -->
+                <div x-show="inputType === 'url'">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter URL</label>
+                    <input type="url" x-model="inputData.url" @input="validateInput()"
+                           placeholder="https://example.com/article"
+                           class="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           :class="inputError ? 'border-red-500' : 'border-gray-300'">
+                </div>
+
+                <!-- File Upload -->
+                <div x-show="inputType === 'file'">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
+                    <div class="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer"
+                         :class="inputError ? 'border-red-500' : 'border-gray-300'"
+                         @click="$refs.fileInput.click()">
+                        <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" class="hidden" accept=".txt,.md,.pdf,.docx">
+                        <div class="text-4xl mb-2">📁</div>
+                        <div class="text-gray-600" x-text="inputData.fileName || 'Click to select file'"></div>
+                        <div class="text-sm text-gray-500 mt-2">Supported: TXT, MD, PDF, DOCX</div>
+                    </div>
+                </div>
+
+                <!-- Text Input -->
+                <div x-show="inputType === 'text'">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter Content</label>
+                    <textarea x-model="inputData.text" @input="validateInput()"
+                              rows="8"
+                              placeholder="Paste or type your content here..."
+                              class="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                              :class="inputError ? 'border-red-500' : 'border-gray-300'"></textarea>
+                </div>
+
+                <!-- Error Message -->
+                <div x-show="inputError" class="bg-red-50 border-2 border-red-200 rounded-lg p-3 flex items-start gap-2">
+                    <span class="text-red-500 text-xl">⚠️</span>
+                    <div class="flex-1 text-red-700 text-sm" x-text="inputError"></div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-end gap-3 mt-6">
+                <button @click="nextStep()" :disabled="!isStepValid(1)"
+                        class="px-6 py-3 rounded-lg font-semibold transition-all"
+                        :class="isStepValid(1) ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg' : 'bg-gray-300 text-gray-500 cursor-not-allowed'">
+                    Next: Configure →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Configure -->
+        <div x-show="currentStep === 2" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
+            <h2 class="text-2xl font-bold mb-4">⚙️ Configure Video</h2>
+
+            <!-- Preset Selection -->
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
+                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-xl">⚡</span>
+                    Quick Presets
+                </h3>
+                <div class="grid md:grid-cols-3 gap-3">
+                    <button @click="applyPreset('corporate')" type="button"
+                            class="p-4 bg-white hover:bg-yellow-50 border-2 rounded-lg text-left transition-all hover:shadow-md"
+                            :class="selectedPreset === 'corporate' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-yellow-200'">
+                        <div class="text-2xl mb-2">💼</div>
+                        <div class="font-bold mb-1">Corporate</div>
+                        <div class="text-xs text-gray-600">Professional business videos</div>
+                    </button>
+
+                    <button @click="applyPreset('creative')" type="button"
+                            class="p-4 bg-white hover:bg-yellow-50 border-2 rounded-lg text-left transition-all hover:shadow-md"
+                            :class="selectedPreset === 'creative' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-yellow-200'">
+                        <div class="text-2xl mb-2">🎨</div>
+                        <div class="font-bold mb-1">Creative</div>
+                        <div class="text-xs text-gray-600">Engaging tutorial content</div>
+                    </button>
+
+                    <button @click="applyPreset('educational')" type="button"
+                            class="p-4 bg-white hover:bg-yellow-50 border-2 rounded-lg text-left transition-all hover:shadow-md"
+                            :class="selectedPreset === 'educational' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-yellow-200'">
+                        <div class="text-2xl mb-2">🎓</div>
+                        <div class="font-bold mb-1">Educational</div>
+                        <div class="text-xs text-gray-600">Structured learning materials</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Configuration Form -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Video ID -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Video ID</label>
+                    <input type="text" x-model="config.videoId" @input="validateConfig()"
+                           placeholder="my-video"
+                           class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           :class="configErrors.videoId ? 'border-red-500' : 'border-gray-300'">
+                    <div x-show="configErrors.videoId" class="text-red-600 text-xs mt-1" x-text="configErrors.videoId"></div>
+                </div>
+
+                <!-- Duration -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Duration (seconds)</label>
+                    <input type="number" x-model.number="config.duration" @input="validateConfig(); updateCostEstimate()"
+                           min="30" max="600"
+                           class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300">
+                    <div class="text-xs text-gray-500 mt-1">Recommended: 120-300 seconds</div>
+                </div>
+
+                <!-- Language Mode -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Languages</label>
+                    <select x-model="config.languageMode" @change="updateCostEstimate()"
+                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="single">Single Language</option>
+                        <option value="multiple">Multiple Languages</option>
+                    </select>
+                </div>
+
+                <!-- Target Languages (if multiple) -->
+                <div x-show="config.languageMode === 'multiple'">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Languages</label>
+                    <div class="space-y-2">
+                        <template x-for="lang in availableLanguages" :key="lang.code">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" :value="lang.code" x-model="config.targetLanguages" @change="updateCostEstimate()"
+                                       class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                                <span class="text-sm" x-text="lang.name"></span>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Voice Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Voice</label>
+                    <select x-model="config.primaryVoice"
+                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <optgroup label="English - US">
+                            <option value="en-US-JennyNeural">Jenny (Female, Friendly)</option>
+                            <option value="en-US-GuyNeural">Guy (Male, Professional)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Color Theme -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Color Theme</label>
+                    <select x-model="config.color"
+                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="blue">Blue (Corporate)</option>
+                        <option value="green">Green (Educational)</option>
+                        <option value="purple">Purple (Creative)</option>
+                        <option value="cyan">Cyan (Technical)</option>
+                    </select>
+                </div>
+
+                <!-- AI Enhancements -->
+                <div class="md:col-span-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" x-model="config.useAI" @change="updateCostEstimate()"
+                               class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
+                        <span class="text-sm font-medium text-gray-700">Enable AI Narration Enhancement</span>
+                        <span class="text-xs text-gray-500">(Claude Sonnet 4.5)</span>
+                    </label>
+                    <div class="text-xs text-gray-500 mt-1 ml-6">Improves narration quality with AI-powered enhancements</div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between gap-3 mt-6">
+                <button @click="previousStep()"
+                        class="px-6 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all">
+                    ← Back
+                </button>
+                <button @click="nextStep()" :disabled="!isStepValid(2)"
+                        class="px-6 py-3 rounded-lg font-semibold transition-all"
+                        :class="isStepValid(2) ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg' : 'bg-gray-300 text-gray-500 cursor-not-allowed'">
+                    Next: Review →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Review -->
+        <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
+            <h2 class="text-2xl font-bold mb-4">👀 Review Configuration</h2>
+
+            <!-- Cost Estimate -->
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-gray-900 flex items-center gap-2">
+                        <span class="text-xl">💰</span>
+                        Estimated Cost
+                    </h3>
+                    <div class="text-3xl font-bold text-green-700" x-text="'$' + costEstimate.total.toFixed(4)"></div>
+                </div>
+                <div class="space-y-2">
+                    <template x-for="item in costEstimate.breakdown" :key="item.item">
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-700" x-text="item.details"></span>
+                            <span class="font-semibold text-gray-900" x-text="'$' + item.cost.toFixed(4)"></span>
+                        </div>
+                    </template>
+                </div>
+                <div class="mt-4 pt-4 border-t border-green-300 text-xs text-gray-600">
+                    <div>💡 TTS is always free (Edge-TTS)</div>
+                    <div x-show="!config.useAI">💰 Enable AI for enhanced narration quality (+cost)</div>
+                </div>
+            </div>
+
+            <!-- Configuration Summary -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">📥 Input</div>
+                    <div class="text-sm text-gray-900" x-text="inputType === 'url' ? 'URL: ' + inputData.url : inputType === 'file' ? 'File: ' + inputData.fileName : 'Custom Text'"></div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">🆔 Video ID</div>
+                    <div class="text-sm text-gray-900" x-text="config.videoId"></div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">⏱️ Duration</div>
+                    <div class="text-sm text-gray-900" x-text="config.duration + ' seconds'"></div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">🌍 Languages</div>
+                    <div class="text-sm text-gray-900" x-text="config.languageMode === 'single' ? 'Single Language' : config.targetLanguages.length + ' languages'"></div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">🎤 Voice</div>
+                    <div class="text-sm text-gray-900" x-text="config.primaryVoice.split('-')[2]"></div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">🤖 AI Enhancement</div>
+                    <div class="text-sm text-gray-900" x-text="config.useAI ? 'Enabled' : 'Disabled'"></div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between gap-3 mt-6">
+                <button @click="previousStep()"
+                        class="px-6 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all">
+                    ← Back
+                </button>
+                <button @click="nextStep()"
+                        class="px-6 py-3 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg transition-all">
+                    Next: Generate →
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Generate -->
+        <div x-show="currentStep === 4" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
+            <h2 class="text-2xl font-bold mb-4">🚀 Generate Video</h2>
+
+            <!-- Generation Status -->
+            <div x-show="!generationComplete" class="space-y-4">
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
+                    <div class="text-6xl mb-4 animate-bounce">🎬</div>
+                    <div class="text-xl font-bold text-gray-900 mb-2">Generating Your Video...</div>
+                    <div class="text-gray-600 mb-4">This may take a few minutes</div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-4 mb-4">
+                        <div class="bg-blue-500 h-4 rounded-full transition-all duration-500" :style="'width: ' + generationProgress + '%'"></div>
+                    </div>
+
+                    <div class="text-sm text-gray-600" x-text="generationStatus"></div>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div x-show="generationComplete" class="space-y-4">
+                <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
+                    <div class="text-6xl mb-4">✅</div>
+                    <div class="text-2xl font-bold text-green-900 mb-2">Video Generated Successfully!</div>
+                    <div class="text-gray-600 mb-4">Your video is ready to view</div>
+
+                    <div class="flex justify-center gap-4">
+                        <a :href="'/progress#' + generatedJobId"
+                           class="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-all">
+                            View Video
+                        </a>
+                        <button @click="reset()"
+                                class="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-all">
+                            Create Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div x-show="!generationStarted" class="flex justify-between gap-3 mt-6">
+                <button @click="previousStep()"
+                        class="px-6 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all">
+                    ← Back
+                </button>
+                <button @click="startGeneration()"
+                        class="px-6 py-3 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600 shadow-md hover:shadow-lg transition-all">
+                    🚀 Start Generation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function unifiedCreator() {
+    return {
+        // Step management
+        currentStep: 1,
+        steps: [
+            { title: 'Input', subtitle: 'Choose source' },
+            { title: 'Configure', subtitle: 'Video settings' },
+            { title: 'Review', subtitle: 'Check details' },
+            { title: 'Generate', subtitle: 'Create video' }
+        ],
+
+        // Input data
+        inputType: 'url',
+        inputData: {
+            url: '',
+            file: null,
+            fileName: '',
+            text: ''
+        },
+        inputError: '',
+
+        // Configuration
+        config: {
+            videoId: '',
+            duration: 120,
+            languageMode: 'single',
+            targetLanguages: ['en'],
+            primaryVoice: 'en-US-JennyNeural',
+            color: 'blue',
+            useAI: false
+        },
+        configErrors: {},
+        selectedPreset: null,
+
+        // Available options
+        availableLanguages: [
+            { code: 'en', name: 'English' },
+            { code: 'es', name: 'Spanish' },
+            { code: 'fr', name: 'French' },
+            { code: 'de', name: 'German' }
+        ],
+
+        // Cost estimation
+        costEstimate: {
+            total: 0,
+            breakdown: []
+        },
+
+        // Generation
+        generationStarted: false,
+        generationProgress: 0,
+        generationStatus: 'Initializing...',
+        generationComplete: false,
+        generatedJobId: null,
+
+        init() {
+            // Initialize cost estimator
+            if (window.CostEstimator) {
+                this.costEstimator = new window.CostEstimator();
+            }
+
+            // Initialize validator
+            if (window.FormValidator) {
+                this.validator = new window.FormValidator();
+            }
+
+            // Load presets
+            if (window.PRESET_PACKAGES) {
+                this.presets = window.PRESET_PACKAGES;
+            }
+        },
+
+        nextStep() {
+            if (this.isStepValid(this.currentStep)) {
+                this.currentStep++;
+                if (this.currentStep === 3) {
+                    this.updateCostEstimate();
+                }
+            }
+        },
+
+        previousStep() {
+            if (this.currentStep > 1) {
+                this.currentStep--;
+            }
+        },
+
+        isStepValid(step) {
+            switch(step) {
+                case 1: // Input validation
+                    return this.inputError === '' && this.hasValidInput();
+                case 2: // Config validation
+                    return Object.keys(this.configErrors).length === 0 && this.config.videoId;
+                case 3: // Review (always valid)
+                    return true;
+                default:
+                    return false;
+            }
+        },
+
+        hasValidInput() {
+            switch(this.inputType) {
+                case 'url':
+                    return this.inputData.url && this.inputData.url.trim().length > 0;
+                case 'file':
+                    return this.inputData.file !== null;
+                case 'text':
+                    return this.inputData.text && this.inputData.text.trim().length > 0;
+                default:
+                    return false;
+            }
+        },
+
+        validateInput() {
+            this.inputError = '';
+
+            if (this.inputType === 'url' && this.validator) {
+                const error = this.validator.validateField('url', this.inputData.url);
+                if (error) {
+                    this.inputError = error;
+                }
+            } else if (this.inputType === 'text' && this.inputData.text.trim().length < 10) {
+                this.inputError = 'Text must be at least 10 characters';
+            }
+        },
+
+        validateConfig() {
+            this.configErrors = {};
+
+            if (this.validator) {
+                const videoIdError = this.validator.validateField('video_id', this.config.videoId);
+                if (videoIdError) {
+                    this.configErrors.videoId = videoIdError;
+                }
+            }
+        },
+
+        handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.inputData.file = file;
+                this.inputData.fileName = file.name;
+                this.inputError = '';
+            }
+        },
+
+        applyPreset(presetId) {
+            this.selectedPreset = presetId;
+
+            if (this.presets && this.presets[presetId]) {
+                const preset = this.presets[presetId];
+                const cfg = preset.config;
+
+                this.config.languageMode = cfg.languageMode;
+                this.config.targetLanguages = cfg.targetLanguages;
+                this.config.primaryVoice = cfg.primaryVoice;
+                this.config.color = cfg.color;
+                this.config.duration = cfg.duration;
+                this.config.useAI = cfg.useAI;
+
+                this.updateCostEstimate();
+
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: { message: `Applied ${preset.name} preset`, type: 'success' }
+                }));
+            }
+        },
+
+        updateCostEstimate() {
+            if (!this.costEstimator) return;
+
+            const estimate = this.costEstimator.estimateVideoSetCost({
+                use_ai_narration: this.config.useAI,
+                target_languages: this.config.targetLanguages,
+                translation_method: 'claude',
+                estimatedScenesPerVideo: Math.ceil(this.config.duration / 30),
+                videos: [{ scenes: [] }]
+            });
+
+            this.costEstimate = estimate;
+        },
+
+        async startGeneration() {
+            this.generationStarted = true;
+            this.generationProgress = 0;
+            this.generationStatus = 'Preparing video generation...';
+
+            try {
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('video_id', this.config.videoId);
+                formData.append('duration', this.config.duration);
+                formData.append('use_ai_narration', this.config.useAI);
+                formData.append('primary_voice', this.config.primaryVoice);
+                formData.append('color', this.config.color);
+
+                // Add input data
+                if (this.inputType === 'url') {
+                    formData.append('source_url', this.inputData.url);
+                } else if (this.inputType === 'file') {
+                    formData.append('file', this.inputData.file);
+                } else {
+                    formData.append('text_content', this.inputData.text);
+                }
+
+                // Language settings
+                if (this.config.languageMode === 'multiple') {
+                    formData.append('target_languages', JSON.stringify(this.config.targetLanguages));
+                }
+
+                // Submit via HTMX or fetch
+                this.generationProgress = 20;
+                this.generationStatus = 'Processing content...';
+
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                this.generationProgress = 60;
+                this.generationStatus = 'Generating video...';
+
+                if (response.ok) {
+                    const result = await response.json();
+                    this.generatedJobId = result.job_id;
+
+                    this.generationProgress = 100;
+                    this.generationStatus = 'Complete!';
+                    this.generationComplete = true;
+
+                    window.dispatchEvent(new CustomEvent('show-message', {
+                        detail: { message: 'Video generated successfully!', type: 'success' }
+                    }));
+                } else {
+                    throw new Error('Generation failed');
+                }
+            } catch (error) {
+                this.generationProgress = 0;
+                this.generationStatus = 'Generation failed';
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: { message: 'Failed to generate video: ' + error.message, type: 'error' }
+                }));
+            }
+        },
+
+        reset() {
+            this.currentStep = 1;
+            this.inputType = 'url';
+            this.inputData = { url: '', file: null, fileName: '', text: '' };
+            this.inputError = '';
+            this.config = {
+                videoId: '',
+                duration: 120,
+                languageMode: 'single',
+                targetLanguages: ['en'],
+                primaryVoice: 'en-US-JennyNeural',
+                color: 'blue',
+                useAI: false
+            };
+            this.configErrors = {};
+            this.selectedPreset = null;
+            this.generationStarted = false;
+            this.generationProgress = 0;
+            this.generationStatus = 'Initializing...';
+            this.generationComplete = false;
+            this.generatedJobId = null;
+        }
+    };
+}
+</script>
+{% endblock %}
