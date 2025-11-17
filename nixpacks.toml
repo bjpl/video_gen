@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["python39", "nodejs-18_x"]
+nixPkgs = ["python310", "nodejs-18_x"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = ["python -m pip install --upgrade pip", "pip install -r requirements.txt"]
 
 [phases.build]
 cmds = ["echo 'Build complete - video_gen ready for deployment'"]
