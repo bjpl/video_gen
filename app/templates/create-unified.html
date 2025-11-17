@@ -629,6 +629,7 @@ function unifiedCreator() {
         },
 
         async startGeneration() {
+            console.log('🚀 startGeneration called');
             this.generationStarted = true;
             this.generationProgress = 0;
             this.generationStatus = 'Preparing video generation...';
@@ -636,6 +637,10 @@ function unifiedCreator() {
             try {
                 let endpoint = '';
                 let payload = {};
+
+                console.log('Input method:', this.inputMethod);
+                console.log('Input type:', this.inputType);
+                console.log('Input data:', this.inputData);
 
                 // Determine which API endpoint to use based on input method
                 if (this.inputMethod === 'youtube' || (this.inputType === 'url' && this.inputData.url.includes('youtube'))) {
@@ -655,8 +660,11 @@ function unifiedCreator() {
                         generate_set: false
                     };
                 } else {
-                    throw new Error('Unknown input method');
+                    throw new Error('Unknown input method: ' + this.inputMethod + ', type: ' + this.inputType);
                 }
+
+                console.log('Calling endpoint:', endpoint);
+                console.log('Payload:', payload);
 
                 this.generationProgress = 20;
                 this.generationStatus = 'Processing content...';
@@ -681,8 +689,10 @@ function unifiedCreator() {
                     throw new Error(error.detail || 'Generation failed');
                 }
             } catch (error) {
+                console.error('❌ Generation error:', error);
                 this.generationProgress = 0;
-                this.generationStatus = 'Generation failed';
+                this.generationStatus = 'Generation failed: ' + error.message;
+                this.generationStarted = false; // Allow retry
                 window.dispatchEvent(new CustomEvent('show-message', {
                     detail: { message: 'Failed to generate video: ' + error.message, type: 'error' }
                 }));
