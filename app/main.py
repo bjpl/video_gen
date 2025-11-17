@@ -167,13 +167,13 @@ async def progress(request: Request):
 
 @app.get("/create", response_class=HTMLResponse)
 async def create(request: Request):
-    """Unified video creation page"""
-    return templates.TemplateResponse("create.html", {"request": request})
-
-@app.get("/create-unified", response_class=HTMLResponse)
-async def create_unified(request: Request):
-    """New unified creation interface with Alpine.js store"""
+    """Unified video creation page - new wizard-style interface"""
     return templates.TemplateResponse("create-unified.html", {"request": request})
+
+@app.get("/create-legacy", response_class=HTMLResponse)
+async def create_legacy(request: Request):
+    """Legacy create page (kept for reference)"""
+    return templates.TemplateResponse("create.html", {"request": request})
 
 @app.get("/advanced", response_class=HTMLResponse)
 async def advanced(request: Request):
