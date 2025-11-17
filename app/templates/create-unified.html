@@ -63,10 +63,16 @@
     <div class="bg-white rounded-lg shadow-lg p-6">
         <!-- Step 1: Input -->
         <div x-show="currentStep === 1" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
-            <h2 class="text-2xl font-bold mb-4">📥 Choose Input Source</h2>
+            <!-- Dynamic title based on method -->
+            <h2 class="text-2xl font-bold mb-4">
+                <span x-show="!inputMethod">📥 Choose Input Source</span>
+                <span x-show="inputMethod === 'document'">📄 Document Input</span>
+                <span x-show="inputMethod === 'youtube'">📺 YouTube Video Input</span>
+                <span x-show="inputMethod === 'yaml'">📋 YAML Configuration</span>
+            </h2>
 
-            <!-- Input Type Selection -->
-            <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <!-- Show input type selector ONLY if no method specified -->
+            <div x-show="!inputMethod" class="grid md:grid-cols-3 gap-4 mb-6">
                 <button @click="inputType = 'url'; inputError = ''" type="button"
                         class="p-6 rounded-lg border-2 transition-all hover:shadow-lg"
                         :class="inputType === 'url' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'">
@@ -90,6 +96,19 @@
                     <div class="font-bold text-lg mb-1">Text</div>
                     <div class="text-sm text-gray-600">Paste or type</div>
                 </button>
+            </div>
+
+            <!-- Method-specific help text -->
+            <div x-show="inputMethod" class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 rounded">
+                <p class="text-sm text-blue-900" x-show="inputMethod === 'document'">
+                    📘 Upload a document (PDF, DOCX, TXT, MD) or paste text to automatically generate a video.
+                </p>
+                <p class="text-sm text-blue-900" x-show="inputMethod === 'youtube'">
+                    🎥 Enter a YouTube URL and we'll extract the transcript to create a summary video.
+                </p>
+                <p class="text-sm text-blue-900" x-show="inputMethod === 'yaml'">
+                    ⚙️ Upload a YAML configuration file with your video structure and settings.
+                </p>
             </div>
 
             <!-- Input Fields -->
@@ -419,6 +438,7 @@ function unifiedCreator() {
 
         // Input data
         inputType: 'url',
+        inputMethod: null, // Tracks which home page card was clicked (document/youtube/yaml)
         inputData: {
             url: '',
             file: null,
@@ -462,6 +482,26 @@ function unifiedCreator() {
         generatedJobId: null,
 
         init() {
+            // Read method from URL query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const method = urlParams.get('method');
+
+            // Map home page methods to input types and customize UI
+            if (method === 'document') {
+                this.inputType = 'file'; // Document upload
+                this.inputMethod = 'document';
+            } else if (method === 'youtube') {
+                this.inputType = 'url'; // YouTube URL
+                this.inputMethod = 'youtube';
+            } else if (method === 'wizard') {
+                // Redirect to builder for full scene-by-scene control
+                window.location.href = '/builder';
+                return;
+            } else if (method === 'yaml') {
+                this.inputType = 'file'; // YAML file upload
+                this.inputMethod = 'yaml';
+            }
+
             // Initialize cost estimator
             if (window.CostEstimator) {
                 this.costEstimator = new window.CostEstimator();
