@@ -1,1305 +1,351 @@
-# 🎬 Video Generation System
-
-**Professional Video Production from Any Source - Complete Automated Workflow**
-
-[![Status](https://img.shields.io/badge/status-production--ready-brightgreen)]()
-[![Tests](https://github.com/yourusername/video_gen/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/video_gen/actions/workflows/test.yml)
-[![Coverage](https://github.com/yourusername/video_gen/actions/workflows/coverage.yml/badge.svg)](https://github.com/yourusername/video_gen/actions/workflows/coverage.yml)
-[![Lint](https://github.com/yourusername/video_gen/actions/workflows/lint.yml/badge.svg)](https://github.com/yourusername/video_gen/actions/workflows/lint.yml)
-[![Python](https://img.shields.io/badge/python-3.10+-blue)]()
-[![License](https://img.shields.io/badge/license-MIT-green)]()
-
----
-
-## 🚀 Quick Start (2 Minutes)
-
-### 📋 Step-by-Step Visual Guide
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│ STEP 1: INSTALL (30 seconds)                                        │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  $ pip install -r requirements.txt                                  │
-│  Installing: ████████████████████████████ 100%                      │
-│                                                                     │
-│  ✅ 23 packages installed                                           │
-│  ✅ FFmpeg detected                                                 │
-│  ✅ GPU support: NVIDIA NVENC available                             │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│ STEP 2: OPTIONAL - SET API KEY (10 seconds)                         │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  💡 Skip this for template narration (works great!)                 │
-│  ✨ Add this for AI-enhanced narration (even better!)               │
-│                                                                     │
-│  Linux/Mac:                                                         │
-│  $ export ANTHROPIC_API_KEY="sk-ant-api03-..."                     │
-│                                                                     │
-│  Windows (PowerShell):                                              │
-│  $ $env:ANTHROPIC_API_KEY="sk-ant-api03-..."                       │
-│                                                                     │
-│  Windows (CMD):                                                     │
-│  $ set ANTHROPIC_API_KEY=sk-ant-api03-...                          │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│ STEP 3: CREATE VIDEO (30 seconds)                                   │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  📄 From existing documentation:                                    │
-│  $ python scripts/create_video.py --document README.md             │
-│                                                                     │
-│  🧙 Interactive wizard:                                             │
-│  $ python scripts/create_video.py --wizard                         │
-│                                                                     │
-│  ✨ With AI narration:                                              │
-│  $ python scripts/create_video.py --wizard --use-ai                │
-│                                                                     │
-│  Progress:                                                          │
-│  [1/3] Parsing content... ✅                                        │
-│  [2/3] Generating YAML... ✅                                        │
-│  [3/3] Saved to inputs/... ✅                                       │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│ STEP 4: GENERATE AUDIO + VIDEO (4 minutes)                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  $ cd scripts                                                       │
-│  $ python generate_all_videos_unified_v2.py                        │
-│                                                                     │
-│  🎙️ Generating audio...                                            │
-│  Scene 1/5: [████████████████] 100% (2.3s)                          │
-│  Scene 2/5: [████████████████] 100% (3.1s)                          │
-│  Scene 3/5: [████████████████] 100% (2.8s)                          │
-│  ✅ Audio complete: audio_timings.json                              │
-│                                                                     │
-│  $ python generate_videos_from_timings_v3_simple.py                │
-│                                                                     │
-│  🎬 Rendering video...                                              │
-│  Frame 1/180:   [████████████████] 100%                             │
-│  Encoding:      [████████████████] 100% (GPU NVENC)                 │
-│  ✅ Video complete: output/video.mp4                                │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────┐
-│ 🎉 DONE!                                                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│  ✅ video.mp4 (1920x1080, ~5 MB)                                    │
-│  ✅ Perfect audio/visual sync                                       │
-│  ✅ Professional neural TTS narration                               │
-│  ✅ Ready to publish!                                               │
-│                                                                     │
-│  Total time: ~5 minutes                                             │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### 🎯 Quick Start Decision Tree
-
-```
-                    Start Here
-                        │
-                        v
-           Do you have existing content?
-                    │       │
-              ┌─────┘       └─────┐
-              │                   │
-             YES                  NO
-              │                   │
-              v                   v
-    ┌─────────────────┐   ┌──────────────┐
-    │ What type?      │   │ Use Wizard   │
-    └─────────────────┘   │              │
-            │             │ --wizard     │
-    ┌───────┼───────┐     └──────────────┘
-    │       │       │             │
-    v       v       v             │
-  Docs   YouTube  API             │
-    │       │       │             │
-    v       v       v             v
---document --youtube-url  python_set_builder.py
-    │       │       │             │
-    └───────┴───────┴─────────────┘
-                │
-                v
-    generate_all_videos_unified_v2.py
-                │
-                v
- generate_videos_from_timings_v3_simple.py
-                │
-                v
-            video.mp4 ✅
-```
-
-**Result:** Professional Full HD video with neural TTS narration and perfect audio/visual sync.
-
-**Narration Quality:**
-- ⭐ Default (template): Professional, functional, **FREE**
-- ✨ With `--use-ai`: Natural, engaging, **~$0.05 per video**
-
-📝 **Pro Tip:** Try default narration first! It's surprisingly good. Add `--use-ai` later if you want even more natural speech.
-
----
-
-## ✨ Features
-
-**Production Status:** See [PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md) for honest assessment
-
-### **🎯 Four Input Methods**
-
-💡 **Why this matters:** One system handles ALL content sources - no need for separate tools!
-
-Create videos from ANY source:
-
-1. **📄 Documents** - Parse README, guides, markdown ✅ **PRODUCTION READY** (90% tested)
-2. **📺 YouTube** - Fetch transcripts, create summaries ✅ **PRODUCTION READY** (94% tested)
-3. **🐍 Programmatic** - Python API for automation ✅ **PRODUCTION READY** (80% tested)
-4. **🧙 Wizard** - Interactive creation ⚠️ **WORKS** (87% tested, recently improved)
-5. **🌐 Web UI** - Zero-code browser interface ✅ **PRODUCTION READY** (90% feature parity)
-
-#### 📋 Input Method Decision Guide
-
-| Use Case | Best Method | Why | Time |
-|----------|-------------|-----|------|
-| Existing documentation | 📄 Document | Zero manual work, auto-parse structure | 2 min |
-| Video summarization | 📺 YouTube | Extract key points from any video | 3 min |
-| Batch automation (10+ videos) | 🐍 Programmatic | Full control, scriptable, CI/CD ready | 5 min setup |
-| New content from scratch | 🧙 Wizard | Guided prompts, beginner-friendly | 15 min |
-| Visual scene editing | 🌐 Web UI | Browser-based, no code, scene-by-scene control | 10 min |
-
-📝 **Pro tip:** Start with Document or YouTube for fastest results. Use Programmatic for automation at scale. Use Web UI for maximum visual control.
-
-### **🌍 Multilingual Support**
-
-Generate videos in **28+ languages** automatically: ✅ **PRODUCTION READY**
-
-- **Bidirectional translation** - ANY language → ANY language
-- **Auto-translate** with Claude API (high quality) or Google Translate (free)
-- **Native TTS voices** for all languages
-- **One command** generates all language versions
-
-```bash
-# English → Spanish + French
-python generate_multilingual_set.py --source README.md --languages en es fr
-
-# Spanish → English (REVERSE!)
-python generate_multilingual_set.py --source README_ES.md --languages es en --source-lang es
-```
-
-### **🎨 Twelve Scene Types**
-
-**General (6 types):** ✅ **100% TESTED**
-- **title** - Large centered title slides
-- **command** - Terminal cards with syntax-highlighted code
-- **list** - Numbered items with descriptions
-- **outro** - Checkmark with call-to-action
-- **code_comparison** - Side-by-side before/after code
-- **quote** - Centered quotes with attribution
-
-**Educational (6 types):** ✅ **96% TESTED**
-- **learning_objectives** - Lesson goals and expectations
-- **problem** - Coding challenge presentation
-- **solution** - Problem solution with explanation
-- **checkpoint** - Learning progress review
-- **quiz** - Multiple choice questions with answers
-- **exercise** - Practice instructions
-
-#### 🎬 Scene Type Gallery
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ TITLE SCENE                                                     │
-│ ═══════════════════════════════════════════════════════════════ │
-│                                                                 │
-│                    🎬 Your Video Title                          │
-│                    Subtitle description                         │
-│                                                                 │
-│ Use for: Opening slides, section headers, major transitions    │
-│ Visual: Large centered text, accent color gradient             │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│ COMMAND SCENE                                                   │
-│ ═══════════════════════════════════════════════════════════════ │
-│                                                                 │
-│  $ Install Dependencies                                         │
-│  ┌──────────────────────────────────────────────┐              │
-│  │ pip install -r requirements.txt              │              │
-│  │ python scripts/create_video.py --help        │              │
-│  └──────────────────────────────────────────────┘              │
-│                                                                 │
-│ Use for: Terminal commands, code snippets, CLI examples        │
-│ Visual: Rounded card, syntax highlighting, copy-ready          │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│ CODE COMPARISON SCENE                                           │
-│ ═══════════════════════════════════════════════════════════════ │
-│                                                                 │
-│    ❌ Before              │    ✅ After                          │
-│  ┌────────────────────────┼────────────────────────┐           │
-│  │ def bad_code():        │ def good_code():       │           │
-│  │   # messy              │   # clean              │           │
-│  └────────────────────────┴────────────────────────┘           │
-│                                                                 │
-│ Use for: Refactoring, improvements, before/after code          │
-│ Visual: Split screen, color-coded (red/green)                  │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│ QUIZ SCENE (Educational)                                        │
-│ ═══════════════════════════════════════════════════════════════ │
-│                                                                 │
-│  ❓ What is the time complexity?                                │
-│                                                                 │
-│     A. O(n)        B. O(log n)                                  │
-│     C. O(n²)       D. O(1)                                      │
-│                                                                 │
-│  ✅ Answer: B (O(log n))                                        │
-│                                                                 │
-│ Use for: Knowledge checks, engagement, retention                │
-│ Visual: Multiple choice layout, reveals answer                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-⚠️ **Note:** Mix scene types for maximum engagement. Don't use the same type twice in a row!
-
-### **🤖 Two Narration Modes**
-
-- **Template-Based** (default) - Fast, free, predictable
-- **AI-Enhanced** (optional) - Natural, engaging, uses Claude 3.5 Sonnet
-
-Add `--use-ai` flag for Claude API-powered narration!
-
-### **🎙️ Four Professional Voices**
-
-- **Andrew** (male) - Professional, confident
-- **Brandon** (male_warm) - Warm, engaging
-- **Aria** (female) - Clear, crisp
-- **Ava** (female_friendly) - Friendly, pleasant
-
-Mix voices per scene for maximum engagement!
-
-### **⚡ Performance**
-
-- **GPU Accelerated** - NVIDIA NVENC hardware encoding
-- **NumPy Optimized** - 8x faster frame blending
-- **AI-Powered Narration** - Optional Claude API integration
-- **Batch Processing** - 15 videos in ~30 minutes
-- **Parallel Generation** - Multi-core support
-
----
-
-## 🎬 What It Does
-
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                          COMPLETE WORKFLOW                                   │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  INPUT                    SYSTEM PROCESSING               OUTPUT             │
-│  ═════                    ══════════════════               ══════             │
-│                                                                              │
-│  📄 README.md      ──┐                                                       │
-│  📺 YouTube URL    ──┼──> ⚙️  Parse Content      ──┐                        │
-│  🧙 Wizard Input   ──┘     └─ Extract structure    │                        │
-│  🐍 Python API             └─ Generate scenes      │                        │
-│                                                      ├──> 🎙️  Neural TTS    │
-│                                                      │    └─ 4 pro voices    │
-│                                                      │    └─ Perfect timing  │
-│                                                      │                        │
-│                                                      ├──> 🎨 Render Visuals  │
-│                                                      │    └─ 1920x1080 HD    │
-│                                                      │    └─ 12 scene types  │
-│                                                      │    └─ Smooth fade     │
-│                                                      │                        │
-│                                                      └──> 🎬 Encode Video    │
-│                                                           └─ GPU accelerated │
-│                                                           └─ H.264/AAC      │
-│                                                                              │
-│  RESULT: 🎥 video.mp4                                                        │
-│  ✅ Perfect audio/visual sync      ⚡ 5 minutes or less                      │
-│  ✅ Professional quality           🎯 Ready to publish                       │
-│  ✅ 1920x1080 Full HD              📊 Metrics tracked                        │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 📈 Traditional vs This System
-
-| Step | Traditional Workflow | This System | Time Saved |
-|------|---------------------|-------------|------------|
-| Script writing | ✍️ Manual (2-3 hours) | ⚡ Auto-generated (30 sec) | **95%** |
-| Recording audio | 🎤 Record & re-record (1 hour) | 🤖 Neural TTS (1 min) | **98%** |
-| Video editing | 🎬 Manual sync in editor (3-4 hours) | ⚙️ Auto-rendered (3 min) | **98%** |
-| **TOTAL** | **6-8 hours** | **5 minutes** | **~99%** |
-
-✨ **Success Story:** User generated 15-video tutorial series in 30 minutes (would have taken 90+ hours manually)
-
----
-
-## 🌐 Web UI (NEW!)
-
-**Zero-Code Video Generation Through Your Browser**
-
-Launch the web interface for visual, browser-based video creation with **90% API feature parity**:
-
-```bash
-cd app
-python main.py
-# Open: http://localhost:8000
-```
-
-### ✨ UI Features (Phase 1+2 Complete - Oct 11, 2025)
-
-**✅ Quick Start (`/create`):**
-- 📝 Document/YouTube parsing with **scene preview**
-- 🎙️ 4 professional voices with **rotation patterns explained**
-- 🤖 **Claude AI Script Enhancement** (with transparent cost disclosure)
-- 🌍 Multilingual support (28+ languages)
-- 👁️ **NEW:** Preview parsed scenes before generation
-
-**✅ Scene Builder (`/builder`):**
-- 🎬 **ALL 12 scene types** with complete parameter forms
-- ⏱️ **Duration controls** (min/max) on every scene
-- 🎨 6 color options with psychology guide
-- 🌐 **NEW:** Multilingual configuration built-in
-- 🎯 **NEW:** Scene-specific forms for educational content
-
-**✅ Real-Time Progress:**
-- 📊 Server-Sent Events for live updates
-- 🔄 Stage-by-stage progress tracking
-- ⚡ Background task processing
-
-### 📋 UI Capabilities
-
-| Feature | Quick Start | Scene Builder | Status |
-|---------|-------------|---------------|--------|
-| 12 Scene Types | ❌ (auto-generated) | ✅ Full forms | ✅ Complete |
-| Duration Controls | ✅ Global | ✅ Per-scene min/max | ✅ Complete |
-| Voice Configuration | ✅ Multi-track | ✅ Per-scene | ✅ Complete |
-| Multilingual | ✅ Built-in | ✅ NEW Phase 2 | ✅ Complete |
-| AI Narration | ✅ With transparency | ⚠️ Coming | 🟡 Partial |
-| Scene Preview | ✅ NEW Phase 2 | ❌ | 🟡 Partial |
-
-### 🚀 Feature Parity Progress
-
-```
-Baseline (Oct 10):  60% ████████████░░░░░░░░
-Phase 1 Complete:   80% ████████████████░░░░
-Phase 2 Complete:   90% ██████████████████░░  ← We are here
-Phase 3 Planned:    95% ███████████████████░
-Phase 4 Planned:   100% ████████████████████
-```
-
-### 📖 UI Documentation
-
-- **[WEB_UI_GUIDE.md](docs/WEB_UI_GUIDE.md)** - Complete UI user guide (400+ lines)
-- **[UI_API_GAP_ANALYSIS.md](docs/UI_API_GAP_ANALYSIS.md)** - Detailed feature comparison
-- **[UI_ALIGNMENT_PHASE_1_COMPLETE.md](docs/UI_ALIGNMENT_PHASE_1_COMPLETE.md)** - Phase 1 summary
-- **[UI_ALIGNMENT_PHASE_2_COMPLETE.md](docs/UI_ALIGNMENT_PHASE_2_COMPLETE.md)** - Phase 2 summary
-- **[app/README.md](app/README.md)** - Technical UI stack details
-
-### 🎯 When to Use the Web UI
-
-| Scenario | Use Web UI | Why |
-|----------|-----------|-----|
-| Visual scene editing | ✅ Yes | Scene-by-scene parameter control |
-| Educational content | ✅ Yes | All 6 educational scene types with proper forms |
-| Multilingual videos | ✅ Yes | Per-language voice assignment UI |
-| Quick prototyping | ✅ Yes | No code, instant feedback |
-| Batch automation | ❌ No | Use Programmatic API instead |
-| CI/CD pipelines | ❌ No | Use Programmatic API instead |
-
----
-
-## 📖 Documentation
-
-**📋 Complete Index:** [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) - All 49 docs organized
-
-**⚠️ Honest Assessment:** [PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md) - What works/doesn't
-
-### **Essential Guides:**
-
-| Guide | Purpose | Read Time |
-|-------|---------|-----------|
-| [**THREE_INPUT_METHODS_GUIDE.md**](docs/guides/THREE_INPUT_METHODS_GUIDE.md) | All 4 input methods (START HERE) | 10 min |
-| **[EDUCATIONAL_SCENES_GUIDE.md](EDUCATIONAL_SCENES_GUIDE.md)** 🆕 | 6 educational scene types | 10 min |
-| **[EDUCATIONAL_SCENES_QUICKREF.md](EDUCATIONAL_SCENES_QUICKREF.md)** 🆕 | Educational quick reference | 5 min |
-| **[MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)** 🆕 | Generate in 28+ languages | 12 min |
-| **[MULTILINGUAL_QUICKREF.md](MULTILINGUAL_QUICKREF.md)** 🆕 | Multilingual quick reference | 5 min |
-| **[PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)** 🆕 | Parse markdown/GitHub/YouTube | 5 min |
-| **[PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md)** 🆕 | Complete Python API reference | 10 min |
-| **[CONTENT_CONTROL_GUIDE.md](CONTENT_CONTROL_GUIDE.md)** 🆕 | Control content generation | 8 min |
-| [**AI_NARRATION_QUICKSTART.md**](AI_NARRATION_QUICKSTART.md) | Setup AI narration in 2 minutes | 3 min |
-| [**COMPLETE_USER_WORKFLOW.md**](docs/COMPLETE_USER_WORKFLOW.md) | Step-by-step workflow | 15 min |
-| [**NEW_SCENE_TYPES_GUIDE.md**](docs/NEW_SCENE_TYPES_GUIDE.md) | Code comparison & quote scenes | 8 min |
-| [**VOICE_GUIDE_COMPLETE.md**](docs/VOICE_GUIDE_COMPLETE.md) | Using all 4 voices | 8 min |
-
-### **Technical Reference:**
-
-| Guide | Purpose |
-|-------|---------|
-| [**AI_NARRATION_GUIDE.md**](docs/AI_NARRATION_GUIDE.md) | AI vs template narration (detailed) |
-| [**PACKAGE_DOCUMENTATION.md**](docs/PACKAGE_DOCUMENTATION.md) | All dependencies explained |
-| [**WORKFLOW_VISUAL_OUTLINE.md**](docs/WORKFLOW_VISUAL_OUTLINE.md) | Visual workflow diagrams |
-| [**SYSTEM_OVERVIEW_VISUAL.md**](docs/SYSTEM_OVERVIEW_VISUAL.md) | Architecture overview |
-| [**TEMPLATE_SYSTEM_EXPLAINED.md**](docs/TEMPLATE_SYSTEM_EXPLAINED.md) | Template systems |
-
-### **Examples:**
-
-- `inputs/example_simple.yaml` - Minimal YAML template
-- `inputs/example_advanced.yaml` - Full control template
-- `inputs/example_new_scene_types.yaml` - Code comparison & quote
-- `inputs/example_four_voices.yaml` - All 4 voices
-
----
-
-## 💻 Installation
-
-### **Requirements:**
+# Video Generation System
+
+Professional video production from text content through automated workflows with neural text-to-speech narration and synchronized visual rendering.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Technical Overview](#technical-overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Overview
+
+This system automates the creation of professional-quality tutorial and documentation videos. It processes various input formats (markdown documents, YouTube transcripts, YAML configurations) and generates Full HD videos with synchronized narration, visual elements, and transitions.
+
+The architecture employs an audio-first approach to ensure perfect synchronization between narration and visual content, eliminating manual timing adjustments.
+
+## Features
+
+### Input Processing
+- **Document Parsing**: Converts markdown and documentation into structured video content
+- **YouTube Integration**: Extracts and summarizes video transcripts
+- **Programmatic API**: Python interface for automated batch generation
+- **Interactive Wizard**: Guided creation process for manual content development
+- **Web Interface**: Browser-based visual editor for scene-by-scene control
+
+### Content Generation
+- **Multiple Scene Types**: 12 different scene templates including title cards, code blocks, comparisons, and educational formats
+- **Neural TTS**: High-quality text-to-speech with 4 professional voice options
+- **Multilingual Support**: Generate content in 28+ languages with automatic translation
+- **AI Enhancement**: Optional Claude API integration for natural narration (template-based fallback available)
+
+### Video Production
+- **Audio-First Architecture**: Generates narration first, then builds video to match exact timings
+- **GPU Acceleration**: NVIDIA NVENC hardware encoding for 5-10x performance improvement
+- **Batch Processing**: Parallel generation of multiple videos with progress tracking
+- **Automated Workflow**: End-to-end pipeline from content to finished video
+
+## Technical Overview
+
+### Architecture
+
+**Stage-Based Pipeline**
+- Input Stage: Processes YAML, documents, YouTube URLs, or programmatic inputs
+- Parsing Stage: Extracts structure and validates scene definitions
+- Script Generation: Creates narration (template-based or AI-enhanced)
+- Audio Generation: Synthesizes speech and measures precise durations
+- Video Generation: Renders frames to match audio timing exactly
+- Validation Stage: Performs health checks and quality validation
+- Output Stage: Exports final video with metrics
+
+**Core Technologies**
+- Video Processing: FFmpeg with NVENC GPU encoding
+- Audio Synthesis: Edge-TTS neural voices
+- AI Integration: Claude 3.5 Sonnet (optional)
+- Rendering: NumPy for optimized frame operations
+- Testing: Pytest with 79% coverage across 474 tests
+
+**Performance Characteristics**
+- Single video generation: ~5 minutes
+- Batch processing: 2.25x speedup with parallel execution
+- Frame rendering: 8x faster with NumPy optimizations
+- Perfect audio/visual sync through manifest-based timing
+
+## Installation
+
+<details>
+<summary>Installation Steps</summary>
+
+### Prerequisites
 
 - Python 3.10+
-- FFmpeg with NVENC support (GPU encoding)
-- Internet connection (for Edge-TTS)
-- Optional: Anthropic API key (for AI-enhanced narration)
+- FFmpeg with NVENC support (GPU encoding recommended)
+- Internet connection (for Edge-TTS voice downloads)
+- Optional: Anthropic API key for AI-enhanced narration
 
-### **Install:**
+### Setup
 
 ```bash
 # Clone repository
-git clone https://github.com/bjpl/video_gen.git
+git clone <repository-url>
 cd video_gen
 
-# Install Python dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# Optional: Set API key for AI narration (recommended for best quality)
+# Optional: Configure AI narration
 export ANTHROPIC_API_KEY="sk-ant-api03-..."  # Linux/Mac
 # OR
 set ANTHROPIC_API_KEY=sk-ant-api03-...       # Windows CMD
 # OR
 $env:ANTHROPIC_API_KEY="sk-ant-api03-..."    # Windows PowerShell
 
-# Verify setup
+# Verify installation
 python scripts/create_video.py --help
 ```
 
----
+### First Run
 
-## 🎯 Usage Examples
+FFmpeg will download Edge-TTS voices (~50MB) on first execution. Subsequent runs use cached voices.
 
-### **From Existing Documentation:**
+</details>
 
+## Usage
+
+### For Portfolio Review
+
+This project demonstrates:
+
+**Software Architecture**
+- Modular stage-based pipeline design
+- Event-driven progress tracking
+- State persistence between pipeline stages
+- Extensible renderer system
+
+**Development Practices**
+- Comprehensive test coverage (79%, 474 tests)
+- Type-safe Python with full type hints
+- Separation of concerns across 7 renderer modules
+- Clear API boundaries and interfaces
+
+**Performance Engineering**
+- GPU-accelerated video encoding
+- Vectorized NumPy operations
+- Parallel batch processing
+- Intelligent caching strategies
+
+### Quick Start
+
+**From Existing Documentation**
 ```bash
-# Parse your README into a video
-python scripts/create_video.py --document README.md \
-  --accent-color blue \
-  --voice male
+# Parse markdown into video
+python scripts/create_video.py --document README.md
 
-# Review generated YAML
-cat inputs/*_from_doc_*.yaml
-
-# Generate video
+# Generate audio and video
 cd scripts
 python generate_all_videos_unified_v2.py
 python generate_videos_from_timings_v3_simple.py
 ```
 
-**Time:** ~5 minutes total
-
----
-
-### **From YouTube Video:**
-
+**From YouTube Video**
 ```bash
-# Create summary from YouTube tutorial
-python scripts/create_video.py --youtube-url \
-  "https://youtube.com/watch?v=VIDEO_ID" \
-  --duration 60
-
-# Generates condensed 60-second summary
+# Create summary video from YouTube content
+python scripts/create_video.py --youtube-url "https://youtube.com/watch?v=VIDEO_ID" --duration 60
 ```
 
-**Time:** ~3 minutes total
-
----
-
-### **Interactive Creation:**
-
+**Interactive Creation**
 ```bash
-# Launch wizard
+# Launch guided wizard
 python scripts/create_video.py --wizard
-
-# Answer questions:
-# - What's your video about?
-# - What topics to cover?
-# - What commands to show?
-# System generates everything!
 ```
 
-**Time:** ~15 minutes total
-
----
-
-### **Programmatic Generation:** 🆕
-
-**Two approaches available:**
-
-#### **A) Parse Existing Content (Fastest!)**
-
+**Programmatic Generation**
 ```python
-# From local markdown
+# Parse markdown content
 from scripts.document_to_programmatic import parse_document_to_set
-parse_document_to_set('README.md')  # ONE line - done!
+parse_document_to_set('README.md')
 
-# From GitHub README
+# Or fetch GitHub repository README
 from scripts.document_to_programmatic import github_readme_to_video
-github_readme_to_video('https://github.com/fastapi/fastapi').export_to_yaml('sets/fastapi')
+github_readme_to_video('https://github.com/user/repo').export_to_yaml('sets/project')
 
-# From YouTube video
-from scripts.youtube_to_programmatic import parse_youtube_to_set
-parse_youtube_to_set('https://youtube.com/watch?v=VIDEO_ID', target_duration=60)
-
-# Then generate
-cd scripts
-python generate_video_set.py ../sets/{name}
-python generate_videos_from_set.py ../output/{name}
+# Generate videos
+# cd scripts
+# python generate_video_set.py ../sets/project
+# python generate_videos_from_set.py ../output/project
 ```
 
-#### **B) Build from Scratch (Full Control)**
-
-```python
-# Generate videos with Python code
-from scripts.python_set_builder import VideoSetBuilder
-
-builder = VideoSetBuilder("tutorial_series", "Python Tutorial")
-
-for topic in ["Variables", "Functions", "Classes"]:
-    builder.add_video(
-        video_id=topic.lower(),
-        title=topic,
-        scenes=[
-            builder.create_title_scene(topic, f"Learn {topic}"),
-            builder.create_command_scene("Example", "Code", ["# ..."]),
-            builder.create_outro_scene("Great!", "Next lesson")
-        ]
-    )
-
-builder.export_to_yaml("sets/tutorial_series")
-
-# Then generate with standard pipeline
-cd scripts
-python generate_video_set.py ../sets/tutorial_series
-python generate_videos_from_set.py ../output/tutorial_series
+**Web Interface**
+```bash
+# Launch browser-based editor
+cd app
+python main.py
+# Navigate to http://localhost:8000
 ```
 
-**Perfect for:**
-- Parse markdown/GitHub/YouTube (zero manual work!)
-- Generate 10+ videos from databases/APIs
-- CI/CD integration
-- Batch automation
-
-**See:** [PROGRAMMATIC_GUIDE.md](PROGRAMMATIC_GUIDE.md) | [PARSE_RAW_CONTENT.md](PARSE_RAW_CONTENT.md)
-
----
-
-## 🏗️ Architecture
-
-### **Stage-Based Pipeline (New):**
-
-💡 **Why this matters:** Modular stages allow you to extend the system without touching core code!
-
-The system uses a modular stage-based pipeline for maximum extensibility:
-
-```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                           STAGE-BASED PIPELINE                                 │
-├────────────────────────────────────────────────────────────────────────────────┤
-│                                                                                │
-│  📥 INPUT STAGES                                                               │
-│  ════════════════                                                              │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                    │
-│  │ InputStage   │───>│ ParsingStage │───>│ ScriptGen    │                    │
-│  │ ✅ 97% tested│    │ ✅ 100% test │    │ ⚠️  85% test │                    │
-│  │              │    │              │    │              │                    │
-│  │ • YAML files │    │ • Extract    │    │ • Template   │                    │
-│  │ • Documents  │    │   structure  │    │   narration  │                    │
-│  │ • YouTube    │    │ • Validate   │    │ • AI enhance │                    │
-│  │ • Wizard     │    │   scenes     │    │   (optional) │                    │
-│  └──────────────┘    └──────────────┘    └──────────────┘                    │
-│        │                     │                    │                            │
-│        └─────────────────────┴────────────────────┘                            │
-│                              │                                                 │
-│                              v                                                 │
-│  🎙️ AUDIO GENERATION                                                           │
-│  ═══════════════════                                                           │
-│  ┌──────────────────────────────────────┐                                     │
-│  │ AudioGenStage     ✅ 75% tested      │                                     │
-│  │ ┌──────────────────────────────────┐ │                                     │
-│  │ │ 1. Generate TTS for each scene   │ │                                     │
-│  │ │ 2. Measure exact duration        │ │ ← KEY INNOVATION                   │
-│  │ │ 3. Create timing manifest        │ │                                     │
-│  │ └──────────────────────────────────┘ │                                     │
-│  └──────────────────────────────────────┘                                     │
-│                    │                                                           │
-│                    v                                                           │
-│  🎬 VIDEO GENERATION                                                           │
-│  ══════════════════                                                            │
-│  ┌──────────────────────────────────────┐                                     │
-│  │ VideoGenStage     ⚠️ 65% tested      │                                     │
-│  │ ┌──────────────────────────────────┐ │                                     │
-│  │ │ 1. Read audio timing manifest    │ │ ← Perfect sync guaranteed          │
-│  │ │ 2. Render frames to match        │ │                                     │
-│  │ │ 3. GPU-accelerated encoding      │ │                                     │
-│  │ └──────────────────────────────────┘ │                                     │
-│  └──────────────────────────────────────┘                                     │
-│                    │                                                           │
-│                    v                                                           │
-│  📤 OUTPUT                                                                     │
-│  ════════                                                                      │
-│  ┌──────────────────────────────────────┐                                     │
-│  │ OutputStage       ⚠️ 70% tested      │                                     │
-│  │ • Validation                         │                                     │
-│  │ • Health checks                      │                                     │
-│  │ • Metrics export                     │                                     │
-│  │ • File output: video.mp4             │                                     │
-│  └──────────────────────────────────────┘                                     │
-│                                                                                │
-└────────────────────────────────────────────────────────────────────────────────┘
-
-LEGEND:  ✅ Production Ready  |  ⚠️ Tested, Minor Gaps  |  ❌ Not Ready
-```
-
-**Each stage:**
-- ✅ Independent, testable module
-- ✅ Event-driven progress tracking
-- ✅ Error handling and recovery
-- ✅ State persistence between stages
-
-📝 **Best Practice:** Each stage can be run independently for debugging!
-
----
-
-### **Modular Renderer System:**
-
-Scene rendering is now modular:
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                     RENDERER ARCHITECTURE                        │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  video_gen/renderers/                                            │
-│  ├── 📐 base.py              (Shared utilities)                  │
-│  │   └─ Text wrapping, positioning, transitions                 │
-│  │                                                               │
-│  ├── 🎨 constants.py         (Visual config)                     │
-│  │   └─ Colors, fonts, dimensions                               │
-│  │                                                               │
-│  ├── ✅ basic_scenes.py       (100% coverage)                    │
-│  │   ├─ title        - Opening slides                           │
-│  │   ├─ command      - Terminal/code                            │
-│  │   ├─ list         - Bullet points                            │
-│  │   └─ outro        - Closing                                  │
-│  │                                                               │
-│  ├── 🎓 educational_scenes.py (96% coverage)                     │
-│  │   ├─ learning_objectives - Lesson goals                      │
-│  │   ├─ quiz         - Multiple choice                          │
-│  │   └─ exercise     - Practice tasks                           │
-│  │                                                               │
-│  ├── 🔀 comparison_scenes.py  (100% coverage)                    │
-│  │   ├─ code_comparison - Before/after                          │
-│  │   ├─ problem      - Challenge                                │
-│  │   └─ solution     - Answer                                   │
-│  │                                                               │
-│  └── 📍 checkpoint_scenes.py  (95% coverage)                     │
-│      ├─ checkpoint   - Progress review                          │
-│      └─ quote        - Key principles                           │
-│                                                                  │
-│  OLD: 1,476-line monolith 😓                                     │
-│  NEW: 7 focused modules (~206 lines each) ✨                     │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-**Benefits:**
-- 🎯 Single responsibility per module (~200 lines each)
-- 🧪 Independently testable
-- 🔧 Easy to extend with new scene types
-- 📝 Clear API boundaries
-
-✨ **Add Your Own Scene Type:** Just create a new function in the appropriate renderer file!
-
----
-
-### **Key Innovation: Audio-First Architecture**
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  ❌ TRADITIONAL APPROACH                                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. Guess duration → "This scene should be 10 seconds"         │
-│  2. Create video → Render 10 seconds of video                  │
-│  3. Generate audio → Create narration                          │
-│  4. Hope it fits → Audio is 12 seconds... PROBLEM! 😓          │
-│  5. Re-render → Manual fixing, tedious sync                    │
-│                                                                 │
-│  RESULT: Frequent desync, manual fixes, wasted time            │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  ✅ THIS SYSTEM'S APPROACH                                      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. Generate audio → Create narration with TTS                 │
-│  2. Measure EXACT duration → Audio is 12.347 seconds           │
-│  3. Build video to match → Render exactly 12.347 seconds       │
-│                                                                 │
-│  RESULT: Perfect sync, EVERY TIME, zero manual work ✨          │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Result:** Perfect sync, every time! No guessing, no re-rendering, no manual fixes.
-
-⚠️ **Critical Detail:** We generate timing manifests (`audio_timings.json`) that video generation reads. This guarantees frame-perfect sync.
-
----
-
-### **Test Quality: 79% Coverage**
-
-```
-┌────────────────────────────────────────────────────────────┐
-│                    TEST METRICS                            │
-├────────────────────────────────────────────────────────────┤
-│                                                            │
-│  Total Statements:    4,432                                │
-│  Covered:            3,493                                 │
-│  Coverage:           79%   [████████████████░░░░░] 79%     │
-│                                                            │
-│  Tests:              474 passing ✅                        │
-│                        1 failing  ⚠️                        │
-│                      128 skipped  ⏭️                        │
-│                                                            │
-│  Execution Time:     18 seconds ⚡                          │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
-```
-
-**Coverage by Component:**
-
-| Component | Coverage | Status | Notes |
-|-----------|----------|--------|-------|
-| **Renderers** | 95-100% | ✅ Production Ready | All scene types tested |
-| **Models & Utils** | 76-100% | ✅ Robust | Core data structures solid |
-| **Input Adapters** | 87-99% | ✅ Reliable | Document/YouTube/YAML tested |
-| **Pipeline Stages** | 60-85% | ⚠️ Tested | Integration tests cover gaps |
-| **Audio Generator** | 75% | ⚠️ Functional | Voice rotation, timing work |
-| **Video Generator** | 65% | ⚠️ Functional | GPU encoding, frame gen work |
-
-```
-COVERAGE VISUALIZATION:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Renderers         ████████████████████  100%  ✅
-Models/Utils      ███████████████████   95%   ✅
-Input Adapters    ██████████████████    90%   ✅
-Pipeline Stages   ███████████████       75%   ⚠️
-Audio Gen         ███████████████       75%   ⚠️
-Video Gen         █████████████         65%   ⚠️
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Overall           ████████████████      79%   ✅
-```
-
-📝 **Note:** Lower coverage in video/audio gen is acceptable - these are integration-heavy and tested end-to-end.
-
----
-
-## 📦 Project Structure
+## Project Structure
 
 ```
 video_gen/
-├── 📜 scripts/                         # 🚀 Automation & Entry Points
-│   ├── create_video.py                 # ⭐ Main CLI entry point (START HERE)
-│   ├── python_set_builder.py           # 🐍 Programmatic video builder
-│   ├── multilingual_builder.py         # 🌍 28+ language support
-│   ├── document_to_programmatic.py     # 📄 Parse markdown/docs
-│   ├── youtube_to_programmatic.py      # 📺 Parse YouTube videos
-│   └── ... (30+ utility scripts)
+├── scripts/                         # Automation and entry points
+│   ├── create_video.py             # Main CLI interface
+│   ├── python_set_builder.py      # Programmatic video builder
+│   ├── document_to_programmatic.py # Document parser
+│   └── generate_all_videos_unified_v2.py  # Audio generation
 │
-├── 🎬 video_gen/                       # 🔧 Core Video Generation Library
+├── video_gen/                       # Core library
+│   ├── renderers/                  # Scene rendering modules
+│   │   ├── basic_scenes.py         # General-purpose scenes
+│   │   ├── educational_scenes.py   # Learning content
+│   │   ├── comparison_scenes.py    # Before/after displays
+│   │   └── checkpoint_scenes.py    # Progress markers
 │   │
-│   ├── renderers/                      # 🎨 Modular Scene Renderers (NEW!)
-│   │   ├── base.py                     # 🧰 Shared utilities (text, positioning)
-│   │   ├── constants.py                # 🎨 Colors, fonts, dimensions
-│   │   │
-│   │   ├── basic_scenes.py             # ✅ 100% - General Purpose
-│   │   │   ├─ title        - Opening slides
-│   │   │   ├─ command      - Terminal/code blocks
-│   │   │   ├─ list         - Bullet points
-│   │   │   └─ outro        - Closing call-to-action
-│   │   │
-│   │   ├── educational_scenes.py       # 🎓 96% - Learning Content
-│   │   │   ├─ learning_objectives - Lesson goals
-│   │   │   ├─ quiz         - Multiple choice Q&A
-│   │   │   └─ exercise     - Practice tasks
-│   │   │
-│   │   ├── comparison_scenes.py        # 🔀 100% - Before/After
-│   │   │   ├─ code_comparison - Side-by-side code
-│   │   │   ├─ problem      - Coding challenges
-│   │   │   └─ solution     - Solutions + explanations
-│   │   │
-│   │   └── checkpoint_scenes.py        # 📍 95% - Progress & Quotes
-│   │       ├─ checkpoint   - Learning checkpoints
-│   │       └─ quote        - Key principles/quotes
+│   ├── stages/                      # Pipeline stages
+│   │   ├── input_stage.py          # Input processing
+│   │   ├── audio_generation_stage.py  # TTS synthesis
+│   │   ├── video_generation_stage.py  # Frame rendering
+│   │   └── validation_stage.py     # Quality checks
 │   │
-│   ├── stages/                         # ⚙️ Pipeline Stages (Stage-Based Architecture)
-│   │   ├── input_stage.py              # 📥 Input adaptation (YAML, docs, etc)
-│   │   ├── parsing_stage.py            # 🔍 Content parsing & validation
-│   │   ├── script_generation_stage.py  # ✍️ Narration generation (template/AI)
-│   │   ├── audio_generation_stage.py   # 🎙️ TTS synthesis + timing manifest
-│   │   ├── video_generation_stage.py   # 🎬 Frame rendering + encoding
-│   │   ├── validation_stage.py         # ✅ Health checks + validation
-│   │   └── output_stage.py             # 📤 File output + metrics
+│   ├── pipeline/                    # Pipeline orchestration
+│   │   ├── orchestrator.py         # Stage coordination
+│   │   ├── events.py               # Event system
+│   │   └── state_manager.py        # State persistence
 │   │
-│   ├── pipeline/                       # 🎯 Pipeline Orchestration
-│   │   ├── orchestrator.py             # 🎛️ Pipeline coordinator
-│   │   ├── stage.py                    # 📋 Base stage interface
-│   │   ├── events.py                   # 📢 Event-driven progress
-│   │   └── state_manager.py            # 💾 State persistence
-│   │
-│   ├── audio_generator/                # 🎙️ Audio Synthesis
-│   │   └── unified.py                  # Voice rotation, TTS, timing
-│   │
-│   ├── video_generator/                # 🎬 Video Rendering
-│   │   └── unified.py                  # Frame generation, GPU encoding
-│   │
-│   ├── input_adapters/                 # 📥 Input Parsers (Legacy - being migrated)
-│   │   ├── document.py                 # Markdown → YAML
-│   │   ├── yaml_file.py                # YAML loading
-│   │   ├── youtube.py                  # YouTube transcript fetching
-│   │   └── programmatic.py             # Python API
-│   │
-│   └── shared/                         # 🛠️ Shared Utilities
-│       ├── models.py                   # 📊 Data models (99% coverage)
-│       ├── config.py                   # ⚙️ Configuration singleton
-│       ├── exceptions.py               # ⚠️ Custom exceptions
-│       └── utils.py                    # 🔧 Helper functions (100% coverage)
+│   └── shared/                      # Utilities
+│       ├── models.py               # Data models
+│       ├── config.py               # Configuration
+│       └── utils.py                # Helper functions
 │
-├── 🌐 app/                             # 🚀 Web API (FastAPI - Optional)
-│   ├── main.py                         # 🔌 REST API endpoints
-│   ├── input_adapters/                 # 📥 Input parsers (new location)
-│   │   ├── document.py                 # ✅ 90% coverage
-│   │   ├── yaml_file.py                # ✅ 86% coverage
-│   │   ├── youtube.py                  # ✅ 94% coverage
-│   │   ├── examples.py                 # ✅ 99% coverage
-│   │   └── wizard.py                   # ⚠️ 87% coverage
-│   ├── models.py                       # ✅ API models (100% coverage)
-│   └── utils.py                        # ⚠️ API utilities (76% coverage)
+├── app/                             # Web interface (FastAPI)
+│   ├── main.py                     # API server
+│   └── input_adapters/             # Input processors
 │
-├── 🧪 tests/                           # ✅ Test Suite (79% coverage, 474 tests)
-│   ├── test_renderers.py               # ✅ 100% - All scene renderers
-│   ├── test_stages_coverage.py         # ✅ 32 tests - Pipeline stages
-│   ├── test_adapters_coverage.py       # ✅ 45 tests - Input adapters
-│   ├── test_utilities_coverage.py      # ✅ 63 tests - Shared utilities
-│   ├── test_pipeline_stages.py         # ✅ Pipeline integration
-│   ├── test_integration_comprehensive.py # ✅ End-to-end workflows
-│   └── ... (24 test files total)
+├── tests/                           # Test suite (79% coverage)
+│   ├── test_renderers.py           # Renderer tests
+│   ├── test_stages_coverage.py     # Pipeline tests
+│   └── test_integration_comprehensive.py  # E2E tests
 │
-├── 📁 sets/                            # 📦 Video Set Definitions (multi-video projects)
-├── 📁 output/                          # 🎥 Generated Videos & Assets
-├── 📁 inputs/                          # 📝 Example YAML Templates
-│   ├── example_simple.yaml             # ⭐ Minimal example (START HERE)
-│   ├── example_advanced.yaml           # 🚀 Full-featured example
-│   ├── example_new_scene_types.yaml    # 🎨 Code comparison & quotes
-│   └── example_four_voices.yaml        # 🎙️ All 4 voice examples
+├── docs/                            # Documentation (50+ guides)
+│   ├── THREE_INPUT_METHODS_GUIDE.md
+│   ├── PROGRAMMATIC_GUIDE.md
+│   └── PRODUCTION_READINESS.md
 │
-├── 📁 docs/                            # 📚 Documentation (100+ guides, 27K+ words)
-│   ├── THREE_INPUT_METHODS_GUIDE.md    # ⭐ Essential reading
-│   ├── PROGRAMMATIC_GUIDE.md           # 🐍 Python API reference
-│   ├── MULTILINGUAL_GUIDE.md           # 🌍 28+ languages
-│   ├── PRODUCTION_READINESS.md         # ⚠️ Honest status assessment
-│   ├── architecture/                   # 🏗️ System architecture docs
-│   ├── SESSION_SUMMARY_2025-10-06.md   # 📝 Latest changes (TODAY)
-│   └── REFACTORING_SESSION_SUMMARY.md  # 📝 Oct 5 major refactoring
-│
-├── pytest.ini                          # 🧪 Test configuration
-├── requirements.txt                    # 📦 Python dependencies
-└── README.md                           # 📖 This file
+└── inputs/                          # Example templates
+    ├── example_simple.yaml
+    └── example_advanced.yaml
 ```
 
-### 📊 Structure Statistics
+## Development
 
+### Code Quality
+
+**Testing**
+- 474 passing tests across 24 test files
+- 79% overall code coverage
+- Component coverage: 95-100% (renderers), 75-85% (pipeline stages)
+- Integration tests for end-to-end workflows
+
+**Architecture Improvements**
+- Refactored 1,476-line monolith into 7 focused modules (~206 lines each)
+- Migrated from print statements to structured logging
+- Centralized configuration through singleton pattern
+- Modular renderer system for easy extensibility
+
+### Running Tests
+
+```bash
+# Full test suite (~18 seconds)
+pytest
+
+# With coverage report
+pytest --cov=video_gen --cov-report=html
+
+# Specific test file
+pytest tests/test_renderers.py
+
+# Watch mode during development
+pytest --watch
 ```
-┌───────────────────────────────────────────────────────────┐
-│                    CODEBASE METRICS                       │
-├───────────────────────────────────────────────────────────┤
-│                                                           │
-│  Total Files:           ~150                              │
-│  Python Modules:        ~80                               │
-│  Test Files:            24                                │
-│  Documentation:         ~50 files (27K+ words)            │
-│                                                           │
-│  Lines of Code:         ~15,000                           │
-│  Test Coverage:         79%                               │
-│  Passing Tests:         474/475 (99.8%)                   │
-│                                                           │
-│  Largest Module:        ~600 lines (after refactor!)      │
-│  Average Module:        ~200 lines                        │
-│  Smallest Module:       ~50 lines                         │
-│                                                           │
-└───────────────────────────────────────────────────────────┘
-```
 
-### 🎯 Key Improvements (Oct 2025)
+### Scene Types
 
-| Improvement | Before | After | Impact |
-|-------------|--------|-------|--------|
-| **Renderer Modularity** | 1,476-line monolith | 7 modules (~206 lines each) | ✅ 86% size reduction |
-| **Test Coverage** | 45% | 79% | ✅ 76% improvement |
-| **Pipeline Architecture** | Monolithic scripts | 7 independent stages | ✅ Fully modular |
-| **Configuration** | Scattered | Single config singleton | ✅ DRY principle |
-| **Logging** | 1,020 print() calls | Structured logging | ✅ Production-ready |
-| **Documentation** | 15 guides | 50+ guides (27K words) | ✅ 233% increase |
+Mix 12 available scene types:
+- `title` - Opening slides and section headers
+- `command` - Terminal commands and code blocks
+- `list` - Numbered or bulleted content
+- `code_comparison` - Side-by-side before/after code
+- `quote` - Centered quotes with attribution
+- `outro` - Closing call-to-action
+- Educational: `learning_objectives`, `problem`, `solution`, `quiz`, `checkpoint`, `exercise`
 
-💡 **Navigation Tips:**
-- 🚀 **New users:** Start with `scripts/create_video.py --wizard`
-- 📄 **Parse docs:** Use `scripts/document_to_programmatic.py`
-- 🐍 **Automation:** Check `scripts/python_set_builder.py`
-- 🎨 **Add scenes:** Edit files in `video_gen/renderers/`
-- 🧪 **Run tests:** `pytest tests/` (takes ~18 seconds)
+### Voice Options
 
-⚠️ **Deprecated Paths:** Some legacy code in `video_gen/input_adapters/` - being migrated to `app/input_adapters/`
+Four professional neural TTS voices:
+- `male` (Andrew) - Professional, confident tone
+- `male_warm` (Brandon) - Warm, engaging delivery
+- `female` (Aria) - Clear, crisp articulation
+- `female_friendly` (Ava) - Friendly, approachable style
 
----
-
-## 🎨 Customization
-
-### **Scene Types:**
-
-Mix and match 6 scene types:
+### Customization
 
 ```yaml
+# Example scene configuration
 scenes:
-  - type: title                # Opening
-  - type: command              # Show code
-  - type: code_comparison      # Before/after
-  - type: quote                # Key principle
-  - type: list                 # Takeaways
-  - type: outro                # Close
-```
+  - type: title
+    title: "Getting Started"
+    subtitle: "Quick installation guide"
+    voice: male
 
-### **Voices:**
-
-```yaml
-scenes:
-  - voice: male              # Andrew - professional
-  - voice: male_warm         # Brandon - engaging
-  - voice: female            # Aria - clear
-  - voice: female_friendly   # Ava - friendly
-```
-
-### **Visual Style:**
-
-```yaml
-video:
-  accent_color: purple  # orange, blue, purple, green, pink, cyan
-```
-
----
-
-## ⚡ Performance
-
-### 📊 Benchmark Results (Real World)
-
-| Videos | Time (Sequential) | Time (Parallel) | Speedup | Time Saved |
-|--------|------------------|-----------------|---------|------------|
-| **1 video** | ~5 min | ~5 min | 1.0x | — |
-| **5 videos** | ~20 min | ~10 min | **2.0x** | 10 min ⏱️ |
-| **15 videos** | ~45 min | ~20 min | **2.25x** | 25 min ⏱️ |
-| **50 videos** | ~2.5 hours | ~1 hour | **2.5x** | 1.5 hours ⏱️ |
-
-```
-PERFORMANCE VISUALIZATION (15 videos):
-
-Sequential:  ████████████████████████████████████████████ 45 min
-Parallel:    █████████████████████ 20 min  (2.25x faster!)
-                                   ↑
-                              GPU + Multi-core
-```
-
-### 🚀 Performance Features
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│                  PERFORMANCE OPTIMIZATIONS                   │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  🎮 GPU ACCELERATION (NVIDIA NVENC)                          │
-│  ════════════════════════════════════                        │
-│  • Hardware H.264 encoding                                   │
-│  • 5-10x faster than CPU encoding                            │
-│  • Frees CPU for other tasks                                │
-│  • Automatic fallback to CPU if no GPU                       │
-│                                                              │
-│  ⚡ NUMPY OPTIMIZATIONS                                      │
-│  ═══════════════════════                                     │
-│  • Vectorized frame blending → 8x faster                     │
-│  • NumPy array operations (no Python loops)                  │
-│  • Memory-efficient frame buffering                          │
-│                                                              │
-│  🤖 AI-POWERED NARRATION (Optional)                          │
-│  ══════════════════════════════                              │
-│  • Claude API integration                                    │
-│  • Natural language generation                               │
-│  • ~$0.05 per video                                          │
-│  • Falls back to template if unavailable                     │
-│                                                              │
-│  🔄 BATCH PROCESSING                                         │
-│  ══════════════════                                          │
-│  • Multi-core parallel generation                            │
-│  • Automatic load balancing                                  │
-│  • Progress tracking per video                               │
-│  • Aggregate health reporting                                │
-│                                                              │
-│  💾 CACHING & REUSE                                          │
-│  ══════════════════                                          │
-│  • Audio files cached between runs                           │
-│  • Timing manifests persisted                                │
-│  • Skip regeneration if unchanged                            │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### 💻 System Requirements
-
-| Component | Minimum | Recommended | Impact |
-|-----------|---------|-------------|--------|
-| **Python** | 3.10 | 3.11+ | Faster execution |
-| **RAM** | 4 GB | 8+ GB | Larger videos |
-| **CPU** | 2 cores | 4+ cores | Parallel processing |
-| **GPU** | None (CPU fallback) | NVIDIA with NVENC | **5-10x encoding speed** |
-| **Storage** | 1 GB | 5+ GB | Batch processing |
-| **Network** | Required | Fast | Edge-TTS downloads |
-
-### 🎯 Performance Tips
-
-💡 **Enable GPU encoding for best performance:**
-```bash
-# Automatic GPU detection - no config needed!
-# System uses NVENC if available, CPU otherwise
-python scripts/create_video.py --document README.md
-```
-
-⚡ **Parallel batch processing:**
-```bash
-# Generate multiple videos at once
-python scripts/generate_videos_from_timings_v3_optimized.py
-# Automatically uses all CPU cores
-```
-
-📝 **Cache audio for faster iterations:**
-```bash
-# Audio files cached in output/ directory
-# Re-running with same content reuses audio (90% faster!)
-```
-
-⚠️ **Performance Warning:** First run downloads Edge-TTS voices (~50MB) - subsequent runs are instant!
-
----
-
-## 🔧 Advanced Features
-
-### **Batch Processing:**
-
-```bash
-# Generate 15 videos from documentation
-for doc in docs/*.md; do
-    python scripts/create_video.py --document "$doc"
-done
-
-# Aggregate health check
-python scripts/generate_aggregate_report.py
-
-# Batch generate (parallel)
-python scripts/generate_videos_from_timings_v3_optimized.py
-```
-
-### **Custom Narration:**
-
-```yaml
-# Override auto-generated narration
-scenes:
   - type: command
-    narration: "Your exact custom narration text here..."
+    title: "Installation"
+    commands:
+      - "pip install -r requirements.txt"
+      - "python scripts/create_video.py --help"
+    voice: female
 ```
 
----
+### Performance Optimization
 
-## 📊 What Can You Create?
+**GPU Acceleration**
+- Automatic NVIDIA NVENC detection
+- 5-10x faster encoding vs CPU
+- Fallback to CPU if GPU unavailable
 
-✅ Technical tutorials
-✅ Feature overviews
-✅ Refactoring guides
-✅ Best practices videos
-✅ Code review content
-✅ Design pattern explanations
-✅ Troubleshooting guides
-✅ API documentation
-✅ Quick tips series
-✅ Tool comparisons
+**Batch Processing**
+```bash
+# Generate multiple videos in parallel
+python scripts/generate_videos_from_timings_v3_optimized.py
+# Utilizes all available CPU cores
+```
 
-**Coverage:** 99.5% of technical/software/learning content
+**Caching**
+- Audio files cached between runs
+- Timing manifests persisted
+- Regeneration skipped for unchanged content
 
----
+## Contributing
 
-## 🤝 Contributing
-
-This is an open system designed for:
+Contributions are welcome. This system is designed for:
 - Technical content creators
 - Developer advocates
 - Course creators
 - Documentation teams
 
-Feel free to:
-- Add new scene types
-- Extend input methods
-- Improve narration generation
-- Add visual themes
+Areas open for contribution:
+- New scene type templates
+- Additional input format parsers
+- Visual theme variations
+- Narration generation improvements
+
+Please ensure:
+- Tests pass and maintain coverage
+- Code follows existing style (Black formatting, type hints)
+- Documentation is updated
+- New features include examples
+
+## License
+
+MIT License - See LICENSE file for details.
 
 ---
 
-## 📄 License
+**Repository**: https://github.com/bjpl/video_gen
+**Documentation**: Complete index at `DOCUMENTATION_INDEX.md`
 
-MIT License - Use freely for any purpose
-
----
-
-## 🎯 Key Benefits
-
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                      WHY USE THIS SYSTEM?                          │
-├────────────────────────────────────────────────────────────────────┤
-│                                                                    │
-│  ⚡ FAST                                                           │
-│  ════════                                                          │
-│  • Videos in 5 minutes (not 6-8 hours)                             │
-│  • 99% time savings vs manual workflow                             │
-│  • Batch processing: 15 videos in 30 minutes                       │
-│                                                                    │
-│  🎬 PROFESSIONAL QUALITY                                           │
-│  ══════════════════════                                            │
-│  • Neural TTS narration (sounds human)                             │
-│  • GPU-accelerated encoding (broadcast quality)                    │
-│  • 1920x1080 Full HD output                                        │
-│  • Smooth transitions & animations                                 │
-│                                                                    │
-│  🔧 FLEXIBLE                                                       │
-│  ═══════════                                                       │
-│  • 4 input methods (docs, YouTube, wizard, API)                    │
-│  • 12 scene types (general + educational)                          │
-│  • 4 professional voices (mix per scene)                           │
-│  • 28+ languages (auto-translate)                                  │
-│  • 6 color themes (customize brand)                                │
-│                                                                    │
-│  📈 SCALABLE                                                       │
-│  ═══════════                                                       │
-│  • 1 video or 100+ videos                                          │
-│  • Parallel processing (multi-core)                                │
-│  • CI/CD integration ready                                         │
-│  • Programmatic Python API                                         │
-│                                                                    │
-│  ✅ PERFECT SYNC                                                   │
-│  ═══════════════                                                   │
-│  • Audio-first architecture (build video to match audio)           │
-│  • Frame-perfect timing (no manual sync)                           │
-│  • Zero desync issues (guaranteed)                                 │
-│                                                                    │
-│  📚 WELL DOCUMENTED                                                │
-│  ══════════════════                                                │
-│  • 27K words across 50+ guides                                     │
-│  • Step-by-step tutorials                                          │
-│  • API reference docs                                              │
-│  • Working examples included                                       │
-│                                                                    │
-└────────────────────────────────────────────────────────────────────┘
-```
-
-### 🎯 Use Cases & Success Stories
-
-| Use Case | Time Manual | Time With System | Saved |
-|----------|-------------|------------------|-------|
-| **Product tutorial** (1 video) | 6-8 hours | 5 minutes | **99%** |
-| **Course series** (15 videos) | 90-120 hours | 30 minutes | **99.6%** |
-| **Weekly tips** (50 videos/year) | 300-400 hours | 5 hours | **98.5%** |
-| **Multilingual content** (1 video × 5 languages) | 30-40 hours | 25 minutes | **99.3%** |
-
-✨ **Real Success Story:**
-> "Generated a 15-video Python tutorial series in 30 minutes. Would have taken me 90+ hours manually. The quality is indistinguishable from professionally recorded content." — Developer Advocate
-
-💡 **Perfect For:**
-- 🎓 Course creators (education content at scale)
-- 👨‍💻 Developer advocates (technical tutorials)
-- 📝 Documentation teams (visual guides from docs)
-- 🚀 Startups (product demos without video team)
-- 🌍 Content creators (multilingual expansion)
-
----
-
-## 📞 Links
-
-- **Repository:** https://github.com/bjpl/video_gen
-- **Documentation:** See `docs/` directory
-- **Examples:** See `inputs/` directory
-- **Issues:** https://github.com/bjpl/video_gen/issues
-
----
-
-## 🎉 Get Started
-
-```bash
-# 1. Install
-pip install -r requirements.txt
-
-# 2. Optional: Set API key for AI narration
-export ANTHROPIC_API_KEY="your_key_here"  # Optional but recommended
-
-# 3. Try an example
-python scripts/create_video.py --yaml inputs/example_simple.yaml
-
-# 4. Try with AI narration (if API key set)
-python scripts/create_video.py --yaml inputs/example_simple.yaml --use-ai
-
-# 5. Try programmatic example (NEW!)
-cd scripts
-python generate_video_set.py ../sets/tutorial_series_example
-python generate_videos_from_set.py ../output/tutorial_series_example
-
-# 6. Read the guides
-cat docs/guides/THREE_INPUT_METHODS_GUIDE.md   # All 4 input methods
-cat PARSE_RAW_CONTENT.md                 # Parse markdown/GitHub/YouTube (NEW!)
-cat PROGRAMMATIC_GUIDE.md                # Python API (NEW!)
-cat AI_NARRATION_QUICKSTART.md          # AI setup
-
-# 7. Create your first video!
-python scripts/create_video.py --wizard
-# Or parse existing content:
-python scripts/document_to_programmatic.py README.md
-```
-
----
-
-**Professional video production made simple.**
-
-**From idea to video in minutes.**
-
-*Last Updated: 2025-10-06 | Test Coverage: 79% | 474 Tests Passing*
+Built with Python, FFmpeg, Edge-TTS, and NumPy for automated professional video production.
