@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional, Literal, Any
 from contextlib import asynccontextmanager
 import asyncio
@@ -100,12 +100,27 @@ class SceneBase(BaseModel):
         extra = "allow"  # Allow additional fields for scene-specific content
 
 class Video(BaseModel):
-    video_id: str
-    title: str
-    scenes: List[Dict]  # Accept any scene type
+    video_id: str = Field(..., min_length=1)
+    title: str = Field(..., min_length=1, max_length=200)
+    scenes: List[Dict] = Field(..., min_length=1)  # Accept any scene type
     voice: Optional[str] = "male"  # Deprecated: use voices instead
     voices: Optional[List[str]] = None  # NEW: Support multiple voices
     duration: Optional[int] = None
+
+    @field_validator('scenes')
+    @classmethod
+    def validate_scenes(cls, v):
+        if not v or len(v) == 0:
+            raise ValueError('scenes list cannot be empty - must have at least one scene')
+
+        # Validate each scene has required 'type' field
+        for i, scene in enumerate(v):
+            if not isinstance(scene, dict):
+                raise ValueError(f'Scene {i} must be a dictionary')
+            if 'type' not in scene:
+                raise ValueError(f'Scene {i} missing required field: type')
+
+        return v
 
     def get_voices(self) -> List[str]:
         """Get voice list, handling backward compatibility."""
@@ -114,25 +129,80 @@ class Video(BaseModel):
         return [self.voice] if self.voice else ["male"]
 
 class VideoSet(BaseModel):
-    set_id: str
-    set_name: str
-    videos: List[Video]
+    set_id: str = Field(..., min_length=1, pattern="^[a-zA-Z0-9_-]+$")
+    set_name: str = Field(..., min_length=1, max_length=200)
+    videos: List[Video] = Field(..., min_length=1)
     accent_color: Optional[str] = "blue"
     languages: Optional[List[str]] = ["en"]  # Default to English only
     source_language: Optional[str] = "en"
     translation_method: Optional[Literal["claude", "google", "manual"]] = "claude"
 
+    @field_validator('accent_color')
+    @classmethod
+    def validate_accent_color(cls, v):
+        if v is None:
+            return "blue"
+        valid_colors = ['orange', 'blue', 'purple', 'green', 'pink', 'cyan']
+        if v not in valid_colors:
+            raise ValueError(f'accent_color must be one of: {valid_colors}')
+        return v
+
+    @field_validator('videos')
+    @classmethod
+    def validate_videos_not_empty(cls, v):
+        if not v or len(v) == 0:
+            raise ValueError('videos list cannot be empty - must have at least one video')
+        return v
+
 class DocumentInput(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1)
     accent_color: Optional[str] = "blue"
     voice: Optional[str] = "male"
-    video_count: Optional[int] = 1  # Number of videos to split document into
+    video_count: Optional[int] = Field(default=1, ge=1, le=10)  # Number of videos to split document into
     generate_set: Optional[bool] = False  # Whether to generate a video set
 
+    @field_validator('content')
+    @classmethod
+    def validate_content(cls, v):
+        if not v or not v.strip():
+            raise ValueError('content cannot be empty')
+        return v.strip()
+
+    @field_validator('accent_color')
+    @classmethod
+    def validate_accent_color(cls, v):
+        if v is None:
+            return "blue"
+        valid_colors = ['orange', 'blue', 'purple', 'green', 'pink', 'cyan']
+        if v not in valid_colors:
+            raise ValueError(f'accent_color must be one of: {valid_colors}')
+        return v
+
 class YouTubeInput(BaseModel):
-    url: str
-    duration: Optional[int] = 60
+    url: str = Field(..., min_length=1)
+    duration: Optional[int] = Field(default=60, ge=30, le=600)
     accent_color: Optional[str] = "blue"
+
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v):
+        if not v or not v.strip():
+            raise ValueError('url cannot be empty')
+        v = v.strip()
+        # Basic YouTube URL validation
+        if 'youtube.com' not in v and 'youtu.be' not in v:
+            raise ValueError('url must be a valid YouTube URL')
+        return v
+
+    @field_validator('accent_color')
+    @classmethod
+    def validate_accent_color(cls, v):
+        if v is None:
+            return "blue"
+        valid_colors = ['orange', 'blue', 'purple', 'green', 'pink', 'cyan']
+        if v not in valid_colors:
+            raise ValueError(f'accent_color must be one of: {valid_colors}')
+        return v
 
 class MultilingualRequest(BaseModel):
     video_set: VideoSet
@@ -288,7 +358,7 @@ async def generate_videos(video_set: VideoSet, background_tasks: BackgroundTasks
         # The pipeline expects programmatic input with video set data
         input_config = InputConfig(
             input_type="programmatic",
-            source=json.dumps(video_set.dict()),  # Serialize video set as JSON string
+            source=json.dumps(video_set.model_dump()),  # Serialize video set as JSON string (Pydantic v2)
             accent_color=video_set.accent_color or "blue",
             voice="male",
             languages=video_set.languages or ["en"]
@@ -491,7 +561,7 @@ async def generate_multilingual(request: MultilingualRequest, background_tasks: 
         # IMPORTANT: Pass dict, not JSON string! Programmatic adapter expects dict
         input_config = InputConfig(
             input_type="programmatic",
-            source=request.video_set.dict(),  # Pass dict directly, not JSON string
+            source=request.video_set.model_dump(),  # Pass dict directly, not JSON string (Pydantic v2)
             accent_color=request.video_set.accent_color or "blue",
             voice="male",
             languages=request.target_languages
