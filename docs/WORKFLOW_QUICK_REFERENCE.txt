@@ -1,0 +1,323 @@
+================================================================================
+VIDEO_GEN WORKFLOW ANALYSIS - QUICK REFERENCE
+================================================================================
+
+GENERATED: 2025-11-19
+ANALYSIS TYPE: Very Thorough (Complete User Journey Mapping)
+DOCUMENTS CREATED: 2
+
+================================================================================
+DOCUMENT LOCATIONS
+================================================================================
+
+1. /docs/WORKFLOW_ANALYSIS.md (810 lines)
+   - Comprehensive analysis with all details
+   - User journey maps for all 4 input methods
+   - Complete API integration points
+   - State management documentation
+   - Detailed workflow diagrams
+
+2. /docs/WORKFLOW_ISSUES_SUMMARY.md (300+ lines)
+   - Executive summary format
+   - Root cause analysis (3 critical issues)
+   - Quick assessment table
+   - Impact assessment
+   - Actionable recommendations
+
+================================================================================
+KEY FINDINGS AT A GLANCE
+================================================================================
+
+WORKFLOW STATUS:
+  ✅ YouTube Method  (100% working)
+  ✅ Wizard/Builder  (100% working)
+  ❌ Document Upload (0% working - file never read)
+  ❌ YAML Upload     (0% working - file never read)
+
+OVERALL: 50% of user-facing workflows are broken
+
+================================================================================
+THREE CRITICAL ISSUES
+================================================================================
+
+#1: FILE UPLOAD NOT IMPLEMENTED
+    Location: create-unified.html, line 586-656
+    Problem: Files stored as File objects, never converted to text
+    Impact: Document and YAML inputs completely broken
+    Evidence: startGeneration() sends filename, not content
+
+#2: ARCHITECTURAL MISMATCH (WIZARD VS BUILDER)
+    Location: home.html + create-unified.html
+    Problem: Two separate implementations for same purpose
+    Impact: User confusion, maintenance burden
+    Evidence: Wizard card redirects to /builder immediately
+
+#3: SILENT FAILURES IN ERROR HANDLING
+    Location: create-unified.html, pollJobStatus() line 702-735
+    Problem: No proper error handling, generic messages
+    Impact: Users don't know why generation failed
+    Evidence: Missing try-catch, no HTTP error handling
+
+================================================================================
+BROKEN WORKFLOW: DOCUMENT UPLOAD
+================================================================================
+
+User Action              System State              Result
+─────────────────────────────────────────────────────────────────────────
+Upload file.txt      inputData.file = File obj   ← File object stored
+                     inputData.fileName = "file.txt"
+
+Click "Generate"     startGeneration() called
+
+Send to API          content: "file.txt"         ← WRONG! Just filename!
+                     POST /api/parse/document
+
+Backend receives     "file.txt"
+                     Treats as file path
+                     Tries to load ./file.txt
+                     ❌ File not found!
+
+Poll for status      /api/tasks/{id}
+                     Max 60 polls (2 min)
+                     ❌ Never completes
+
+User sees            "Generation failed: ..."    ← Generic error
+                     No idea why
+                     Cannot retry intelligently
+
+================================================================================
+WORKING WORKFLOW: YOUTUBE
+================================================================================
+
+User Action              System State              Result
+─────────────────────────────────────────────────────────────────────────
+Paste URL            inputData.url = "youtu..."  ✅ Correct input
+
+Click "Generate"     startGeneration() called
+
+Send to API          url: "youtu..."             ✅ Correct format
+                     POST /api/parse/youtube
+
+Backend receives     URL
+                     Fetches transcript
+                     Generates video
+                     ✅ Success
+
+Poll for status      /api/tasks/{id}
+                     Polls every 2s
+                     ✅ Gets real updates
+
+User sees            "Video Generated!"          ✅ Success
+                     Links to progress page
+
+================================================================================
+ARCHITECTURE DIAGRAM: HOW IT SHOULD WORK
+================================================================================
+
+HOME PAGE
+    │
+    ├─ Document ──→ /create?method=document
+    │               Step 1: Upload
+    │               ✅ Read file contents
+    │               ✅ Show preview
+    │               ↓
+    │               Step 2: Configure
+    │               ↓
+    │               Step 3: Parse Preview
+    │               ✅ Show parsed scenes
+    │               ✅ Allow editing
+    │               ↓
+    │               Step 4: Review
+    │               ↓
+    │               Step 5: Generate
+    │               ✓ WORKS
+    │
+    ├─ YouTube ──→ /create?method=youtube
+    │               ✓ CURRENTLY WORKS
+    │
+    ├─ Wizard ──→ /builder (CONSOLIDATE HERE)
+    │               ✓ CURRENTLY WORKS
+    │
+    └─ YAML ──→ /create?method=yaml
+                ✅ Read file contents
+                ✅ Parse as YAML
+                ✅ Show preview
+                ✓ WORKS
+
+================================================================================
+QUICK FIX FOR FILE UPLOAD (2 CHANGES)
+================================================================================
+
+CHANGE #1: Read file contents in handleFileUpload()
+────────────────────────────────────────────────────
+
+BEFORE (Line 586-593):
+    handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            this.inputData.file = file;
+            this.inputData.fileName = file.name;
+            this.inputError = '';
+        }
+    }
+
+AFTER:
+    async handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            this.inputData.file = file;
+            this.inputData.fileName = file.name;
+            this.inputData.fileContent = await file.text();  // ← ADD THIS
+            this.inputError = '';
+        }
+    }
+
+CHANGE #2: Send actual content in startGeneration()
+──────────────────────────────────────────────────
+
+BEFORE (Line 656):
+    content: this.inputData.text || this.inputData.fileName || this.inputData.url,
+
+AFTER:
+    content: this.inputData.text || this.inputData.fileContent || this.inputData.url,
+
+RESULT: File contents now sent to backend instead of just filename
+
+================================================================================
+PROGRESS TRACKING COMPARISON
+================================================================================
+
+METHOD          CURRENT APPROACH           ISSUES
+────────────────────────────────────────────────────────────────────────
+Document        Poll /api/tasks/{id}       ⚠️ Polling (2s interval)
+YouTube         Poll /api/tasks/{id}       ⚠️ Polling (2s interval)
+Builder         EventSource SSE            ✅ Real-time updates
+
+RECOMMENDED: Use SSE for all methods (better performance)
+
+================================================================================
+MISSING WORKFLOW STEPS
+================================================================================
+
+CURRENT FLOW:
+  1. Input → 2. Configure → 3. Review → 4. Generate
+
+SHOULD BE:
+  1. Input
+  2. Parse (show progress)
+  3. Preview Parsed Scenes (let user review/edit)
+  4. Configure
+  5. Review (cost estimate)
+  6. Generate (render video)
+
+MISSING STATES:
+  ❌ File validation feedback
+  ❌ Parsing progress display
+  ❌ Scene preview before generation
+  ❌ Scene editing capability
+  ❌ Detailed error messages
+  ❌ Error recovery options
+
+================================================================================
+API INCONSISTENCIES
+================================================================================
+
+ENDPOINT NAMING:
+  POST /api/parse/document      ← Confusing: "parse" but actually generates video
+  POST /api/parse/youtube       ← Confusing: "parse" but actually generates video
+  POST /api/generate            ← Clear: generates video
+
+STATUS FORMAT MISMATCH:
+  /api/tasks/{id}               → {status, progress, message}
+  /api/videos/jobs              → {stats, active_jobs, queued_jobs, ...}
+
+RECOMMENDATION: Unify to single /api/generate endpoint with consistent responses
+
+================================================================================
+IMPACT ASSESSMENT
+================================================================================
+
+CURRENT STATE:
+  - 50% of workflows broken (Document, YAML)
+  - 50% of workflows working (YouTube, Builder)
+  - Users cannot tell which will work
+  - Silent failures with no explanation
+  - No error recovery options
+
+USER EXPERIENCE:
+  ❌ Try document upload → fails silently → user frustrated
+  ✅ Try YouTube → works → user happy
+  ✅ Try wizard → works → user happy
+  ❌ Try YAML → fails silently → user frustrated
+
+BUSINESS IMPACT:
+  - 50% feature loss for new users
+  - Negative reviews for broken features
+  - Support burden from confused users
+  - Architectural debt accumulating
+
+================================================================================
+RECOMMENDATIONS BY PRIORITY
+================================================================================
+
+PRIORITY 1 (BLOCKING - FIX IMMEDIATELY):
+  [ ] Implement file upload handler
+  [ ] Fix silent failures in error handling
+  [ ] Add detailed error messages
+
+PRIORITY 2 (IMPORTANT - FIX THIS SPRINT):
+  [ ] Clarify wizard vs builder
+  [ ] Add parsing preview step
+  [ ] Unify API contracts
+  [ ] Improve progress tracking
+
+PRIORITY 3 (NICE TO HAVE):
+  [ ] Error recovery options
+  [ ] Workflow presets/templates
+  [ ] Performance benchmarking
+
+================================================================================
+TESTING CHECKLIST
+================================================================================
+
+BEFORE RELEASE:
+  [ ] Document upload succeeds
+  [ ] YAML upload succeeds
+  [ ] YouTube parsing succeeds
+  [ ] Builder scene generation succeeds
+  [ ] Error messages are clear
+  [ ] Retry mechanism works
+  [ ] Progress updates every 2 seconds
+  [ ] Timeout handling works properly
+  [ ] All edge cases tested
+
+================================================================================
+TIMELINE ESTIMATES
+================================================================================
+
+QUICK FIXES (4-6 hours total):
+  - File upload handler: 2-3 hours
+  - Error handling improvements: 1-2 hours
+  - Testing: 1-2 hours
+
+FULL RESOLUTION (20-30 hours total):
+  - Parsing preview step: 8-10 hours
+  - API unification: 4-6 hours
+  - SSE implementation: 6-8 hours
+  - Testing & QA: 4-6 hours
+
+================================================================================
+FOR MORE DETAILS
+================================================================================
+
+See:
+  WORKFLOW_ANALYSIS.md       - Complete detailed analysis
+  WORKFLOW_ISSUES_SUMMARY.md - Executive summary with recommendations
+
+Key Files to Review:
+  /app/templates/create-unified.html   (Primary issue location)
+  /app/templates/builder.html          (Working reference)
+  /app/templates/home.html             (Navigation flow)
+  /app/main.py                         (Backend endpoints)
+
+================================================================================
