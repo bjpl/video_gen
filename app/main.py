@@ -4,7 +4,7 @@ Now powered by the unified pipeline for consistency and reliability.
 
 HTMX + Alpine.js compatible REST API
 """
-from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -299,6 +299,169 @@ async def parse_document(input: DocumentInput, background_tasks: BackgroundTasks
 
     except Exception as e:
         logger.error(f"Document parsing failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/upload/document")
+async def upload_document(
+    file: UploadFile = File(...),
+    accent_color: str = Form("blue"),
+    voice: str = Form("male"),
+    video_count: int = Form(1),
+    background_tasks: BackgroundTasks = None
+):
+    """
+    Upload a document file and generate video set.
+    Accepts multipart/form-data with file upload.
+    """
+    try:
+        # Validate file type
+        allowed_extensions = {'.md', '.txt', '.rst', '.markdown'}
+        file_ext = Path(file.filename).suffix.lower()
+
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type: {file_ext}. Allowed: {', '.join(allowed_extensions)}"
+            )
+
+        # Generate task ID
+        task_id = f"upload_{int(time.time())}"
+
+        # Create uploads directory if it doesn't exist
+        uploads_dir = Path(__file__).parent.parent / "uploads"
+        uploads_dir.mkdir(exist_ok=True)
+
+        # Save uploaded file with task_id prefix
+        upload_path = uploads_dir / f"{task_id}_{file.filename}"
+
+        with open(upload_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        logger.info(f"File uploaded: {upload_path} ({len(content)} bytes)")
+
+        # Create input config for pipeline
+        input_config = InputConfig(
+            input_type="document",
+            source=str(upload_path),
+            accent_color=accent_color,
+            voice=voice,
+            languages=["en"],
+            video_count=video_count,
+            split_by_h2=(video_count > 1)
+        )
+
+        # Get pipeline singleton
+        pipeline = get_pipeline()
+
+        # Execute asynchronously in background
+        background_tasks.add_task(
+            execute_pipeline_task,
+            pipeline,
+            input_config,
+            task_id
+        )
+
+        logger.info(f"Document upload processing started: {task_id}")
+
+        return {
+            "task_id": task_id,
+            "status": "started",
+            "message": f"File '{file.filename}' uploaded successfully and processing started",
+            "filename": file.filename,
+            "size": len(content)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"File upload failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/parse-only/document")
+async def parse_document_only(input: DocumentInput):
+    """
+    Parse document and return scenes for review WITHOUT generating video.
+    This allows users to review/edit scenes before triggering generation.
+    """
+    try:
+        # Import the document adapter directly
+        from video_gen.adapters.document import DocumentInputAdapter
+        from video_gen.shared.models import InputConfig as PipelineInputConfig
+
+        # Strip any surrounding quotes from the path
+        document_path = str(input.content).strip().strip('"').strip("'")
+
+        # Create input config
+        input_config = PipelineInputConfig(
+            input_type="document",
+            source=document_path,
+            accent_color=input.accent_color,
+            voice=input.voice,
+            languages=["en"],
+            video_count=input.video_count,
+            split_by_h2=(input.video_count > 1)
+        )
+
+        # Use adapter directly to parse (no pipeline execution)
+        adapter = DocumentInputAdapter()
+        parse_result = adapter.parse(input_config)
+
+        logger.info(f"Document parsed: {len(parse_result.get('videos', []))} videos")
+
+        # Return scenes for frontend review
+        return {
+            "status": "success",
+            "message": "Document parsed successfully",
+            "data": parse_result,
+            "scene_count": sum(len(v.get("scenes", [])) for v in parse_result.get("videos", [])),
+            "video_count": len(parse_result.get("videos", []))
+        }
+
+    except Exception as e:
+        logger.error(f"Parse-only failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/parse-only/youtube")
+async def parse_youtube_only(input: YouTubeInput):
+    """
+    Parse YouTube video and return scenes for review WITHOUT generating video.
+    This allows users to review/edit scenes before triggering generation.
+    """
+    try:
+        # Import the YouTube adapter directly
+        from video_gen.adapters.youtube import YouTubeInputAdapter
+        from video_gen.shared.models import InputConfig as PipelineInputConfig
+
+        # Strip any surrounding quotes from URL
+        youtube_url = str(input.url).strip().strip('"').strip("'")
+
+        # Create input config
+        input_config = PipelineInputConfig(
+            input_type="youtube",
+            source=youtube_url,
+            accent_color=input.accent_color,
+            voice="male",
+            languages=["en"]
+        )
+
+        # Use adapter directly to parse (no pipeline execution)
+        adapter = YouTubeInputAdapter()
+        parse_result = adapter.parse(input_config)
+
+        logger.info(f"YouTube parsed: {len(parse_result.get('videos', []))} videos")
+
+        # Return scenes for frontend review
+        return {
+            "status": "success",
+            "message": "YouTube video parsed successfully",
+            "data": parse_result,
+            "scene_count": sum(len(v.get("scenes", [])) for v in parse_result.get("videos", [])),
+            "video_count": len(parse_result.get("videos", []))
+        }
+
+    except Exception as e:
+        logger.error(f"YouTube parse-only failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/parse/youtube")
