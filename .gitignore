@@ -28,6 +28,7 @@ audio/
 videos/
 scripts/drafts/
 scripts/temp_*/
+uploads/
 *.mp4
 *.mp3
 *.wav
