@@ -1450,14 +1450,44 @@ async def get_languages():
 
 @app.get("/api/languages/{lang_code}/voices")
 async def get_language_voices(lang_code: str):
-    """Get available voices for a specific language"""
+    """Get available voices for a specific language with enhanced metadata"""
     if lang_code not in MULTILINGUAL_VOICES:
         raise HTTPException(status_code=404, detail=f"Language '{lang_code}' not supported")
 
     voices = MULTILINGUAL_VOICES[lang_code]
+    voice_objects = []
+
+    for voice_id, voice_name in voices.items():
+        # Determine gender from voice name patterns
+        name_lower = voice_name.lower()
+        if any(f in name_lower for f in ['female', 'woman', 'girl', 'jenny', 'aria', 'emma', 'sonia', 'jane']):
+            gender = 'female'
+            gender_symbol = '♀️'
+            desc = "Clear, friendly"
+        elif any(m in name_lower for m in ['male', 'man', 'boy', 'guy', 'andrew', 'brian', 'tony', 'davis']):
+            gender = 'male'
+            gender_symbol = '♂️'
+            desc = "Professional, confident"
+        else:
+            gender = 'neutral'
+            gender_symbol = '⚧'
+            desc = "Versatile"
+
+        voice_objects.append({
+            "id": voice_id,
+            "name": voice_name,
+            "display_name": f"{voice_name} ({gender.capitalize()})",
+            "description": desc,
+            "gender": gender,
+            "gender_symbol": gender_symbol,
+            "sample_url": f"/static/audio/samples/{lang_code}_{gender}.mp3"
+        })
+
     return {
+        "status": "success",
         "language": lang_code,
-        "voices": [{"id": k, "name": v} for k, v in voices.items()]
+        "voices": voice_objects,
+        "voice_count": len(voice_objects)
     }
 
 @app.post("/api/generate/multilingual")

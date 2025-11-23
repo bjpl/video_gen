@@ -59,6 +59,24 @@ document.addEventListener('alpine:init', () => {
         init() {
             console.log('[MultiVoiceSelector] Component initialized');
 
+            // Watch for changes in language selector's global store
+            if (Alpine.store('appState')?.languages) {
+                // Get initial languages from store
+                const storeLangs = Alpine.store('appState').languages.selected;
+                if (storeLangs && storeLangs.length > 0) {
+                    this.selectedLanguages = [...storeLangs];
+                }
+
+                // Watch store for changes
+                this.$watch('$store.appState.languages.selected', (newLangs) => {
+                    console.log('[MultiVoiceSelector] Languages changed from store:', newLangs);
+                    if (newLangs && Array.isArray(newLangs)) {
+                        this.handleLanguageChange(newLangs, this.selectedLanguages);
+                        this.selectedLanguages = [...newLangs];
+                    }
+                });
+            }
+
             // Initialize state for each selected language
             this.selectedLanguages.forEach(lang => {
                 this.languageVoices[lang] = [];
@@ -71,14 +89,15 @@ document.addEventListener('alpine:init', () => {
                 this.handleLanguageChange(newLangs, oldLangs || []);
             });
 
-            // Listen for language-selector events
+            // Listen for language-selector events (backup method)
             window.addEventListener('languages-changed', (event) => {
+                console.log('[MultiVoiceSelector] languages-changed event:', event.detail);
                 if (event.detail && event.detail.languages) {
                     this.selectedLanguages = event.detail.languages;
                 }
             });
 
-            // Restore state from global store if available
+            // Restore voice state from global store if available
             if (Alpine.store('appState')?.videoConfig?.languageVoices) {
                 const stored = Alpine.store('appState').videoConfig.languageVoices;
                 Object.keys(stored).forEach(lang => {
