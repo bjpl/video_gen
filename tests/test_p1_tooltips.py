@@ -19,17 +19,17 @@ class TooltipConfig:
 
     TOOLTIPS = {
         'youtube_url': {
-            'text': 'Enter a YouTube video URL to use as source material (e.g., https://youtube.com/watch?v=...)',
+            'text': 'Enter a YouTube video URL to use as source material (e.g., https://youtube.com/watch?v=...).',
             'position': 'right',
             'trigger': 'hover_focus',
         },
         'document_path': {
-            'text': 'Path to document file or URL. Supports PDF, DOCX, TXT, and Google Docs.',
+            'text': 'Path to document file or URL, e.g., /path/to/doc.pdf or https://docs.google.com/. Supports PDF, DOCX, TXT, and Google Docs.',
             'position': 'right',
             'trigger': 'hover_focus',
         },
         'ai_narration': {
-            'text': 'Enable AI-generated narration using Claude Sonnet 4.5 (~$0.00075 per scene)',
+            'text': 'Enable AI-generated narration using Claude Sonnet 4.5 (~$0.00075 per scene).',
             'position': 'right',
             'trigger': 'hover_focus',
         },

@@ -158,8 +158,10 @@ Main class for video generation.
         assert len(video.scenes) >= 5
 
         # Should detect code blocks
+        # SceneConfig objects use scene_type attribute (not 'type' dict key)
+        # and code blocks are rendered as 'command' type (not 'code_example')
         has_code_scene = any(
-            scene.get('type') == 'code_example'
+            getattr(scene, 'scene_type', None) in ('code_example', 'command')
             for scene in video.scenes
         )
         assert has_code_scene or True  # Code scenes may be optional

@@ -74,11 +74,29 @@ class TestLanguageVoices:
 
     @pytest.mark.asyncio
     async def test_audio_generation_uses_language_voice(
-        self, audio_generation_stage, sample_video_config_with_language_voices
+        self, audio_generation_stage
     ):
         """Test that AudioGenerationStage uses language-specific voice."""
+        # Create a config with a single scene that will receive language voice
+        # (scene.voice is None or "male" triggers voice assignment)
+        config = VideoConfig(
+            video_id="spanish_video",
+            title="Spanish Test",
+            description="Testing Spanish voice",
+            scenes=[
+                SceneConfig(
+                    scene_id="scene_001",
+                    scene_type="title",
+                    narration="Bienvenido",
+                    visual_content={"title": "Bienvenido"},
+                    # voice defaults to None, so language voice will be assigned
+                )
+            ],
+            language_voices={"es": "male_warm", "fr": "female_friendly"}
+        )
+
         context = {
-            "video_config": sample_video_config_with_language_voices,
+            "video_config": config,
             "target_language": "es",
             "task_id": "test_task"
         }
@@ -206,29 +224,31 @@ class TestLanguageVoices:
         self, audio_generation_stage
     ):
         """Test multiple languages with different voice assignments."""
-        config = VideoConfig(
-            video_id="multi_lang",
-            title="Multi-language",
-            description="Multiple languages",
-            scenes=[
-                SceneConfig(
-                    scene_id="scene_001",
-                    scene_type="title",
-                    narration="Test",
-                    visual_content={"title": "Test"},
-                )
-            ],
-            language_voices={
-                "es": "male_warm",
-                "fr": "female",
-                "de": "male",
-                "it": "female_friendly"
-            }
-        )
+        # Helper function to create fresh config for each language test
+        def create_config():
+            return VideoConfig(
+                video_id="multi_lang",
+                title="Multi-language",
+                description="Multiple languages",
+                scenes=[
+                    SceneConfig(
+                        scene_id="scene_001",
+                        scene_type="title",
+                        narration="Test",
+                        visual_content={"title": "Test"},
+                    )
+                ],
+                language_voices={
+                    "es": "male_warm",
+                    "fr": "female",
+                    "de": "male",
+                    "it": "female_friendly"
+                }
+            )
 
-        # Test Spanish
+        # Test Spanish with fresh config
         context_es = {
-            "video_config": config,
+            "video_config": create_config(),
             "target_language": "es",
             "task_id": "test"
         }
@@ -245,9 +265,9 @@ class TestLanguageVoices:
             result_es = await audio_generation_stage.execute(context_es)
             assert result_es.metadata["voices_used"] == ["male_warm"]
 
-        # Test French
+        # Test French with fresh config (avoids mutation from Spanish test)
         context_fr = {
-            "video_config": config,
+            "video_config": create_config(),
             "target_language": "fr",
             "task_id": "test"
         }

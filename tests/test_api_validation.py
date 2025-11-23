@@ -38,7 +38,9 @@ def test_video_voices_array():
         video_id="test_002",
         title="Old Format",
         voice="female",
-        scenes=[]
+        scenes=[
+            {"type": "title", "title": "Placeholder", "subtitle": "For validation"}
+        ]
     )
 
     print(f"✅ Old format works, get_voices() returns: {video_old.get_voices()}")
@@ -48,7 +50,9 @@ def test_video_voices_array():
     video_default = Video(
         video_id="test_003",
         title="Default",
-        scenes=[]
+        scenes=[
+            {"type": "title", "title": "Default Scene", "subtitle": "Test"}
+        ]
     )
 
     print(f"✅ Default case, get_voices() returns: {video_default.get_voices()}")

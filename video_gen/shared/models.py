@@ -215,9 +215,10 @@ class VideoSet:
                 self.set_name = video_set.name
                 self.description = video_set.description
                 # Add defaults property for backward compatibility
+                # Pull custom options from metadata if available, otherwise use defaults
                 self.defaults = {
-                    "accent_color": "blue",
-                    "voice": "male",
+                    "accent_color": video_set.metadata.get("accent_color", "blue"),
+                    "voice": video_set.metadata.get("voice", "male"),
                     "languages": video_set.languages
                 }
 

@@ -73,8 +73,8 @@ Thank you for testing our system.
 
         assert result is not None
         assert len(result.videos) >= 1
-        # DocumentAdapter uses first H2 as title when document has content structure
-        assert result.videos[0].title == 'Introduction'
+        # DocumentAdapter uses document's H1 title as the video title
+        assert result.videos[0].title == 'Integration Test Video'
 
     def test_yaml_to_script_stage(self):
         """Test script generation from YAML"""
@@ -234,8 +234,8 @@ This is test video number {i}.
         assert len(results) == 3
         for i, result in enumerate(results):
             assert result is not None
-            # DocumentAdapter uses first H2 as title ('Content' in this case)
-            assert result.videos[0].title == 'Content'
+            # DocumentAdapter uses document's H1 title ('Test Video {i}')
+            assert result.videos[0].title == f'Test Video {i}'
 
     @pytest.mark.asyncio
     async def test_concurrent_pipeline_execution(self):

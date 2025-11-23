@@ -547,6 +547,7 @@ class DocumentAdapter(InputAdapter):
                 videos.append(video)
 
         # Return video set
+        # Store custom options in metadata for backward compatibility with config.defaults
         return VideoSet(
             set_id=set_id,
             name=set_name,
@@ -555,7 +556,10 @@ class DocumentAdapter(InputAdapter):
             metadata={
                 "source": str(source),
                 "video_count": len(videos),
-                "total_sections": len(structure['sections'])
+                "total_sections": len(structure['sections']),
+                # Store custom options for config.defaults backward compat
+                "accent_color": accent_color,
+                "voice": voice
             }
         )
 
