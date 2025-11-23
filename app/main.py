@@ -5,7 +5,7 @@ Now powered by the unified pipeline for consistency and reliability.
 HTMX + Alpine.js compatible REST API
 """
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, field_validator
@@ -17,6 +17,28 @@ import sys
 from pathlib import Path
 import time
 import logging
+
+# Add app directory to path for utils import
+app_dir = Path(__file__).parent
+sys.path.insert(0, str(app_dir.parent))
+
+# Import file validation utilities
+try:
+    from app.utils.file_validation import (
+        validate_upload,
+        preview_document_structure,
+        create_validation_response,
+        create_error_response,
+        detect_document_format,
+        sanitize_filename,
+        get_upload_progress_stages,
+        format_progress_message,
+        convert_to_markdown,
+        is_binary_content,
+    )
+except ImportError:
+    # Fallback - module may not be available during initial import
+    pass
 
 # Add scripts directory to path
 scripts_dir = Path(__file__).parent.parent / "scripts"
@@ -182,16 +204,20 @@ class YouTubeInput(BaseModel):
     url: str = Field(..., min_length=1)
     duration: Optional[int] = Field(default=60, ge=30, le=600)
     accent_color: Optional[str] = "blue"
+    voice: Optional[str] = "male"
+    scene_duration: Optional[int] = Field(default=12, ge=5, le=30)
 
     @field_validator('url')
     @classmethod
     def validate_url(cls, v):
         if not v or not v.strip():
             raise ValueError('url cannot be empty')
-        v = v.strip()
-        # Basic YouTube URL validation
-        if 'youtube.com' not in v and 'youtu.be' not in v:
-            raise ValueError('url must be a valid YouTube URL')
+        v = v.strip().strip('"').strip("'")
+        # Import and use the validator for comprehensive URL checking
+        from video_gen.utils.youtube_validator import extract_video_id
+        video_id = extract_video_id(v)
+        if not video_id:
+            raise ValueError('Invalid YouTube URL. Please provide a valid YouTube video link.')
         return v
 
     @field_validator('accent_color')
@@ -203,6 +229,18 @@ class YouTubeInput(BaseModel):
         if v not in valid_colors:
             raise ValueError(f'accent_color must be one of: {valid_colors}')
         return v
+
+
+class YouTubeURLValidation(BaseModel):
+    """Request model for YouTube URL validation."""
+    url: str = Field(..., min_length=1)
+
+
+class YouTubePreviewRequest(BaseModel):
+    """Request model for YouTube video preview."""
+    url: str = Field(..., min_length=1)
+    include_transcript_preview: Optional[bool] = False
+    transcript_language: Optional[str] = "en"
 
 class MultilingualRequest(BaseModel):
     video_set: VideoSet
@@ -378,6 +416,242 @@ async def upload_document(
         logger.error(f"File upload failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ============================================================================
+# Modern Document Input Flow - Validation & Preview Endpoints
+# ============================================================================
+
+@app.post("/api/validate/document")
+async def validate_document_upload(file: UploadFile = File(...)):
+    """
+    Validate a document file before processing.
+
+    Performs real-time validation including:
+    - File extension check
+    - File size validation
+    - Content type verification
+    - Binary content detection
+    - Document structure preview
+
+    Returns validation result with preview data for UI display.
+    """
+    try:
+        # Read file content
+        content = await file.read()
+        await file.seek(0)  # Reset for potential re-read
+
+        # Perform comprehensive validation
+        validation_result = validate_upload(
+            filename=file.filename,
+            content_type=file.content_type or "",
+            file_size=len(content),
+            content=content
+        )
+
+        if not validation_result["valid"]:
+            # Return validation errors with suggestions
+            return JSONResponse(
+                status_code=400,
+                content=create_validation_response(
+                    valid=False,
+                    filename=file.filename,
+                    errors=validation_result["errors"],
+                    warnings=validation_result.get("warnings", [])
+                )
+            )
+
+        # Decode content for preview
+        try:
+            text_content = content.decode('utf-8')
+        except UnicodeDecodeError:
+            try:
+                text_content = content.decode('latin-1')
+            except:
+                return JSONResponse(
+                    status_code=400,
+                    content=create_validation_response(
+                        valid=False,
+                        filename=file.filename,
+                        errors=["Unable to decode file content. Please ensure it's a text file."]
+                    )
+                )
+
+        # Generate document preview
+        preview = preview_document_structure(text_content)
+
+        # Detect format
+        format_info = detect_document_format(text_content, file.filename)
+        preview["format_info"] = format_info
+
+        return create_validation_response(
+            valid=True,
+            filename=validation_result["sanitized_filename"],
+            preview=preview,
+            warnings=validation_result.get("warnings", [])
+        )
+
+    except Exception as e:
+        logger.error(f"Document validation failed: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content=create_error_response(
+                error_code="VALIDATION_ERROR",
+                message=f"Validation failed: {str(e)}",
+                details={"filename": file.filename if file else "unknown"}
+            )
+        )
+
+
+@app.post("/api/preview/document")
+async def preview_document(file: UploadFile = File(...)):
+    """
+    Generate a detailed preview of document structure.
+
+    Returns:
+    - Document title
+    - Section count and headings
+    - Estimated video scenes
+    - Estimated duration
+    - Content statistics
+
+    This endpoint is designed for the "preview before generate" workflow.
+    """
+    try:
+        # Read and decode content
+        content = await file.read()
+
+        # Check for binary content
+        if is_binary_content(content):
+            raise HTTPException(
+                status_code=400,
+                detail="Binary file detected. Please upload a text document."
+            )
+
+        try:
+            text_content = content.decode('utf-8')
+        except UnicodeDecodeError:
+            text_content = content.decode('latin-1')
+
+        # Detect format and convert if necessary
+        format_info = detect_document_format(text_content, file.filename)
+
+        if format_info["format"] == "rst":
+            # Convert RST to markdown for preview
+            text_content = convert_to_markdown(text_content, "rst")
+        elif format_info["format"] == "plain_text":
+            text_content = convert_to_markdown(text_content, "plain_text")
+
+        # Generate comprehensive preview
+        preview = preview_document_structure(text_content)
+
+        # Extract section headings for preview
+        sections = []
+        for line in text_content.split('\n'):
+            if line.startswith('## '):
+                sections.append(line[3:].strip())
+            elif line.startswith('# ') and not preview.get("title"):
+                preview["title"] = line[2:].strip()
+
+        preview["sections"] = sections[:10]  # Limit to first 10 sections
+        preview["format"] = format_info["format"]
+        preview["filename"] = sanitize_filename(file.filename)
+        preview["file_size"] = len(content)
+
+        return {
+            "status": "success",
+            "preview": preview,
+            "ready_for_generation": True,
+            "recommendations": _generate_preview_recommendations(preview)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Document preview failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/upload/progress-stages")
+async def get_progress_stages():
+    """
+    Get the defined stages for upload progress tracking.
+
+    Returns stage names, progress percentages, and user-friendly messages
+    for implementing progress indicators in the UI.
+    """
+    return get_upload_progress_stages()
+
+
+@app.get("/api/document/supported-formats")
+async def get_supported_formats():
+    """
+    Get list of supported document formats.
+
+    Returns format information including:
+    - File extensions
+    - MIME types
+    - Format descriptions
+    - Best practices
+    """
+    return {
+        "formats": [
+            {
+                "extension": ".md",
+                "name": "Markdown",
+                "mime_types": ["text/markdown", "text/x-markdown"],
+                "description": "Best format for structured content with headings, lists, and code",
+                "recommended": True
+            },
+            {
+                "extension": ".txt",
+                "name": "Plain Text",
+                "mime_types": ["text/plain"],
+                "description": "Simple text files - content will be auto-structured",
+                "recommended": False
+            },
+            {
+                "extension": ".rst",
+                "name": "reStructuredText",
+                "mime_types": ["text/x-rst", "text/restructuredtext"],
+                "description": "Python documentation format - automatically converted",
+                "recommended": False
+            }
+        ],
+        "max_file_size": "10MB",
+        "tips": [
+            "Use Markdown for best results with automatic scene detection",
+            "Include ## headings to create logical video sections",
+            "Add code blocks with ``` for command/code scenes",
+            "Use bullet points for list scenes"
+        ]
+    }
+
+
+def _generate_preview_recommendations(preview: Dict) -> List[str]:
+    """Generate helpful recommendations based on document preview."""
+    recommendations = []
+
+    if preview.get("section_count", 0) == 0:
+        recommendations.append("Add ## headings to create distinct video sections")
+
+    if preview.get("word_count", 0) < 100:
+        recommendations.append("Consider adding more content for a richer video")
+
+    if preview.get("word_count", 0) > 5000:
+        recommendations.append("Consider splitting into multiple videos for better engagement")
+
+    if not preview.get("has_lists") and not preview.get("has_code"):
+        recommendations.append("Add bullet points or code blocks for visual variety")
+
+    if preview.get("estimated_scenes", 0) > 20:
+        recommendations.append("Video may be long - consider splitting by H2 sections")
+
+    if not recommendations:
+        recommendations.append("Document looks good for video generation!")
+
+    return recommendations
+
+
 @app.post("/api/parse-only/document")
 async def parse_document_only(input: DocumentInput):
     """
@@ -506,6 +780,332 @@ async def parse_youtube(input: YouTubeInput, background_tasks: BackgroundTasks):
     except Exception as e:
         logger.error(f"YouTube parsing failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# YouTube Input Flow - Enhanced Endpoints
+# ============================================================================
+
+@app.post("/api/youtube/validate")
+async def validate_youtube_url_endpoint(request: YouTubeURLValidation):
+    """
+    Validate a YouTube URL and return detailed validation result.
+
+    This endpoint provides comprehensive URL validation including:
+    - URL format validation for all YouTube URL types
+    - Video ID extraction
+    - URL normalization to standard format
+
+    Returns:
+        JSON with validation result including:
+        - is_valid: Whether URL is valid
+        - video_id: Extracted video ID (if valid)
+        - normalized_url: Standardized URL format
+        - error: Error message (if invalid)
+    """
+    try:
+        from video_gen.utils.youtube_validator import validate_youtube_url
+
+        result = validate_youtube_url(request.url)
+        return result.to_dict()
+
+    except Exception as e:
+        logger.error(f"YouTube URL validation failed: {e}", exc_info=True)
+        return {
+            "is_valid": False,
+            "video_id": None,
+            "normalized_url": None,
+            "error": str(e),
+            "error_code": "VALIDATION_ERROR"
+        }
+
+
+@app.post("/api/youtube/preview")
+async def youtube_preview_endpoint(request: YouTubePreviewRequest):
+    """
+    Get preview information for a YouTube video.
+
+    This endpoint fetches video metadata for preview including:
+    - Video title and channel
+    - Duration and thumbnail
+    - Transcript availability
+    - Estimated scene count and generation time
+
+    Args:
+        request: YouTubePreviewRequest with URL and options
+
+    Returns:
+        JSON with video preview data for UI display
+    """
+    try:
+        from video_gen.utils.youtube_validator import (
+            YouTubeURLValidator,
+            validate_youtube_url,
+        )
+
+        # First validate the URL
+        validation = validate_youtube_url(request.url)
+        if not validation.is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": validation.error,
+                    "error_code": validation.error_code
+                }
+            )
+
+        video_id = validation.video_id
+
+        # Fetch video information
+        validator = YouTubeURLValidator()
+        video_info = await validator.fetch_video_info(video_id)
+
+        if video_info is None:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "Could not fetch video information",
+                    "error_code": "VIDEO_NOT_FOUND"
+                }
+            )
+
+        # Get preview data
+        preview_data = video_info.get_preview_data()
+
+        # Optionally include transcript preview
+        if request.include_transcript_preview and video_info.has_transcript:
+            transcript_preview = await _get_transcript_preview(
+                video_id,
+                request.transcript_language,
+                max_segments=5
+            )
+            preview_data["transcript_preview"] = transcript_preview
+
+        return {
+            "status": "success",
+            "video_id": video_id,
+            "normalized_url": validation.normalized_url,
+            "preview": preview_data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"YouTube preview failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": f"Failed to get video preview: {str(e)}",
+                "error_code": "PREVIEW_ERROR"
+            }
+        )
+
+
+@app.post("/api/youtube/transcript-preview")
+async def youtube_transcript_preview(request: YouTubePreviewRequest):
+    """
+    Get a preview of the video transcript.
+
+    This endpoint fetches the first few segments of the transcript
+    to give users a preview before full processing.
+
+    Args:
+        request: YouTubePreviewRequest with URL and language
+
+    Returns:
+        JSON with transcript preview and availability info
+    """
+    try:
+        from video_gen.utils.youtube_validator import (
+            validate_youtube_url,
+            YouTubeURLValidator,
+        )
+
+        # Validate URL
+        validation = validate_youtube_url(request.url)
+        if not validation.is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": validation.error}
+            )
+
+        video_id = validation.video_id
+
+        # Check transcript availability
+        validator = YouTubeURLValidator()
+        transcript_info = await validator.check_transcript_availability(video_id)
+
+        if not transcript_info.get("available"):
+            return {
+                "status": "unavailable",
+                "video_id": video_id,
+                "available": False,
+                "languages": [],
+                "error": transcript_info.get("error", "No transcript available for this video"),
+                "suggestion": "This video does not have captions. Try a different video with subtitles enabled."
+            }
+
+        # Get transcript preview
+        transcript_preview = await _get_transcript_preview(
+            video_id,
+            request.transcript_language,
+            max_segments=10
+        )
+
+        return {
+            "status": "success",
+            "video_id": video_id,
+            "available": True,
+            "languages": transcript_info.get("languages", []),
+            "requested_language": request.transcript_language,
+            "preview": transcript_preview
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Transcript preview failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={"error": f"Failed to get transcript preview: {str(e)}"}
+        )
+
+
+@app.get("/api/youtube/estimate/{video_id}")
+async def youtube_estimate(video_id: str):
+    """
+    Get generation time and scene count estimates for a video.
+
+    Args:
+        video_id: YouTube video ID (11 characters)
+
+    Returns:
+        JSON with estimation details including:
+        - source_duration_seconds: Original video duration
+        - estimated_scenes: Number of scenes to generate
+        - generation_estimate: Estimated processing time
+    """
+    try:
+        from video_gen.utils.youtube_validator import (
+            YouTubeURLValidator,
+            estimate_generation_duration,
+            estimate_scene_count,
+        )
+
+        # Validate video ID format
+        import re
+        if not re.match(r'^[a-zA-Z0-9_-]{11}$', video_id):
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "Invalid video ID format"}
+            )
+
+        # Try to get video duration
+        validator = YouTubeURLValidator()
+        video_info = await validator.fetch_video_info(video_id)
+
+        if video_info and video_info.duration_seconds > 0:
+            duration = video_info.duration_seconds
+        else:
+            # Default estimate for unknown duration
+            duration = 180  # 3 minutes default
+
+        return {
+            "video_id": video_id,
+            "source_duration_seconds": duration,
+            "source_duration_formatted": f"{duration // 60}:{duration % 60:02d}",
+            "estimated_scenes": estimate_scene_count(duration),
+            "generation_estimate": estimate_generation_duration(duration),
+            "has_accurate_duration": video_info is not None and video_info.duration_seconds > 0
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Estimation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={"error": f"Failed to estimate: {str(e)}"}
+        )
+
+
+async def _get_transcript_preview(
+    video_id: str,
+    language: str = "en",
+    max_segments: int = 5
+) -> Dict[str, Any]:
+    """
+    Get a preview of the transcript for display.
+
+    Args:
+        video_id: YouTube video ID
+        language: Transcript language code
+        max_segments: Maximum number of segments to return
+
+    Returns:
+        Dictionary with transcript preview data
+    """
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+        from youtube_transcript_api._errors import NoTranscriptFound
+
+        try:
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+            # Try to get requested language
+            try:
+                transcript = transcript_list.find_transcript([language])
+            except NoTranscriptFound:
+                # Fall back to auto-generated or any available
+                transcript = transcript_list.find_generated_transcript([language])
+
+            transcript_data = transcript.fetch()
+
+            # Get preview segments
+            preview_segments = []
+            for segment in transcript_data[:max_segments]:
+                preview_segments.append({
+                    "text": segment.get("text", ""),
+                    "start": segment.get("start", 0),
+                    "duration": segment.get("duration", 0)
+                })
+
+            # Calculate total word count
+            total_words = sum(
+                len(seg.get("text", "").split())
+                for seg in transcript_data
+            )
+
+            return {
+                "segments": preview_segments,
+                "total_segments": len(transcript_data),
+                "total_words": total_words,
+                "language": transcript.language_code,
+                "is_generated": transcript.is_generated,
+                "preview_text": " ".join(s["text"] for s in preview_segments)
+            }
+
+        except NoTranscriptFound:
+            return {
+                "segments": [],
+                "total_segments": 0,
+                "error": f"No transcript found for language: {language}"
+            }
+
+    except ImportError:
+        return {
+            "segments": [],
+            "total_segments": 0,
+            "error": "youtube-transcript-api not installed"
+        }
+    except Exception as e:
+        logger.error(f"Error getting transcript preview: {e}")
+        return {
+            "segments": [],
+            "total_segments": 0,
+            "error": str(e)
+        }
+
 
 @app.post("/api/generate")
 async def generate_videos(video_set: VideoSet, background_tasks: BackgroundTasks):
