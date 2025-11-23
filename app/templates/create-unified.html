@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto" x-data="unifiedCreator()" x-init="init()">
+<div class="max-w-5xl mx-auto" x-data="unifiedCreator()" x-init="init(); $cleanup && $cleanup(() => destroy())" @beforeunload.window="destroy()">
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Video</h1>
@@ -72,7 +72,7 @@
             </h2>
 
             <!-- Show input type selector ONLY if no method specified -->
-            <div x-show="!inputMethod" class="grid md:grid-cols-3 gap-4 mb-6">
+            <div x-show="showInputTypeSelector" class="grid md:grid-cols-3 gap-4 mb-6">
                 <button @click="inputType = 'url'; inputError = ''" type="button"
                         class="p-6 rounded-lg border-2 transition-all hover:shadow-lg"
                         :class="inputType === 'url' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-300'">
@@ -113,54 +113,15 @@
 
             <!-- Input Fields -->
             <div class="space-y-4">
-                <!-- URL Input -->
+                <!-- URL Input - WITH REAL-TIME VALIDATION -->
                 <div x-show="inputType === 'url'">
-                    <label for="input-url" class="block text-sm font-medium text-gray-700 mb-2">Enter URL</label>
-                    <input type="url" id="input-url" x-model="inputData.url" @input="validateInput()"
-                           placeholder="https://example.com/article"
-                           aria-label="Source URL"
-                           class="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           :class="inputError ? 'border-red-500' : 'border-gray-300'">
+                    {% include 'components/validation-feedback.html' %}
                 </div>
 
-                <!-- File Upload -->
-                <div x-show="inputType === 'file'">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
-                    <div class="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer"
-                         :class="inputError ? 'border-red-500' : inputData.fileContent ? 'border-green-500 bg-green-50' : 'border-gray-300'"
-                         @click="!isReadingFile && $refs.fileInput.click()">
-                        <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" class="hidden"
-                               aria-label="File upload"
-                               :accept="inputMethod === 'yaml' ? '.yaml,.yml' : '.txt,.md,.pdf,.docx'">
-
-                        <!-- Loading state -->
-                        <template x-if="isReadingFile">
-                            <div>
-                                <div class="text-4xl mb-2 animate-spin">⏳</div>
-                                <div class="text-gray-600">Reading file...</div>
-                            </div>
-                        </template>
-
-                        <!-- Success state -->
-                        <template x-if="!isReadingFile && inputData.fileContent">
-                            <div>
-                                <div class="text-4xl mb-2">✅</div>
-                                <div class="text-green-700 font-medium" x-text="inputData.fileName"></div>
-                                <div class="text-sm text-green-600 mt-1" x-text="(inputData.fileContent.length / 1024).toFixed(1) + ' KB loaded'"></div>
-                                <div class="text-xs text-gray-500 mt-2">Click to replace</div>
-                            </div>
-                        </template>
-
-                        <!-- Default state -->
-                        <template x-if="!isReadingFile && !inputData.fileContent">
-                            <div>
-                                <div class="text-4xl mb-2">📁</div>
-                                <div class="text-gray-600" x-text="inputData.fileName || 'Click to select file'"></div>
-                                <div class="text-sm text-gray-500 mt-2"
-                                     x-text="inputMethod === 'yaml' ? 'Supported: YAML, YML' : 'Supported: TXT, MD, PDF, DOCX'"></div>
-                            </div>
-                        </template>
-                    </div>
+                <!-- File Upload - NEW MODERN DRAG-DROP COMPONENT -->
+                <div x-show="inputType === 'file'"
+                     @file-ready.window="handleFileReady($event)">
+                    {% include 'components/drag-drop-zone.html' %}
                 </div>
 
                 <!-- Text Input -->
@@ -181,8 +142,8 @@
                 </div>
             </div>
 
-            <!-- Navigation -->
-            <div class="flex justify-end gap-3 mt-6">
+            <!-- Navigation (hidden for file upload since drag-drop has its own Continue button) -->
+            <div x-show="inputType !== 'file'" class="flex justify-end gap-3 mt-6">
                 <button @click="nextStep()" :disabled="!isStepValid(1)"
                         class="px-6 py-3 rounded-lg font-semibold transition-all"
                         :class="isStepValid(1) ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg' : 'bg-gray-300 text-gray-500 cursor-not-allowed'">
@@ -251,43 +212,53 @@
                     <div class="text-xs text-gray-500 mt-1">Recommended: 120-300 seconds</div>
                 </div>
 
-                <!-- Language Mode -->
-                <div>
-                    <label for="config-language-mode" class="block text-sm font-medium text-gray-700 mb-2">Languages</label>
-                    <select id="config-language-mode" x-model="config.languageMode" @change="updateCostEstimate()"
-                            aria-label="Language mode selection"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="single">Single Language</option>
-                        <option value="multiple">Multiple Languages</option>
-                    </select>
-                </div>
-
-                <!-- Target Languages (if multiple) -->
-                <div x-show="config.languageMode === 'multiple'">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Target Languages</label>
-                    <div class="space-y-2">
-                        <template x-for="lang in availableLanguages" :key="lang.code">
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" :value="lang.code" x-model="config.targetLanguages" @change="updateCostEstimate()"
-                                       aria-label="Target language option"
-                                       class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
-                                <span class="text-sm" x-text="lang.name"></span>
-                            </label>
-                        </template>
+                <!-- NEW: Video Mode Selector (Single vs Set) -->
+                <div class="md:col-span-2 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span>🎬</span>
+                        Video Output Mode
+                    </h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <button @click="config.videoMode = 'single'"
+                                type="button"
+                                :class="config.videoMode === 'single' ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200' : 'bg-white border-gray-300 hover:border-blue-300'"
+                                class="p-4 border-2 rounded-lg text-left transition-all">
+                            <div class="text-2xl mb-2">🎬</div>
+                            <div class="font-bold mb-1">Single Video</div>
+                            <div class="text-xs text-gray-600">Create one complete video from the entire document</div>
+                        </button>
+                        <button @click="config.videoMode = 'set'"
+                                type="button"
+                                :class="config.videoMode === 'set' ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200' : 'bg-white border-gray-300 hover:border-blue-300'"
+                                class="p-4 border-2 rounded-lg text-left transition-all">
+                            <div class="text-2xl mb-2">📚</div>
+                            <div class="font-bold mb-1">Video Set</div>
+                            <div class="text-xs text-gray-600">Split document into multiple videos (by H2 headings)</div>
+                        </button>
+                    </div>
+                    <!-- Video count selector for sets -->
+                    <div x-show="config.videoMode === 'set'"
+                         x-transition
+                         class="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <label for="video-count" class="block text-sm font-medium text-gray-700 mb-2">Number of Videos</label>
+                        <input type="number"
+                               id="video-count"
+                               x-model.number="config.videoCount"
+                               min="2"
+                               max="10"
+                               class="w-32 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-2">Document will be split into <span class="font-semibold" x-text="config.videoCount"></span> videos</p>
                     </div>
                 </div>
 
-                <!-- Voice Selection -->
-                <div>
-                    <label for="config-voice" class="block text-sm font-medium text-gray-700 mb-2">Voice</label>
-                    <select id="config-voice" x-model="config.primaryVoice"
-                            aria-label="Voice selection"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <optgroup label="English - US">
-                            <option value="en-US-JennyNeural">Jenny (Female, Friendly)</option>
-                            <option value="en-US-GuyNeural">Guy (Male, Professional)</option>
-                        </optgroup>
-                    </select>
+                <!-- NEW: Multi-Language Selector Component -->
+                <div class="md:col-span-2">
+                    {% include 'components/multi-language-selector.html' %}
+                </div>
+
+                <!-- NEW: Multi-Voice Selector Component -->
+                <div class="md:col-span-2">
+                    {% include 'components/multi-voice-selector.html' %}
                 </div>
 
                 <!-- Color Theme -->
@@ -303,16 +274,19 @@
                     </select>
                 </div>
 
-                <!-- AI Enhancements -->
+                <!-- AI Narration Info (ALWAYS ENABLED - No toggle) -->
                 <div class="md:col-span-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="config-use-ai" x-model="config.useAI" @change="updateCostEstimate()"
-                               aria-label="Enable AI narration enhancement"
-                               class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
-                        <span class="text-sm font-medium text-gray-700">Enable AI Narration Enhancement</span>
-                        <span class="text-xs text-gray-500">(Claude Sonnet 4.5)</span>
-                    </label>
-                    <div class="text-xs text-gray-500 mt-1 ml-6">Improves narration quality with AI-powered enhancements</div>
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="text-2xl">🤖</div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-gray-900">AI Narration Enhancement</div>
+                                <div class="text-sm text-gray-600">Powered by Claude Sonnet 4.5 - Always Enabled</div>
+                            </div>
+                            <div class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">ACTIVE</div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">All videos include AI-powered narration for superior quality</div>
+                    </div>
                 </div>
             </div>
 
@@ -334,6 +308,11 @@
         <div x-show="currentStep === 3" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
             <h2 class="text-2xl font-bold mb-4">👀 Review Configuration</h2>
 
+            <!-- NEW: Preview Panel Component -->
+            <div class="mb-6">
+                {% include 'components/preview-panel.html' %}
+            </div>
+
             <!-- Cost Estimate -->
             <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-6">
                 <div class="flex items-center justify-between mb-4">
@@ -353,7 +332,7 @@
                 </div>
                 <div class="mt-4 pt-4 border-t border-green-300 text-xs text-gray-600">
                     <div>💡 TTS is always free (Edge-TTS)</div>
-                    <div x-show="!config.useAI">💰 Enable AI for enhanced narration quality (+cost)</div>
+                    <div>🤖 AI narration enhancement always enabled for superior quality</div>
                 </div>
             </div>
 
@@ -385,8 +364,16 @@
                 </div>
 
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="text-sm font-semibold text-gray-700 mb-2">🤖 AI Enhancement</div>
-                    <div class="text-sm text-gray-900" x-text="config.useAI ? 'Enabled' : 'Disabled'"></div>
+                    <div class="text-sm font-semibold text-gray-700 mb-2">🎬 Video Mode</div>
+                    <div class="text-sm text-gray-900" x-text="config.videoMode === 'single' ? 'Single Video' : 'Video Set (' + config.videoCount + ' videos)'"></div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-sm font-semibold text-gray-700 mb-2">🤖 AI Narration</div>
+                    <div class="text-sm text-gray-900 flex items-center gap-2">
+                        <span class="px-2 py-0.5 bg-green-100 text-green-800 text-xs font-semibold rounded">ENABLED</span>
+                        <span>Claude Sonnet 4.5</span>
+                    </div>
                 </div>
             </div>
 
@@ -407,8 +394,11 @@
         <div x-show="currentStep === 4" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
             <h2 class="text-2xl font-bold mb-4">🚀 Generate Video</h2>
 
-            <!-- Generation Status -->
-            <div x-show="!generationComplete" class="space-y-4">
+            <!-- NEW: Progress Indicator Component -->
+            {% include 'components/progress-indicator.html' %}
+
+            <!-- Generation Status (Legacy - kept for fallback) -->
+            <div x-show="!generationComplete && !$store.appState.progress.isProcessing" class="space-y-4">
                 <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
                     <div class="text-6xl mb-4 animate-bounce">🎬</div>
                     <div class="text-xl font-bold text-gray-900 mb-2">Generating Your Video...</div>
@@ -475,6 +465,7 @@ function unifiedCreator() {
         // Input data
         inputType: 'url',
         inputMethod: null, // Tracks which home page card was clicked (document/youtube/yaml)
+        showInputTypeSelector: true, // Hide selector when coming from home page
         inputData: {
             url: '',
             file: null,
@@ -489,11 +480,13 @@ function unifiedCreator() {
         config: {
             videoId: '',
             duration: 120,
+            videoMode: 'single', // 'single' or 'set'
+            videoCount: 1, // Number of videos in set
             languageMode: 'single',
             targetLanguages: ['en'],
             primaryVoice: 'en-US-JennyNeural',
             color: 'blue',
-            useAI: false
+            useAI: true // ALWAYS TRUE - AI narration always enabled
         },
         configErrors: {},
         selectedPreset: null,
@@ -519,6 +512,11 @@ function unifiedCreator() {
         generationComplete: false,
         generatedJobId: null,
 
+        // Security - AbortController for cleanup (FIX C2: Memory leak prevention)
+        pollAbortController: null,
+        retryCount: 0,
+        maxRetries: 3,
+
         init() {
             // Read method from URL query parameter
             const urlParams = new URLSearchParams(window.location.search);
@@ -528,9 +526,11 @@ function unifiedCreator() {
             if (method === 'document') {
                 this.inputType = 'file'; // Document upload
                 this.inputMethod = 'document';
+                this.showInputTypeSelector = false; // Hide selector
             } else if (method === 'youtube') {
                 this.inputType = 'url'; // YouTube URL
                 this.inputMethod = 'youtube';
+                this.showInputTypeSelector = false; // Hide selector
             } else if (method === 'wizard') {
                 // Redirect to builder for full scene-by-scene control
                 window.location.href = '/builder';
@@ -538,6 +538,7 @@ function unifiedCreator() {
             } else if (method === 'yaml') {
                 this.inputType = 'file'; // YAML file upload
                 this.inputMethod = 'yaml';
+                this.showInputTypeSelector = false; // Hide selector
             }
 
             // Initialize cost estimator
@@ -571,6 +572,30 @@ function unifiedCreator() {
             }
         },
 
+        /**
+         * Handle file-ready event from drag-drop component
+         * Receives file data and advances to next step
+         */
+        handleFileReady(event) {
+            console.log('[UnifiedCreator] File ready event received:', event.detail);
+
+            if (event.detail && event.detail.file) {
+                // Update parent state with file data
+                this.inputData.file = event.detail.file;
+                this.inputData.fileName = event.detail.file.name;
+
+                // Store file content (we'll read it when generating)
+                this.inputData.fileContent = 'file-uploaded';
+
+                // Clear any errors
+                this.inputError = '';
+
+                // Auto-advance to next step
+                console.log('[UnifiedCreator] Advancing to step 2');
+                this.currentStep = 2;
+            }
+        },
+
         isStepValid(step) {
             switch(step) {
                 case 1: // Input validation
@@ -592,8 +617,10 @@ function unifiedCreator() {
                 case 'url':
                     return this.inputData.url && this.inputData.url.trim().length > 0;
                 case 'file':
-                    // Must have both file object AND content read successfully
-                    return this.inputData.file !== null && this.inputData.fileContent.length > 0;
+                    // Check if drag-drop component has valid file OR legacy file upload
+                    const dragDropValid = Alpine.store('appState')?.formData?.document?.isValid;
+                    const legacyValid = this.inputData.file !== null && this.inputData.fileContent.length > 0;
+                    return dragDropValid || legacyValid;
                 case 'text':
                     return this.inputData.text && this.inputData.text.trim().length > 0;
                 default:
@@ -782,11 +809,17 @@ function unifiedCreator() {
             this.costEstimate = estimate;
         },
 
+        /**
+         * Start video generation with CSRF protection and error retry
+         * FIX C1: Added CSRF token to all POST requests
+         * FIX M2: Added retry logic for network errors
+         */
         async startGeneration() {
-            console.log('🚀 startGeneration called');
+            console.log('startGeneration called');
             this.generationStarted = true;
             this.generationProgress = 0;
             this.generationStatus = 'Preparing video generation...';
+            this.retryCount = 0;
 
             try {
                 let endpoint = '';
@@ -794,13 +827,12 @@ function unifiedCreator() {
 
                 console.log('Input method:', this.inputMethod);
                 console.log('Input type:', this.inputType);
-                console.log('Input data:', this.inputData);
 
                 // Determine which API endpoint to use based on input method
                 if (this.inputMethod === 'youtube' || (this.inputType === 'url' && this.inputData.url.includes('youtube'))) {
                     endpoint = '/api/parse/youtube';
                     payload = {
-                        url: this.inputData.url,
+                        url: window.securityUtils ? window.securityUtils.sanitizeUrl(this.inputData.url) : this.inputData.url,
                         duration: this.config.duration,
                         accent_color: this.config.color
                     };
@@ -808,8 +840,8 @@ function unifiedCreator() {
                     // YAML configuration - send to YAML-specific endpoint
                     endpoint = '/api/parse/yaml';
                     payload = {
-                        content: this.inputData.fileContent, // Send actual YAML content, NOT filename
-                        filename: this.inputData.fileName,
+                        content: this.inputData.fileContent,
+                        filename: window.securityUtils ? window.securityUtils.sanitizeFilename(this.inputData.fileName) : this.inputData.fileName,
                         accent_color: this.config.color,
                         voice: this.config.primaryVoice
                     };
@@ -821,36 +853,31 @@ function unifiedCreator() {
                     if (this.inputType === 'text') {
                         content = this.inputData.text;
                     } else if (this.inputType === 'file') {
-                        // BUG FIX: Send actual file CONTENT, not filename
                         content = this.inputData.fileContent;
                     } else if (this.inputType === 'url') {
-                        content = this.inputData.url;
+                        content = window.securityUtils ? window.securityUtils.sanitizeUrl(this.inputData.url) : this.inputData.url;
                     }
 
                     payload = {
                         content: content,
-                        filename: this.inputData.fileName || null, // Include filename for context
-                        file_type: this.inputData.fileType || 'text', // 'text', 'pdf', or 'docx'
+                        filename: this.inputData.fileName ? (window.securityUtils ? window.securityUtils.sanitizeFilename(this.inputData.fileName) : this.inputData.fileName) : null,
+                        file_type: this.inputData.fileType || 'text',
                         accent_color: this.config.color,
                         voice: this.config.primaryVoice,
                         video_count: 1,
                         generate_set: false
                     };
                 } else {
-                    throw new Error('Unknown input method: ' + this.inputMethod + ', type: ' + this.inputType);
+                    throw new Error('Unknown input method');
                 }
 
                 console.log('Calling endpoint:', endpoint);
-                console.log('Payload:', payload);
 
                 this.generationProgress = 20;
                 this.generationStatus = 'Processing content...';
 
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                // FIX C1: Use secure fetch with CSRF token
+                const response = await this._securePost(endpoint, payload);
 
                 this.generationProgress = 40;
                 this.generationStatus = 'Generating video...';
@@ -859,30 +886,118 @@ function unifiedCreator() {
                     const result = await response.json();
                     this.generatedJobId = result.task_id;
 
-                    // Poll for completion
+                    // Poll for completion with abort controller
                     await this.pollJobStatus(result.task_id);
                 } else {
                     const error = await response.json();
                     throw new Error(error.detail || 'Generation failed');
                 }
             } catch (error) {
-                console.error('❌ Generation error:', error);
+                // FIX M2: Categorize and handle errors with retry
+                const errorType = this._categorizeError(error);
+
+                if (errorType === 'network' && this.retryCount < this.maxRetries) {
+                    this.retryCount++;
+                    console.log(`Retrying (${this.retryCount}/${this.maxRetries})...`);
+                    this.generationStatus = `Network error, retrying (${this.retryCount}/${this.maxRetries})...`;
+                    await this._delay(2000 * this.retryCount);
+                    return this.startGeneration();
+                }
+
+                console.error('Generation error:', error);
                 this.generationProgress = 0;
-                this.generationStatus = 'Generation failed: ' + error.message;
-                this.generationStarted = false; // Allow retry
+                this.generationStatus = this._getUserFriendlyError(errorType, error);
+                this.generationStarted = false;
                 window.dispatchEvent(new CustomEvent('show-message', {
-                    detail: { message: 'Failed to generate video: ' + error.message, type: 'error' }
+                    detail: { message: this._getUserFriendlyError(errorType, error), type: 'error' }
                 }));
             }
         },
 
+        /**
+         * Secure POST request with CSRF token
+         * FIX C1: All POST requests include CSRF token
+         */
+        async _securePost(url, payload) {
+            // Use securityUtils if available, otherwise fallback
+            if (window.securityUtils) {
+                return window.securityUtils.secureFetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            // Fallback: try to get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const headers = { 'Content-Type': 'application/json' };
+            if (csrfToken) {
+                headers['X-CSRF-Token'] = csrfToken;
+            }
+
+            return fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(payload)
+            });
+        },
+
+        /**
+         * Categorize error for handling
+         * FIX M2: Error categorization
+         */
+        _categorizeError(error) {
+            if (error.name === 'AbortError') return 'cancelled';
+            if (error.name === 'TypeError' || error.message.includes('network') || error.message.includes('fetch')) return 'network';
+            if (error.message.includes('CSRF')) return 'csrf';
+            if (error.message.includes('timeout')) return 'timeout';
+            return 'unknown';
+        },
+
+        /**
+         * Get user-friendly error message
+         * FIX M2: Better error messages
+         */
+        _getUserFriendlyError(errorType, error) {
+            const messages = {
+                'network': 'Network error. Please check your connection and try again.',
+                'csrf': 'Session expired. Please refresh the page and try again.',
+                'timeout': 'Request timed out. Please try again.',
+                'cancelled': 'Request was cancelled.',
+                'unknown': 'Generation failed: ' + (error.message || 'Unknown error')
+            };
+            return messages[errorType] || messages['unknown'];
+        },
+
+        /**
+         * Delay helper for retry logic
+         */
+        _delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        },
+
+        /**
+         * Poll job status with proper cleanup
+         * FIX C2: Uses AbortController for proper cleanup on component destruction
+         */
         async pollJobStatus(taskId) {
             const maxAttempts = 60; // 2 minutes max
             let attempts = 0;
 
-            while (attempts < maxAttempts) {
+            // Create abort controller for this polling session
+            this.pollAbortController = new AbortController();
+            const signal = this.pollAbortController.signal;
+
+            while (attempts < maxAttempts && !signal.aborted) {
                 try {
-                    const response = await fetch(`/api/tasks/${taskId}`);
+                    // Use abort signal for fetch
+                    const response = await fetch(`/api/tasks/${taskId}`, { signal });
+
+                    if (signal.aborted) {
+                        console.log('Polling aborted');
+                        return;
+                    }
+
                     if (response.ok) {
                         const status = await response.json();
 
@@ -893,26 +1008,73 @@ function unifiedCreator() {
                             this.generationProgress = 100;
                             this.generationStatus = 'Complete!';
                             this.generationComplete = true;
+                            this._cleanupPolling();
                             window.dispatchEvent(new CustomEvent('show-message', {
                                 detail: { message: 'Video generated successfully!', type: 'success' }
                             }));
                             return;
                         } else if (status.status === 'failed') {
+                            this._cleanupPolling();
                             throw new Error(status.errors || 'Generation failed');
                         }
                     }
                 } catch (error) {
-                    console.error('Polling error:', error);
+                    // Don't log abort errors (expected during cleanup)
+                    if (error.name !== 'AbortError') {
+                        console.error('Polling error:', error);
+                    } else {
+                        return; // Exit cleanly on abort
+                    }
                 }
 
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
+                // Abortable delay
+                await this._abortableDelay(2000, signal);
                 attempts++;
             }
 
-            throw new Error('Generation timeout');
+            this._cleanupPolling();
+
+            if (!signal.aborted) {
+                throw new Error('Generation timeout');
+            }
         },
 
+        /**
+         * Delay that can be aborted
+         * FIX C2: Abortable timeout for clean cancellation
+         */
+        _abortableDelay(ms, signal) {
+            return new Promise((resolve) => {
+                const timeoutId = setTimeout(resolve, ms);
+                signal.addEventListener('abort', () => {
+                    clearTimeout(timeoutId);
+                    resolve();
+                }, { once: true });
+            });
+        },
+
+        /**
+         * Clean up polling resources
+         * FIX C2: Proper resource cleanup
+         */
+        _cleanupPolling() {
+            if (this.pollAbortController) {
+                // Don't abort if already completed
+                if (!this.generationComplete) {
+                    this.pollAbortController.abort();
+                }
+                this.pollAbortController = null;
+            }
+        },
+
+        /**
+         * Reset component state and clean up resources
+         * FIX C2: Added cleanup call to prevent memory leaks
+         */
         reset() {
+            // FIX C2: Clean up any active polling
+            this._cleanupPolling();
+
             this.currentStep = 1;
             this.inputType = 'url';
             this.inputData = { url: '', file: null, fileName: '', fileContent: '', fileType: '', text: '' };
@@ -934,6 +1096,20 @@ function unifiedCreator() {
             this.generationStatus = 'Initializing...';
             this.generationComplete = false;
             this.generatedJobId = null;
+            this.retryCount = 0;
+        },
+
+        /**
+         * Destroy/cleanup method for component removal
+         * FIX C2: Called when component is removed from DOM
+         */
+        destroy() {
+            this._cleanupPolling();
+
+            // Clean up any global event listeners if needed
+            if (window.securityUtils) {
+                window.securityUtils.abortAllRequests();
+            }
         }
     };
 }

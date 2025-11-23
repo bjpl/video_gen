@@ -1,0 +1,739 @@
+/**
+ * Progress Indicator Component Styles
+ * Phase 4.1 - Real-time Progress Tracking
+ *
+ * Includes:
+ * - Progress bar animations
+ * - Stage indicators
+ * - Time display
+ * - Cancel/retry buttons
+ * - Success/error states
+ * - Responsive design
+ * - Accessibility support
+ */
+
+/* ========================================
+   MAIN CONTAINER
+   ======================================== */
+
+.progress-indicator {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+}
+
+.progress-indicator__container {
+    background-color: white;
+    border: 2px solid #E5E7EB;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.progress-indicator__container--complete {
+    border-color: #6EE7B7;
+    background: linear-gradient(to bottom right, #ECFDF5, #D1FAE5);
+}
+
+.progress-indicator__container--error {
+    border-color: #FCA5A5;
+    background: linear-gradient(to bottom right, #FEF2F2, #FEE2E2);
+}
+
+/* ========================================
+   CONNECTION STATUS
+   ======================================== */
+
+.progress-indicator__connection {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+}
+
+.connection-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.connection-status--live {
+    background-color: #10B981;
+    animation: pulse-connection 2s ease-in-out infinite;
+}
+
+.connection-status--reconnecting {
+    background-color: #F59E0B;
+    animation: pulse-connection 1s ease-in-out infinite;
+}
+
+.connection-status--offline {
+    background-color: #EF4444;
+}
+
+@keyframes pulse-connection {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.connection-text {
+    color: #6B7280;
+    font-size: 0.75rem;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.progress-indicator__header {
+    margin-bottom: 1.25rem;
+}
+
+.progress-indicator__title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.progress-indicator__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.progress-indicator__percentage {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #3B82F6;
+    font-family: ui-monospace, monospace;
+}
+
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+
+.progress-bar-container {
+    width: 100%;
+    height: 0.75rem;
+    background-color: #E5E7EB;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.5s ease-out;
+    position: relative;
+}
+
+.progress-bar--active {
+    background: linear-gradient(90deg, #3B82F6, #60A5FA, #3B82F6);
+    background-size: 200% 100%;
+    animation: shimmer-bar 2s linear infinite;
+}
+
+.progress-bar--complete {
+    background-color: #10B981;
+}
+
+.progress-bar--error {
+    background-color: #EF4444;
+}
+
+@keyframes shimmer-bar {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ========================================
+   CURRENT STAGE DISPLAY
+   ======================================== */
+
+.progress-indicator__current-stage {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: #F3F4F6;
+    border-radius: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.current-stage__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    background-color: #DBEAFE;
+    border-radius: 0.75rem;
+    color: #3B82F6;
+    flex-shrink: 0;
+}
+
+.current-stage__icon.animate-pulse {
+    animation: pulse-stage-icon 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-stage-icon {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.current-stage__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.current-stage__name {
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.25rem 0;
+}
+
+.current-stage__message {
+    font-size: 0.875rem;
+    color: #6B7280;
+    margin: 0;
+}
+
+/* ========================================
+   STAGES LIST
+   ======================================== */
+
+.progress-indicator__stages {
+    margin-bottom: 1.25rem;
+}
+
+.stages__list {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: relative;
+}
+
+.stage-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.stage-item__indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: #F3F4F6;
+    border: 2px solid #E5E7EB;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.stage-item__content {
+    text-align: center;
+}
+
+.stage-item__label {
+    font-size: 0.75rem;
+    color: #6B7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 5rem;
+}
+
+/* Stage connector lines */
+.stage-item__connector {
+    position: absolute;
+    top: 1rem;
+    left: calc(50% + 1rem);
+    width: calc(100% - 2rem);
+    height: 2px;
+    background-color: #E5E7EB;
+    z-index: 0;
+}
+
+.stage-item__connector--complete {
+    background-color: #10B981;
+}
+
+.stage-item__connector--active {
+    background: linear-gradient(90deg, #10B981 50%, #E5E7EB 50%);
+}
+
+/* ========================================
+   STAGE STATUS VARIANTS
+   ======================================== */
+
+.progress-stage--pending .stage-item__indicator {
+    background-color: #F3F4F6;
+    border-color: #E5E7EB;
+    color: #9CA3AF;
+}
+
+.progress-stage--active .stage-item__indicator {
+    background-color: #DBEAFE;
+    border-color: #3B82F6;
+    color: #3B82F6;
+    animation: pulse-stage 1.5s ease-in-out infinite;
+}
+
+.progress-stage--complete .stage-item__indicator {
+    background-color: #D1FAE5;
+    border-color: #10B981;
+    color: #10B981;
+}
+
+.progress-stage--error .stage-item__indicator {
+    background-color: #FEE2E2;
+    border-color: #EF4444;
+    color: #EF4444;
+}
+
+.progress-stage--active .stage-item__label {
+    color: #3B82F6;
+    font-weight: 600;
+}
+
+.progress-stage--complete .stage-item__label {
+    color: #10B981;
+}
+
+.progress-stage--error .stage-item__label {
+    color: #EF4444;
+}
+
+@keyframes pulse-stage {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+}
+
+/* ========================================
+   TIME DISPLAY
+   ======================================== */
+
+.progress-indicator__time {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 0.75rem;
+    background-color: #F9FAFB;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.time-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.time-item__label {
+    font-size: 0.75rem;
+    color: #6B7280;
+    margin-bottom: 0.25rem;
+}
+
+.time-item__value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    font-family: ui-monospace, monospace;
+}
+
+/* ========================================
+   CANCEL BUTTON
+   ======================================== */
+
+.progress-indicator__actions {
+    display: flex;
+    justify-content: center;
+}
+
+.cancel-btn {
+    padding: 0.5rem 1.25rem;
+    border: 2px solid #D1D5DB;
+    border-radius: 0.5rem;
+    background-color: white;
+    color: #6B7280;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn:hover:not(:disabled) {
+    border-color: #EF4444;
+    color: #EF4444;
+    background-color: #FEF2F2;
+}
+
+.cancel-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.cancel-btn:focus-visible {
+    outline: 2px solid #EF4444;
+    outline-offset: 2px;
+}
+
+/* ========================================
+   CANCEL CONFIRMATION MODAL
+   ======================================== */
+
+.progress-indicator__confirm-modal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+}
+
+.confirm-modal__content {
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    max-width: 24rem;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-modal__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+}
+
+.confirm-modal__desc {
+    color: #6B7280;
+    margin: 0 0 1.25rem 0;
+}
+
+.confirm-modal__actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.confirm-modal__btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.confirm-modal__btn--cancel {
+    background-color: #EF4444;
+    color: white;
+    border: none;
+}
+
+.confirm-modal__btn--cancel:hover {
+    background-color: #DC2626;
+}
+
+.confirm-modal__btn--continue {
+    background-color: white;
+    color: #374151;
+    border: 2px solid #D1D5DB;
+}
+
+.confirm-modal__btn--continue:hover {
+    background-color: #F3F4F6;
+}
+
+/* ========================================
+   ERROR STATE
+   ======================================== */
+
+.progress-indicator__error {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.error__icon {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.error__content {
+    margin-bottom: 1.25rem;
+}
+
+.error__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #991B1B;
+    margin: 0 0 0.5rem 0;
+}
+
+.error__message {
+    color: #DC2626;
+    margin: 0 0 1rem 0;
+}
+
+.error__details {
+    text-align: left;
+    background-color: #FEF2F2;
+    border: 1px solid #FCA5A5;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.error__details-toggle {
+    cursor: pointer;
+    color: #991B1B;
+    font-weight: 500;
+}
+
+.error__details-content {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: #7F1D1D;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background-color: #FEE2E2;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.error__actions {
+    display: flex;
+    justify-content: center;
+}
+
+.error__btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.error__btn--retry {
+    background-color: #EF4444;
+    color: white;
+    border: none;
+}
+
+.error__btn--retry:hover {
+    background-color: #DC2626;
+}
+
+/* ========================================
+   SUCCESS STATE
+   ======================================== */
+
+.progress-indicator__success {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.success__icon {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.success__content {
+    margin-bottom: 1.25rem;
+}
+
+.success__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #065F46;
+    margin: 0 0 0.5rem 0;
+}
+
+.success__subtitle {
+    color: #059669;
+    margin: 0;
+}
+
+/* ========================================
+   DOWNLOADS SECTION
+   ======================================== */
+
+.success__downloads {
+    background-color: white;
+    border: 2px solid #6EE7B7;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    text-align: left;
+}
+
+.downloads__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #065F46;
+    margin: 0 0 0.75rem 0;
+}
+
+.downloads__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.download-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: #F0FDF4;
+    border-radius: 0.5rem;
+}
+
+.download-item__info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.download-item__icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #10B981;
+    flex-shrink: 0;
+}
+
+.download-item__name {
+    font-weight: 500;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.download-item__size {
+    font-size: 0.75rem;
+    color: #6B7280;
+    flex-shrink: 0;
+}
+
+.download-item__btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #10B981;
+    color: white;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+}
+
+.download-item__btn:hover {
+    background-color: #059669;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 640px) {
+    .progress-indicator__container {
+        padding: 1rem;
+    }
+
+    .stages__list {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .stage-item {
+        flex: 0 0 calc(33.333% - 0.5rem);
+    }
+
+    .stage-item__connector {
+        display: none;
+    }
+
+    .stage-item__label {
+        font-size: 0.625rem;
+        max-width: 4rem;
+    }
+
+    .progress-indicator__time {
+        gap: 1rem;
+    }
+
+    .time-item__value {
+        font-size: 1rem;
+    }
+
+    .download-item {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+
+    .download-item__btn {
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   HIGH CONTRAST MODE
+   ======================================== */
+
+@media (prefers-contrast: high) {
+    .progress-indicator__container {
+        border-width: 3px;
+    }
+
+    .stage-item__indicator {
+        border-width: 3px;
+    }
+
+    .progress-bar-container {
+        border: 2px solid #111827;
+    }
+}
+
+/* ========================================
+   REDUCED MOTION
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-bar,
+    .progress-bar--active,
+    .stage-item__indicator,
+    .current-stage__icon,
+    .connection-dot,
+    .cancel-btn,
+    .error__btn,
+    .download-item__btn {
+        animation: none;
+        transition: none;
+    }
+}

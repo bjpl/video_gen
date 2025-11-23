@@ -1,0 +1,248 @@
+{# Progress Indicator Component
+   A comprehensive progress tracking component with real-time SSE updates.
+
+   Usage:
+   Include components/progress-indicator.html in your template
+
+   Or with task ID:
+   <div x-data="progressIndicator()" x-init="startTracking('task_id_here')">
+     Include components/progress-indicator.html here
+   </div>
+#}
+
+<div class="progress-indicator" x-show="isProcessing || isComplete || hasError">
+    {# Connection Status Indicator #}
+    <div class="progress-indicator__connection" x-show="isProcessing && !isComplete">
+        <span class="connection-dot" :class="getConnectionClass()"></span>
+        <span class="connection-text text-xs" x-text="getConnectionStatus()"></span>
+    </div>
+
+    {# Main Progress Container #}
+    <div class="progress-indicator__container"
+         :class="{
+             'progress-indicator__container--complete': isComplete,
+             'progress-indicator__container--error': hasError
+         }"
+         role="progressbar"
+         :aria-valuenow="progress"
+         aria-valuemin="0"
+         aria-valuemax="100"
+         :aria-valuetext="statusMessage">
+
+        {# Header with Progress Bar #}
+        <div class="progress-indicator__header">
+            <div class="progress-indicator__title-row">
+                <h3 class="progress-indicator__title">
+                    <span x-show="isProcessing && !isComplete && !hasError">Generating Video...</span>
+                    <span x-show="isComplete">Generation Complete!</span>
+                    <span x-show="hasError">Generation Failed</span>
+                </h3>
+                <span class="progress-indicator__percentage" x-text="progress + '%'"></span>
+            </div>
+
+            {# Progress Bar #}
+            <div class="progress-bar-container">
+                <div class="progress-bar"
+                     :style="'width: ' + progress + '%'"
+                     :class="{
+                         'progress-bar--complete': isComplete,
+                         'progress-bar--error': hasError,
+                         'progress-bar--active': isProcessing && !isComplete && !hasError
+                     }">
+                </div>
+            </div>
+        </div>
+
+        {# Current Stage Display #}
+        <div class="progress-indicator__current-stage" x-show="currentStage && isProcessing">
+            <div class="current-stage__icon" :class="{ 'animate-pulse': isProcessing }">
+                <span x-html="currentStage ? getStageIcon(currentStage) : ''"></span>
+            </div>
+            <div class="current-stage__info">
+                <p class="current-stage__name" x-text="currentStage?.label || 'Processing'"></p>
+                <p class="current-stage__message" x-text="statusMessage || currentStage?.message || ''"></p>
+            </div>
+        </div>
+
+        {# Stage List #}
+        <div class="progress-indicator__stages" x-show="stages.length > 0">
+            <h4 class="stages__title sr-only">Progress Stages</h4>
+            <ol class="stages__list" aria-label="Generation stages">
+                <template x-for="(stage, index) in stages" :key="stage.id">
+                    <li class="stage-item"
+                        :class="getStageClass(stage)"
+                        :aria-current="stage.status === 'active' ? 'step' : false">
+                        <div class="stage-item__indicator">
+                            <span x-html="getStageIndicator(stage)"></span>
+                        </div>
+                        <div class="stage-item__content">
+                            <span class="stage-item__label" x-text="stage.label"></span>
+                        </div>
+                        {# Connector line #}
+                        <div class="stage-item__connector" x-show="index < stages.length - 1"
+                             :class="{
+                                 'stage-item__connector--complete': stage.status === 'complete',
+                                 'stage-item__connector--active': stage.status === 'active'
+                             }">
+                        </div>
+                    </li>
+                </template>
+            </ol>
+        </div>
+
+        {# Time Display #}
+        <div class="progress-indicator__time" x-show="isProcessing && !isComplete && !hasError">
+            <div class="time-item">
+                <span class="time-item__label">Elapsed</span>
+                <span class="time-item__value" x-text="formatTime(timeElapsed)"></span>
+            </div>
+            <div class="time-item">
+                <span class="time-item__label">Remaining</span>
+                <span class="time-item__value" x-text="formatTimeRemaining()"></span>
+            </div>
+        </div>
+
+        {# Cancel Button #}
+        <div class="progress-indicator__actions" x-show="isProcessing && !isComplete && !hasError">
+            <button type="button"
+                    class="cancel-btn"
+                    @click="promptCancel()"
+                    :disabled="isCancelling"
+                    aria-label="Cancel video generation">
+                <span x-show="!isCancelling">Cancel</span>
+                <span x-show="isCancelling">Cancelling...</span>
+            </button>
+        </div>
+
+        {# Cancel Confirmation Modal #}
+        <div class="progress-indicator__confirm-modal"
+             x-show="showCancelConfirm"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             role="alertdialog"
+             aria-labelledby="cancel-confirm-title"
+             aria-describedby="cancel-confirm-desc">
+            <div class="confirm-modal__content">
+                <h4 id="cancel-confirm-title" class="confirm-modal__title">Cancel Generation?</h4>
+                <p id="cancel-confirm-desc" class="confirm-modal__desc">
+                    Are you sure you want to cancel? Any progress will be lost.
+                </p>
+                <div class="confirm-modal__actions">
+                    <button type="button"
+                            class="confirm-modal__btn confirm-modal__btn--cancel"
+                            @click="cancelOperation()">
+                        Yes, Cancel
+                    </button>
+                    <button type="button"
+                            class="confirm-modal__btn confirm-modal__btn--continue"
+                            @click="dismissCancel()">
+                        Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# Error State #}
+        <div class="progress-indicator__error" x-show="hasError">
+            <div class="error__icon">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="error__content">
+                <h4 class="error__title">Generation Failed</h4>
+                <p class="error__message" x-text="error"></p>
+                <details class="error__details" x-show="errorDetails">
+                    <summary class="error__details-toggle">Show Details</summary>
+                    <pre class="error__details-content" x-text="errorDetails"></pre>
+                </details>
+            </div>
+            <div class="error__actions">
+                <button type="button"
+                        class="error__btn error__btn--retry"
+                        @click="retry()">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Retry
+                </button>
+            </div>
+        </div>
+
+        {# Success State #}
+        <div class="progress-indicator__success" x-show="isComplete">
+            <div class="success__icon">
+                <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="success__content">
+                <h4 class="success__title">Video Generated Successfully!</h4>
+                <p class="success__subtitle">
+                    Completed in <span x-text="formatTime(timeElapsed)"></span>
+                </p>
+            </div>
+
+            {# Download Section #}
+            <div class="success__downloads" x-show="outputFiles.length > 0 || downloadUrl">
+                <h5 class="downloads__title">Your Videos</h5>
+                <ul class="downloads__list">
+                    <template x-for="file in outputFiles" :key="file.path || file.name">
+                        <li class="download-item">
+                            <div class="download-item__info">
+                                <svg class="download-item__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="download-item__name" x-text="file.name || 'Video'"></span>
+                                <span class="download-item__size" x-text="file.size || ''" x-show="file.size"></span>
+                            </div>
+                            <a :href="'/api/download/' + (file.path || '')"
+                               download
+                               class="download-item__btn">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Download
+                            </a>
+                        </li>
+                    </template>
+
+                    {# Single download URL fallback #}
+                    <li class="download-item" x-show="downloadUrl && outputFiles.length === 0">
+                        <div class="download-item__info">
+                            <svg class="download-item__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="download-item__name">Your Video</span>
+                        </div>
+                        <a :href="downloadUrl"
+                           download
+                           class="download-item__btn">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Download
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {# ARIA Live Region for Screen Readers #}
+    <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        <span x-text="statusMessage"></span>
+        <span x-text="'Progress: ' + progress + ' percent'"></span>
+    </div>
+</div>

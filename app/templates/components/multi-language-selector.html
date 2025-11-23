@@ -1,0 +1,281 @@
+<!--
+MultiLanguageSelector Component Template
+========================================
+
+A modern, accessible multi-language selection component with:
+- Search and filter functionality
+- Popular languages quick select
+- Selected languages summary with removable chips
+- Full keyboard navigation
+- ARIA live regions for screen reader announcements
+
+Usage:
+Include components/multi-language-selector.html in your template
+
+Or with configuration:
+<div x-data="multiLanguageSelector({ maxSelections: 5, initialSelection: ['en', 'es'] })">
+    Include components/multi-language-selector.html here
+</div>
+-->
+
+<div class="language-selector"
+     x-data="multiLanguageSelector()"
+     :id="componentId"
+     role="group"
+     aria-labelledby="language-selector-heading">
+
+    <!-- Screen Reader Announcer -->
+    <div :id="componentId + '-announcer'"
+         class="sr-only"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true">
+    </div>
+
+    <!-- Header -->
+    <div class="language-selector__header">
+        <h3 id="language-selector-heading" class="language-selector__title">
+            <span class="language-selector__icon" aria-hidden="true">&#127760;</span>
+            Target Languages
+            <span class="language-selector__count"
+                  :class="{ 'language-selector__count--warning': selectedCount >= maxSelections }">
+                (<span x-text="selectedCount"></span> selected)
+            </span>
+        </h3>
+        <p class="language-selector__description">
+            Select languages for video generation. Videos will be created for each selected language.
+        </p>
+    </div>
+
+    <!-- Loading State -->
+    <template x-if="isLoading">
+        <div class="language-selector__loading" role="status" aria-label="Loading languages">
+            <div class="language-selector__skeleton">
+                <div class="skeleton-line skeleton-line--short"></div>
+                <div class="skeleton-chips">
+                    <div class="skeleton-chip"></div>
+                    <div class="skeleton-chip"></div>
+                    <div class="skeleton-chip"></div>
+                    <div class="skeleton-chip"></div>
+                </div>
+                <div class="skeleton-list">
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                    <div class="skeleton-item"></div>
+                </div>
+            </div>
+            <span class="sr-only">Loading available languages...</span>
+        </div>
+    </template>
+
+    <!-- Error State -->
+    <template x-if="error && !isLoading">
+        <div class="language-selector__error" role="alert">
+            <span class="language-selector__error-icon" aria-hidden="true">&#9888;</span>
+            <span x-text="error"></span>
+            <button type="button"
+                    @click="fetchLanguages()"
+                    class="language-selector__retry-btn">
+                Retry
+            </button>
+        </div>
+    </template>
+
+    <!-- Main Content (when loaded) -->
+    <template x-if="!isLoading">
+        <div class="language-selector__content">
+
+            <!-- Search Input -->
+            <div class="language-search">
+                <label for="language-search-input" class="sr-only">Search languages</label>
+                <div class="language-search__wrapper">
+                    <span class="language-search__icon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </span>
+                    <input type="search"
+                           id="language-search-input"
+                           x-ref="searchInput"
+                           x-model="searchQuery"
+                           @input="handleSearchInput()"
+                           placeholder="Search languages..."
+                           class="language-search__input"
+                           autocomplete="off"
+                           aria-describedby="search-hint">
+                    <button type="button"
+                            x-show="searchQuery.length > 0"
+                            @click="clearSearch()"
+                            class="language-search__clear"
+                            aria-label="Clear search">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <span id="search-hint" class="language-search__hint">
+                    Search by language name (English or native)
+                </span>
+            </div>
+
+            <!-- Popular Languages Section -->
+            <div class="language-popular" x-show="searchQuery.length === 0">
+                <h4 class="language-popular__title">Popular Languages</h4>
+                <div class="language-chips" role="group" aria-label="Popular language shortcuts">
+                    <template x-for="lang in popularLanguages" :key="lang.code">
+                        <button type="button"
+                                @click="toggleLanguage(lang.code)"
+                                :class="{
+                                    'language-chip': true,
+                                    'language-chip--selected': isSelected(lang.code)
+                                }"
+                                :aria-pressed="isSelected(lang.code)"
+                                :title="lang.name + ' (' + lang.name_local + ')'">
+                            <span class="language-chip__flag" x-text="getLanguageFlag(lang.code)" aria-hidden="true"></span>
+                            <span class="language-chip__name" x-text="lang.name"></span>
+                            <span class="language-chip__check" x-show="isSelected(lang.code)" aria-hidden="true">&#10003;</span>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Preset Buttons -->
+                <div class="language-presets">
+                    <span class="language-presets__label">Quick presets:</span>
+                    <button type="button"
+                            @click="selectPreset('european')"
+                            class="language-preset-btn"
+                            title="English, Spanish, French, German, Italian, Portuguese, Dutch, Polish">
+                        European
+                    </button>
+                    <button type="button"
+                            @click="selectPreset('asian')"
+                            class="language-preset-btn"
+                            title="English, Japanese, Chinese, Korean, Vietnamese, Thai, Indonesian">
+                        Asian
+                    </button>
+                    <button type="button"
+                            @click="selectPreset('global')"
+                            class="language-preset-btn"
+                            title="English, Spanish, Chinese, Arabic, Hindi, Portuguese, Russian, Japanese">
+                        Global
+                    </button>
+                </div>
+            </div>
+
+            <!-- All Languages List -->
+            <div class="language-list-container">
+                <h4 class="language-list__title">
+                    <span x-text="searchQuery ? 'Search Results' : 'All Languages'"></span>
+                    <span class="language-list__count" x-text="'(' + filteredLanguages.length + ')'"></span>
+                </h4>
+
+                <div class="language-list"
+                     x-ref="languageList"
+                     role="listbox"
+                     aria-multiselectable="true"
+                     aria-label="Available languages"
+                     tabindex="0"
+                     @keydown="handleKeyNav($event, 0)">
+
+                    <!-- Empty state for search -->
+                    <template x-if="filteredLanguages.length === 0 && searchQuery">
+                        <div class="language-list__empty">
+                            <span aria-hidden="true">&#128269;</span>
+                            <p>No languages found matching "<span x-text="searchQuery"></span>"</p>
+                            <button type="button" @click="clearSearch()" class="language-list__empty-btn">
+                                Clear search
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Language items -->
+                    <template x-for="(lang, index) in filteredLanguages" :key="lang.code">
+                        <div class="language-option"
+                             :class="{ 'language-option--selected': isSelected(lang.code) }"
+                             role="option"
+                             :aria-selected="isSelected(lang.code)"
+                             :data-lang-code="lang.code"
+                             tabindex="-1"
+                             @click="toggleLanguage(lang.code)"
+                             @keydown="handleKeyNav($event, index)">
+
+                            <div class="language-option__checkbox">
+                                <input type="checkbox"
+                                       :id="'lang-' + lang.code"
+                                       :checked="isSelected(lang.code)"
+                                       :disabled="!isSelected(lang.code) && !canAddMore"
+                                       @change.stop="toggleLanguage(lang.code)"
+                                       @click.stop
+                                       class="language-option__input"
+                                       :aria-describedby="'lang-desc-' + lang.code">
+                                <span class="language-option__checkmark" aria-hidden="true"></span>
+                            </div>
+
+                            <span class="language-option__flag" x-text="getLanguageFlag(lang.code)" aria-hidden="true"></span>
+
+                            <div class="language-option__info">
+                                <span class="language-option__name" x-text="lang.name"></span>
+                                <span class="language-option__native"
+                                      x-show="lang.name_local && lang.name_local !== lang.name"
+                                      x-text="'(' + lang.name_local + ')'"></span>
+                            </div>
+
+                            <span class="language-option__voices"
+                                  :id="'lang-desc-' + lang.code"
+                                  x-show="getVoiceCount(lang.code) > 0">
+                                <span x-text="getVoiceCount(lang.code)"></span> voices
+                            </span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Selected Languages Summary -->
+            <div class="language-selected" x-show="selectedCount > 0">
+                <div class="language-selected__header">
+                    <h4 class="language-selected__title">
+                        Selected (<span x-text="selectedCount"></span>/<span x-text="maxSelections"></span>)
+                    </h4>
+                    <button type="button"
+                            @click="clearAll()"
+                            x-show="selectedCount > 1"
+                            class="language-selected__clear"
+                            title="Clear all except first">
+                        Clear
+                    </button>
+                </div>
+
+                <div class="language-selected__chips" role="list" aria-label="Selected languages">
+                    <template x-for="code in selectedLanguages" :key="code">
+                        <span class="language-selected-chip" role="listitem">
+                            <span class="language-selected-chip__flag" x-text="getLanguageFlag(code)" aria-hidden="true"></span>
+                            <span class="language-selected-chip__name" x-text="getLanguageName(code)"></span>
+                            <button type="button"
+                                    @click.stop="removeLanguage(code)"
+                                    :disabled="selectedCount <= 1"
+                                    class="language-selected-chip__remove"
+                                    :aria-label="'Remove ' + getLanguageName(code)"
+                                    :title="selectedCount <= 1 ? 'At least one language required' : 'Remove ' + getLanguageName(code)">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </span>
+                    </template>
+                </div>
+
+                <!-- Validation message -->
+                <p class="language-selected__validation"
+                   x-show="!isSelectionValid"
+                   role="alert">
+                    <span aria-hidden="true">&#9888;</span>
+                    At least one language must be selected.
+                </p>
+            </div>
+
+        </div>
+    </template>
+</div>

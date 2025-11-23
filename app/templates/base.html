@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     <title>{% block title %}Video Generation System{% endblock %}</title>
 
     <!-- Tailwind CSS -->
@@ -33,6 +37,19 @@
     <link rel="stylesheet" href="/static/css/components.css">
     <script src="/static/js/validation.js"></script>
     <script src="/static/js/cost-estimator.js"></script>
+
+    <!-- ========== Frontend Modernization - Phase 4.2 Utilities ========== -->
+    <!-- Utilities (load first - no dependencies) -->
+    <script src="/static/js/utils/storage.js"></script>
+    <script src="/static/js/utils/event-bus.js"></script>
+    <script src="/static/js/utils/error-handler.js"></script>
+    <script src="/static/js/utils/security.js"></script>
+    <script src="/static/js/utils/api-client.js"></script>
+
+    <!-- ========== Frontend Modernization - Components ========== -->
+    <script src="/static/js/components/drag-drop-zone.js"></script>
+    <script src="/static/js/components/validation-feedback.js"></script>
+    <script src="/static/js/components/preview-panel.js"></script>
 
     <!-- Tailwind Config -->
     <script>

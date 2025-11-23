@@ -1,0 +1,295 @@
+<!-- Validation Feedback Component - Phase 2.2 -->
+<!-- Real-time validation feedback for document and YouTube inputs -->
+<!-- Usage: Simply include the template, defaults to YouTube validation -->
+<!-- The component automatically detects the validation type -->
+
+{% set type = type|default('youtube') %}
+{% set model = model|default('single') %}
+
+{% if type == 'youtube' %}
+<!-- YouTube URL Validation Component -->
+<div x-data="youtubeValidation()"
+     class="validation-component validation-component--youtube"
+     x-on:youtube-validated.window="$dispatch('input-validated', $event.detail)">
+
+    <!-- Input with validation indicator -->
+    <div class="validation-input-wrapper">
+        <input x-model="url"
+               @input="onInput"
+               type="text"
+               placeholder="https://youtube.com/watch?v=..."
+               :class="['w-full px-4 py-2 border rounded-lg focus:ring-2 transition-colors', inputClass]"
+               aria-label="YouTube video URL"
+               :aria-invalid="hasError"
+               :aria-describedby="hasError ? 'youtube-error-{{ model }}' : null">
+
+        <!-- Inline indicator -->
+        <span class="validation-indicator"
+              x-show="state !== 'idle'"
+              x-html="stateIcon"
+              :class="{
+                  'validation-indicator--loading': isValidating,
+                  'validation-indicator--success': isValid,
+                  'validation-indicator--error': hasError
+              }">
+        </span>
+    </div>
+
+    <!-- Validation Feedback Display -->
+    <div class="mt-2">
+        <!-- Loading state -->
+        <div x-show="isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--loading">
+            <span class="validation-feedback__icon validation-feedback__spinner">&#8635;</span>
+            <span class="validation-feedback__content">
+                <span class="validation-feedback__message">Validating URL...</span>
+            </span>
+        </div>
+
+        <!-- Success state -->
+        <div x-show="isValid && !isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--success"
+             role="status"
+             aria-live="polite">
+            <span class="validation-feedback__icon validation-feedback__icon--success">&#10003;</span>
+            <div class="validation-feedback__content">
+                <span class="validation-feedback__message">Valid YouTube URL</span>
+                <div class="validation-feedback__details">
+                    Video ID: <code class="validation-video-id" x-text="videoId"></code>
+                    <button @click="fetchPreview"
+                            class="ml-2 text-xs text-green-700 underline hover:no-underline">
+                        Load Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div x-show="hasError && !isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--error"
+             role="alert"
+             aria-live="assertive"
+             id="youtube-error-{{ model }}">
+            <span class="validation-feedback__icon validation-feedback__icon--error">&#10007;</span>
+            <div class="validation-feedback__content">
+                <span class="validation-feedback__message" x-text="errorMessage"></span>
+                <p class="validation-feedback__suggestion" x-show="suggestion" x-text="suggestion"></p>
+            </div>
+        </div>
+
+        <!-- Warning state -->
+        <div x-show="hasWarning && !hasError && !isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--warning"
+             role="status">
+            <span class="validation-feedback__icon validation-feedback__icon--warning">&#9888;</span>
+            <div class="validation-feedback__content">
+                <span class="validation-feedback__message" x-text="warningMessage"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Helper text -->
+    <p class="text-xs text-gray-500 mt-1">
+        Supported: youtube.com/watch?v=..., youtu.be/..., youtube.com/embed/...
+    </p>
+</div>
+
+{% elif type == 'document' %}
+<!-- Document File Validation Component -->
+<div x-data="documentValidation()"
+     class="validation-component validation-component--document"
+     x-on:document-validated.window="$dispatch('input-validated', $event.detail)">
+
+    <!-- File Upload Zone -->
+    <div class="file-upload-zone"
+         :class="{'dragging': isDragging}"
+         @dragover.prevent="isDragging = true"
+         @dragleave="isDragging = false"
+         @drop.prevent="handleDrop($event); isDragging = false"
+         @click="$refs.fileInput.click()">
+
+        <input type="file"
+               x-ref="fileInput"
+               @change="onFileSelect($event)"
+               accept=".md,.txt,.markdown,.rst"
+               class="hidden"
+               aria-label="Document file upload">
+
+        <!-- Upload Icon and Text -->
+        <div x-show="!file" class="text-center">
+            <div class="file-upload-icon">&#128196;</div>
+            <p class="text-gray-600 mb-1">Drag & drop your document here</p>
+            <p class="text-sm text-gray-500">
+                or <span class="file-upload-browse">browse files</span>
+            </p>
+            <p class="text-xs text-gray-400 mt-2">
+                Supported: .md, .txt, .markdown, .rst (max 10MB)
+            </p>
+        </div>
+
+        <!-- Selected File Display -->
+        <div x-show="file" class="text-center">
+            <div class="file-upload-icon">&#128196;</div>
+            <p class="font-medium text-gray-800" x-text="fileName"></p>
+            <p class="text-sm text-gray-500" x-text="formattedFileSize"></p>
+            <button @click.stop="resetState()"
+                    class="mt-2 text-sm text-red-600 hover:text-red-800">
+                Remove file
+            </button>
+        </div>
+    </div>
+
+    <!-- Validation Feedback Display -->
+    <div class="mt-2">
+        <!-- Loading state -->
+        <div x-show="isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--loading">
+            <span class="validation-feedback__icon validation-feedback__spinner">&#8635;</span>
+            <span class="validation-feedback__content">
+                <span class="validation-feedback__message">Validating document...</span>
+            </span>
+        </div>
+
+        <!-- Success state -->
+        <div x-show="isValid && !isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--success"
+             role="status"
+             aria-live="polite">
+            <span class="validation-feedback__icon validation-feedback__icon--success">&#10003;</span>
+            <div class="validation-feedback__content">
+                <span class="validation-feedback__message">Document validated successfully</span>
+                <div class="validation-feedback__details" x-show="sanitizedFilename">
+                    Filename: <code class="validation-video-id" x-text="sanitizedFilename"></code>
+                    <button @click="fetchPreview"
+                            class="ml-2 text-xs text-green-700 underline hover:no-underline">
+                        Load Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div x-show="hasError && !isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--error"
+             role="alert"
+             aria-live="assertive"
+             id="document-error-{{ model }}">
+            <span class="validation-feedback__icon validation-feedback__icon--error">&#10007;</span>
+            <div class="validation-feedback__content">
+                <span class="validation-feedback__message" x-text="errorMessage"></span>
+                <p class="validation-feedback__suggestion" x-show="suggestion" x-text="suggestion"></p>
+            </div>
+        </div>
+
+        <!-- Warning state -->
+        <div x-show="hasWarning && !hasError && !isValidating"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 transform -translate-y-1"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             class="validation-feedback validation-feedback--warning"
+             role="status">
+            <span class="validation-feedback__icon validation-feedback__icon--warning">&#9888;</span>
+            <div class="validation-feedback__content">
+                <span class="validation-feedback__message" x-text="warningMessage"></span>
+                <ul x-show="warnings.length > 1" class="text-xs mt-1 list-disc list-inside">
+                    <template x-for="warning in warnings">
+                        <li x-text="warning"></li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif type == 'generic' %}
+<!-- Generic Validation Feedback Component -->
+<div x-data="validationFeedback()"
+     x-bind="container"
+     class="validation-feedback">
+
+    <!-- Icon -->
+    <span class="validation-feedback__icon"
+          :class="{
+              'validation-feedback__icon--success': state === 'valid',
+              'validation-feedback__icon--error': state === 'invalid' || state === 'error',
+              'validation-feedback__icon--warning': state === 'warning',
+              'validation-feedback__spinner': state === 'validating'
+          }"
+          x-html="icon">
+    </span>
+
+    <!-- Content -->
+    <div class="validation-feedback__content">
+        <span class="validation-feedback__message" x-text="message"></span>
+        <p class="validation-feedback__suggestion" x-show="suggestion" x-text="suggestion"></p>
+        <div class="validation-feedback__details" x-show="details" x-text="JSON.stringify(details)"></div>
+    </div>
+</div>
+
+{% else %}
+<!-- Default: Combined Input Selector with Validation -->
+<div x-data="{
+         inputType: 'youtube',
+         youtubeData: {},
+         documentData: {}
+     }"
+     class="validation-component">
+
+    <!-- Input Type Selector -->
+    <div class="flex gap-2 mb-4">
+        <button @click="inputType = 'youtube'"
+                :class="inputType === 'youtube' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                class="px-4 py-2 rounded-lg font-medium transition-colors">
+            &#128250; YouTube
+        </button>
+        <button @click="inputType = 'document'"
+                :class="inputType === 'document' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                class="px-4 py-2 rounded-lg font-medium transition-colors">
+            &#128196; Document
+        </button>
+    </div>
+
+    <!-- YouTube Input -->
+    <div x-show="inputType === 'youtube'" x-transition>
+        <!-- YouTube validation component will be rendered here -->
+        <div x-data="youtubeValidation()">
+            <!-- Inline YouTube validation -->
+        </div>
+    </div>
+
+    <!-- Document Input -->
+    <div x-show="inputType === 'document'" x-transition>
+        <!-- Document validation component will be rendered here -->
+        <div x-data="documentValidation()">
+            <!-- Inline document validation -->
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+<!-- Script include reminder -->
+<!-- Make sure to include validation-feedback.js in your page:
+     <script src="/static/js/components/validation-feedback.js"></script>
+-->

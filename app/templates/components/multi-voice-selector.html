@@ -1,0 +1,223 @@
+<!-- Multi-Voice Selector Component -->
+<!-- Usage: Include components/multi-voice-selector.html in your template -->
+<!-- Requires: Alpine.js, multi-voice-selector.js component -->
+
+<div x-data="multiVoiceSelector({ initialLanguages: selectedLanguages || ['en'] })"
+     class="voice-selector"
+     role="region"
+     aria-label="Voice Selection">
+
+    <!-- Section Header -->
+    <div class="voice-selector__header">
+        <h3 class="voice-selector__title">
+            <span class="voice-selector__icon" aria-hidden="true">🎙️</span>
+            Voice Selection
+        </h3>
+        <p class="voice-selector__subtitle">
+            Select voices for each language. Multiple voices will rotate for variety.
+        </p>
+    </div>
+
+    <!-- Error Banner -->
+    <div x-show="error"
+         x-cloak
+         class="voice-selector__error"
+         role="alert"
+         aria-live="polite">
+        <span class="voice-selector__error-icon" aria-hidden="true">⚠️</span>
+        <span x-text="error"></span>
+        <button @click="error = null"
+                class="voice-selector__error-close"
+                aria-label="Dismiss error">
+            ×
+        </button>
+    </div>
+
+    <!-- Per-Language Voice Sections -->
+    <div class="voice-selector__languages">
+        <template x-for="lang in selectedLanguages" :key="lang">
+            <div class="language-voice-section"
+                 :class="{ 'language-voice-section--invalid': !isLanguageValid(lang) }">
+
+                <!-- Language Header -->
+                <div class="language-voice-section__header">
+                    <div class="language-voice-section__title">
+                        <span class="language-voice-section__flag"
+                              x-text="getLanguageFlag(lang)"
+                              aria-hidden="true"></span>
+                        <h4 x-text="getLanguageName(lang)"></h4>
+                        <span class="language-voice-section__count"
+                              x-text="`(${getSelectedVoiceCount(lang)} voice${getSelectedVoiceCount(lang) !== 1 ? 's' : ''} selected)`"></span>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="language-voice-section__actions">
+                        <button @click="selectAllVoices(lang)"
+                                type="button"
+                                class="btn-text btn-text--small"
+                                :disabled="isLoading[lang]">
+                            Select All
+                        </button>
+                        <button @click="clearVoices(lang)"
+                                type="button"
+                                class="btn-text btn-text--small"
+                                :disabled="isLoading[lang]">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div x-show="isLoading[lang]"
+                     class="language-voice-section__loading"
+                     aria-live="polite">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <span>Loading voices...</span>
+                </div>
+
+                <!-- Voice Options List -->
+                <div x-show="!isLoading[lang]"
+                     class="voice-options"
+                     role="group"
+                     :aria-label="`Voice options for ${getLanguageName(lang)}`">
+
+                    <template x-for="voice in (availableVoices[lang] || [])" :key="voice.id">
+                        <label class="voice-option"
+                               :class="{
+                                   'voice-option--selected': isVoiceSelected(lang, voice.id),
+                                   'voice-option--previewing': isPreviewingVoice(lang, voice.id)
+                               }">
+
+                            <!-- Checkbox -->
+                            <input type="checkbox"
+                                   :checked="isVoiceSelected(lang, voice.id)"
+                                   @change="toggleVoice(lang, voice.id)"
+                                   class="voice-option__checkbox"
+                                   :aria-describedby="`voice-desc-${lang}-${voice.id}`">
+
+                            <!-- Voice Info -->
+                            <div class="voice-option__info">
+                                <div class="voice-option__name">
+                                    <span x-text="voice.name"></span>
+                                    <span class="voice-option__gender"
+                                          :class="`voice-option__gender--${voice.gender}`"
+                                          x-text="getGenderIcon(voice.gender)"
+                                          :aria-label="voice.gender + ' voice'"></span>
+                                </div>
+                                <p class="voice-option__description"
+                                   :id="`voice-desc-${lang}-${voice.id}`"
+                                   x-text="voice.description"></p>
+                            </div>
+
+                            <!-- Preview Button -->
+                            <button @click.prevent.stop="isPreviewingVoice(lang, voice.id) ? stopPreview() : previewVoice(lang, voice.id)"
+                                    type="button"
+                                    class="voice-preview-btn"
+                                    :class="{ 'voice-preview-btn--playing': isPreviewingVoice(lang, voice.id) && previewState === 'playing' }"
+                                    :disabled="previewState === 'loading' && isPreviewingVoice(lang, voice.id)"
+                                    :aria-label="isPreviewingVoice(lang, voice.id) ? 'Stop preview' : `Preview ${voice.name}`">
+
+                                <!-- Loading State -->
+                                <template x-if="previewState === 'loading' && isPreviewingVoice(lang, voice.id)">
+                                    <span class="voice-preview-btn__loading" aria-hidden="true">⏳</span>
+                                </template>
+
+                                <!-- Playing State with Waveform -->
+                                <template x-if="previewState === 'playing' && isPreviewingVoice(lang, voice.id)">
+                                    <span class="voice-preview-btn__waveform" aria-hidden="true">
+                                        <span class="waveform-bar"></span>
+                                        <span class="waveform-bar"></span>
+                                        <span class="waveform-bar"></span>
+                                        <span class="waveform-bar"></span>
+                                    </span>
+                                </template>
+
+                                <!-- Default State -->
+                                <template x-if="!isPreviewingVoice(lang, voice.id) || previewState === 'idle' || previewState === 'error'">
+                                    <span aria-hidden="true">🔊</span>
+                                </template>
+                            </button>
+                        </label>
+                    </template>
+                </div>
+
+                <!-- Selected Voices Summary -->
+                <div x-show="getSelectedVoiceCount(lang) > 0 && !isLoading[lang]"
+                     class="selected-voices-summary">
+
+                    <!-- Voice Chips -->
+                    <div class="voice-chips" role="list" aria-label="Selected voices">
+                        <template x-for="voiceId in (languageVoices[lang] || [])" :key="voiceId">
+                            <span class="voice-chip" role="listitem">
+                                <span class="voice-chip__gender"
+                                      :class="`voice-chip__gender--${getVoiceGender(lang, voiceId)}`"
+                                      x-text="getGenderIcon(getVoiceGender(lang, voiceId))"
+                                      aria-hidden="true"></span>
+                                <span x-text="getVoiceName(lang, voiceId)"></span>
+                                <button @click="toggleVoice(lang, voiceId)"
+                                        class="voice-chip__remove"
+                                        :disabled="getSelectedVoiceCount(lang) <= minVoicesPerLang"
+                                        :aria-label="`Remove ${getVoiceName(lang, voiceId)}`">
+                                    ×
+                                </button>
+                            </span>
+                        </template>
+                    </div>
+
+                    <!-- Rotation Preview -->
+                    <div x-show="getSelectedVoiceCount(lang) > 1"
+                         class="voice-rotation-preview"
+                         aria-live="polite">
+                        <span class="voice-rotation-preview__icon" aria-hidden="true">🔄</span>
+                        <span class="voice-rotation-preview__text">
+                            Rotation: <span x-text="getRotationPreview(lang)"></span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Warning if no voice selected -->
+                <div x-show="getSelectedVoiceCount(lang) === 0 && !isLoading[lang]"
+                     class="voice-warning"
+                     role="alert"
+                     aria-live="assertive">
+                    <span class="voice-warning__icon" aria-hidden="true">⚠️</span>
+                    <span>Please select at least one voice for <span x-text="getLanguageName(lang)"></span></span>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="selectedLanguages.length === 0"
+         class="voice-selector__empty">
+        <span class="voice-selector__empty-icon" aria-hidden="true">🌍</span>
+        <p>Select languages first to choose voices.</p>
+    </div>
+
+    <!-- Overall Summary -->
+    <div x-show="selectedLanguages.length > 0"
+         class="voice-selector__summary"
+         aria-live="polite">
+        <div class="voice-selector__summary-stats">
+            <span class="voice-selector__summary-item">
+                <strong x-text="selectedLanguages.length"></strong> language<span x-show="selectedLanguages.length !== 1">s</span>
+            </span>
+            <span class="voice-selector__summary-divider" aria-hidden="true">•</span>
+            <span class="voice-selector__summary-item">
+                <strong x-text="totalVoiceCount"></strong> voice<span x-show="totalVoiceCount !== 1">s</span> total
+            </span>
+        </div>
+
+        <!-- Validation Status -->
+        <div x-show="!allVoicesValid()"
+             class="voice-selector__validation-warning">
+            <span aria-hidden="true">⚠️</span>
+            Some languages need voice selection
+        </div>
+    </div>
+
+    <!-- Hidden live region for screen readers -->
+    <div class="sr-only" aria-live="polite" aria-atomic="true">
+        <span x-text="previewState === 'playing' ? `Now playing voice preview` : ''"></span>
+    </div>
+</div>
