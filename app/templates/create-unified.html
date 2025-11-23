@@ -706,18 +706,36 @@
                         <!-- Output Preview Card -->
                         <div class="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm">
                             <h4 class="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
-                                <span>📁</span> Output Preview
+                                <span>📁</span> Output Files
                             </h4>
-                            <div class="space-y-2 text-xs">
-                                <template x-for="lang in (config.languageMode === 'single' ? ['en'] : config.targetLanguages.slice(0, 3))" :key="lang">
-                                    <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                                        <span x-text="getLanguageFlag(lang)"></span>
-                                        <code class="flex-1 text-gray-600 font-mono truncate" x-text="(config.videoId || 'video') + '_' + lang + '.mp4'"></code>
+                            <div class="space-y-1 text-xs max-h-48 overflow-y-auto">
+                                <template x-for="lang in (config.languageMode === 'single' ? ['en'] : config.targetLanguages.slice(0, 2))" :key="lang">
+                                    <div>
+                                        <!-- Single Video -->
+                                        <div x-show="config.videoMode === 'single'" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                                            <span x-text="getLanguageFlag(lang)"></span>
+                                            <code class="flex-1 text-gray-600 font-mono truncate" x-text="(config.videoId || 'video') + '_' + lang + '.mp4'"></code>
+                                        </div>
+                                        <!-- Video Set -->
+                                        <div x-show="config.videoMode === 'set'" class="space-y-0.5">
+                                            <div class="flex items-center gap-2 px-2 py-1">
+                                                <span x-text="getLanguageFlag(lang)"></span>
+                                                <span class="font-medium text-gray-700" x-text="getLanguageName(lang)"></span>
+                                            </div>
+                                            <template x-for="i in Math.min(config.videoCount, 3)" :key="i">
+                                                <div class="flex items-center gap-2 p-1.5 pl-8 bg-gray-50 rounded">
+                                                    <code class="flex-1 text-gray-600 font-mono text-xs" x-text="(config.videoId || 'video') + '_' + lang + '_' + String(i).padStart(2, '0') + '.mp4'"></code>
+                                                </div>
+                                            </template>
+                                            <div x-show="config.videoCount > 3" class="pl-8 text-gray-400 text-xs">
+                                                ... +<span x-text="config.videoCount - 3"></span> more
+                                            </div>
+                                        </div>
                                     </div>
                                 </template>
-                                <div x-show="config.targetLanguages.length > 3 && config.languageMode !== 'single'"
-                                     class="text-center text-gray-400 py-1">
-                                    +<span x-text="config.targetLanguages.length - 3"></span> more files...
+                                <div x-show="config.targetLanguages.length > 2 && config.languageMode !== 'single'"
+                                     class="text-center text-gray-400 py-1 border-t mt-1 pt-1">
+                                    +<span x-text="(config.targetLanguages.length - 2) * (config.videoMode === 'single' ? 1 : config.videoCount)"></span> more files...
                                 </div>
                             </div>
                         </div>
