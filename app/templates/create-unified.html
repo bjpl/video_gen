@@ -153,282 +153,465 @@
         </div>
 
         <!-- Step 2: Configure -->
-        <div x-show="currentStep === 2" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform translate-x-4" x-transition:enter-end="opacity-100 transform translate-x-0">
-            <h2 class="text-2xl font-bold mb-4">Configure Video</h2>
+        <div x-show="currentStep === 2"
+             x-data="{
+                 activeSection: 'languages',
+                 languageTab: 'popular',
+                 expandedSections: { output: true, appearance: false }
+             }"
+             x-init="$watch('$root.config.videoId', value => { if (value) expandedSections.output = false })"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform translate-x-4"
+             x-transition:enter-end="opacity-100 transform translate-x-0">
 
-            <!-- GENERATION SUMMARY BOX - Shows exactly what user will get -->
-            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl p-5 mb-6">
-                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span class="text-xl">📊</span>
-                    Generation Summary - What You'll Get
-                </h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Videos to Create -->
-                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Videos to Create</div>
-                        <div class="text-2xl font-bold text-indigo-700" x-text="config.videoMode === 'single' ? '1' : config.videoCount"></div>
-                        <div class="text-xs text-gray-600" x-text="config.videoMode === 'single' ? 'One complete video' : 'Split by sections'"></div>
-                    </div>
-                    <!-- Languages Selected -->
-                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Languages</div>
-                        <div class="text-2xl font-bold text-indigo-700" x-text="config.languageMode === 'single' ? '1' : config.targetLanguages.length"></div>
-                        <div class="text-xs text-gray-600" x-text="config.languageMode === 'single' ? 'Primary language only' : config.targetLanguages.slice(0, 3).join(', ') + (config.targetLanguages.length > 3 ? '...' : '')"></div>
-                    </div>
-                    <!-- Total Output Files -->
-                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Video Files</div>
-                        <div class="text-2xl font-bold text-green-600" x-text="getTotalVideoCount()"></div>
-                        <div class="text-xs text-gray-600" x-text="getVideoCountExplanation()"></div>
-                    </div>
-                    <!-- Total Duration -->
-                    <div class="bg-white rounded-lg p-3 border border-indigo-100">
-                        <div class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Content</div>
-                        <div class="text-2xl font-bold text-blue-600" x-text="formatTotalDuration()"></div>
-                        <div class="text-xs text-gray-600" x-text="'~' + config.duration + 's per video'"></div>
-                    </div>
-                </div>
-                <!-- Detailed breakdown when multiple languages/videos -->
-                <div x-show="config.languageMode === 'multi' && config.targetLanguages.length > 1"
-                     x-transition
-                     class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                    <div class="flex items-start gap-2">
-                        <span class="text-blue-500">ℹ️</span>
-                        <div class="text-sm text-blue-800">
-                            <strong>Language Output Breakdown:</strong>
-                            <template x-for="lang in config.targetLanguages" :key="lang">
-                                <div class="ml-2" x-text="'• ' + getLanguageName(lang) + ' version: ' + (config.videoMode === 'single' ? '1 video' : config.videoCount + ' videos')"></div>
-                            </template>
-                            <div class="mt-1 font-semibold" x-text="'= ' + getTotalVideoCount() + ' total video files'"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Main Configuration Area -->
+                <div class="flex-1 space-y-4">
+                    <h2 class="text-2xl font-bold mb-2">Configure Video</h2>
+                    <p class="text-gray-600 text-sm mb-6">Set up your video settings. Essential fields are marked with <span class="text-red-500">*</span></p>
 
-            <!-- Preset Selection -->
-            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
-                <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span class="text-xl">⚡</span>
-                    Quick Presets
-                    <span class="text-xs font-normal text-gray-500 ml-2">(Click to auto-fill settings)</span>
-                </h3>
-                <div class="grid md:grid-cols-3 gap-3">
-                    <button @click="applyPreset('corporate')" type="button"
-                            class="p-4 bg-white hover:bg-yellow-50 border-2 rounded-lg text-left transition-all hover:shadow-md"
-                            :class="selectedPreset === 'corporate' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-yellow-200'">
-                        <div class="text-2xl mb-2">💼</div>
-                        <div class="font-bold mb-1">Corporate</div>
-                        <div class="text-xs text-gray-600">Professional business videos</div>
-                    </button>
-
-                    <button @click="applyPreset('creative')" type="button"
-                            class="p-4 bg-white hover:bg-yellow-50 border-2 rounded-lg text-left transition-all hover:shadow-md"
-                            :class="selectedPreset === 'creative' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-yellow-200'">
-                        <div class="text-2xl mb-2">🎨</div>
-                        <div class="font-bold mb-1">Creative</div>
-                        <div class="text-xs text-gray-600">Engaging tutorial content</div>
-                    </button>
-
-                    <button @click="applyPreset('educational')" type="button"
-                            class="p-4 bg-white hover:bg-yellow-50 border-2 rounded-lg text-left transition-all hover:shadow-md"
-                            :class="selectedPreset === 'educational' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-yellow-200'">
-                        <div class="text-2xl mb-2">🎓</div>
-                        <div class="font-bold mb-1">Educational</div>
-                        <div class="text-xs text-gray-600">Structured learning materials</div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Configuration Form -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Video ID with enhanced help -->
-                <div>
-                    <label for="config-video-id" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        Video ID
-                        <span class="inline-flex items-center justify-center w-4 h-4 bg-gray-200 rounded-full text-xs text-gray-600 cursor-help"
-                              title="A unique identifier for your video. Used in filenames and URLs. Example: 'quarterly-report-2024'">?</span>
-                    </label>
-                    <input type="text" id="config-video-id" x-model="config.videoId" @input="validateConfig()"
-                           placeholder="my-video"
-                           aria-label="Video identifier"
-                           class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           :class="configErrors.videoId ? 'border-red-500' : 'border-gray-300'">
-                    <div x-show="configErrors.videoId" class="text-red-600 text-xs mt-1" x-text="configErrors.videoId"></div>
-                    <div x-show="!configErrors.videoId" class="text-xs text-gray-500 mt-1">
-                        Output files: <code class="bg-gray-100 px-1 rounded" x-text="(config.videoId || 'my-video') + '_en.mp4'"></code>
-                    </div>
-                </div>
-
-                <!-- Duration with context-aware labels -->
-                <div>
-                    <label for="config-duration" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        Duration
-                        <span x-show="config.videoMode === 'single'" class="text-xs font-normal text-gray-500">(total video length)</span>
-                        <span x-show="config.videoMode === 'set'" class="text-xs font-normal text-blue-600">(per video in set)</span>
-                        <span class="inline-flex items-center justify-center w-4 h-4 bg-gray-200 rounded-full text-xs text-gray-600 cursor-help"
-                              title="Target duration for each video. Actual duration may vary based on content.">?</span>
-                    </label>
-                    <div class="flex items-center gap-3">
-                        <input type="number" id="config-duration" x-model.number="config.duration" @input="validateConfig(); updateCostEstimate()"
-                               min="30" max="600"
-                               aria-label="Video duration in seconds"
-                               class="w-32 px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300">
-                        <span class="text-gray-600">seconds</span>
-                        <span class="text-sm text-gray-500" x-text="'(' + Math.floor(config.duration / 60) + 'm ' + (config.duration % 60) + 's)'"></span>
-                    </div>
-                    <!-- Context-aware duration explanation -->
-                    <div class="mt-2 p-2 rounded-lg text-xs" :class="config.videoMode === 'single' ? 'bg-gray-50 text-gray-600' : 'bg-blue-50 text-blue-700'">
-                        <span x-show="config.videoMode === 'single'">
-                            📹 Your video will be approximately <strong x-text="config.duration"></strong> seconds long
-                        </span>
-                        <span x-show="config.videoMode === 'set'">
-                            📚 Each of your <strong x-text="config.videoCount"></strong> videos will be ~<strong x-text="config.duration"></strong> seconds
-                            (total: <strong x-text="config.videoCount * config.duration"></strong> seconds / <strong x-text="Math.floor(config.videoCount * config.duration / 60)"></strong> minutes)
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Video Mode Selector with enhanced explanations -->
-                <div class="md:col-span-2 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <span>🎬</span>
-                        Video Output Mode
-                        <span class="inline-flex items-center justify-center w-4 h-4 bg-gray-200 rounded-full text-xs text-gray-600 cursor-help"
-                              title="Choose whether to create one video or split your content into multiple videos">?</span>
-                    </h3>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <button @click="config.videoMode = 'single'; config.videoCount = 1"
+                    <!-- SECTION 1: Output Settings (Collapsible) -->
+                    <div class="config-section bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all"
+                         :class="expandedSections.output ? 'ring-2 ring-blue-200 border-blue-300' : 'hover:border-gray-300'">
+                        <button @click="expandedSections.output = !expandedSections.output"
                                 type="button"
-                                :class="config.videoMode === 'single' ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200' : 'bg-white border-gray-300 hover:border-blue-300'"
-                                class="p-4 border-2 rounded-lg text-left transition-all">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="text-2xl">🎬</div>
-                                <span x-show="config.videoMode === 'single'" class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded">Selected</span>
-                            </div>
-                            <div class="font-bold mb-1">Single Video</div>
-                            <div class="text-xs text-gray-600 mb-2">Create one complete video from the entire document</div>
-                            <div class="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                                Best for: Short documents, summaries, presentations under 5 minutes
-                            </div>
-                        </button>
-                        <button @click="config.videoMode = 'set'; config.videoCount = config.videoCount < 2 ? 4 : config.videoCount"
-                                type="button"
-                                :class="config.videoMode === 'set' ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200' : 'bg-white border-gray-300 hover:border-blue-300'"
-                                class="p-4 border-2 rounded-lg text-left transition-all">
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="text-2xl">📚</div>
-                                <span x-show="config.videoMode === 'set'" class="text-xs bg-blue-500 text-white px-2 py-0.5 rounded">Selected</span>
-                            </div>
-                            <div class="font-bold mb-1">Video Set (Series)</div>
-                            <div class="text-xs text-gray-600 mb-2">Split document into multiple videos by H2 headings</div>
-                            <div class="text-xs text-purple-600 bg-purple-50 p-2 rounded">
-                                Best for: Long documents, courses, tutorials, chapter-based content
-                            </div>
-                        </button>
-                    </div>
-                    <!-- Video count selector for sets with enhanced explanation -->
-                    <div x-show="config.videoMode === 'set'"
-                         x-transition
-                         class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div class="flex flex-wrap items-center gap-4 mb-3">
-                            <div>
-                                <label for="video-count" class="block text-sm font-medium text-gray-700 mb-1">Number of Videos in Set</label>
-                                <input type="number"
-                                       id="video-count"
-                                       x-model.number="config.videoCount"
-                                       min="2"
-                                       max="10"
-                                       class="w-24 px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div class="flex-1 min-w-[200px]">
-                                <div class="text-sm text-gray-700">
-                                    📖 Your document will be split into <strong class="text-blue-600" x-text="config.videoCount"></strong> separate videos
+                                class="w-full px-5 py-4 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white hover:from-gray-100 hover:to-gray-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">🎬</span>
+                                <div class="text-left">
+                                    <h3 class="font-semibold text-gray-900">Output Settings</h3>
+                                    <p class="text-xs text-gray-500">Video ID, duration, and structure</p>
                                 </div>
-                                <div class="text-xs text-gray-500 mt-1">
-                                    Each video covers a section (based on H2 headings in your document)
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded">Required</span>
+                                <span class="text-xs text-gray-400" x-text="config.videoId ? config.videoId + ' / ' + config.duration + 's' : 'Not configured'"></span>
+                                <svg class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                                     :class="expandedSections.output ? 'rotate-180' : ''"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </button>
+
+                        <div x-show="expandedSections.output"
+                             x-collapse
+                             x-cloak>
+                            <div class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <!-- Video ID -->
+                                    <div>
+                                        <label for="config-video-id" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            Video ID <span class="text-red-500">*</span>
+                                            <span class="inline-flex items-center justify-center w-4 h-4 bg-gray-200 rounded-full text-xs text-gray-600 cursor-help"
+                                                  title="A unique identifier for your video. Used in filenames and URLs.">?</span>
+                                        </label>
+                                        <input type="text" id="config-video-id" x-model="config.videoId" @input="validateConfig()"
+                                               placeholder="my-video"
+                                               aria-label="Video identifier"
+                                               class="w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                               :class="configErrors.videoId ? 'border-red-500 bg-red-50' : 'border-gray-300'">
+                                        <div x-show="configErrors.videoId" class="text-red-600 text-xs mt-1.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                                            <span x-text="configErrors.videoId"></span>
+                                        </div>
+                                        <div x-show="!configErrors.videoId && config.videoId" class="text-xs text-gray-500 mt-1.5">
+                                            Output: <code class="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-gray-700" x-text="config.videoId + '_en.mp4'"></code>
+                                        </div>
+                                    </div>
+
+                                    <!-- Duration -->
+                                    <div>
+                                        <label for="config-duration" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                            Duration <span class="text-red-500">*</span>
+                                            <span x-show="config.videoMode === 'set'" class="text-xs font-normal text-blue-600">(per video)</span>
+                                        </label>
+                                        <div class="flex items-center gap-3">
+                                            <input type="number" id="config-duration" x-model.number="config.duration" @input="validateConfig(); updateCostEstimate()"
+                                                   min="30" max="600"
+                                                   class="w-28 px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                            <span class="text-gray-600 text-sm">seconds</span>
+                                            <span class="px-2.5 py-1 bg-gray-100 rounded-md text-sm text-gray-600" x-text="Math.floor(config.duration / 60) + 'm ' + (config.duration % 60) + 's'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Video Mode -->
+                                <div class="mt-6 pt-5 border-t border-gray-200">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-3">Video Structure</h4>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        <button @click="config.videoMode = 'single'; config.videoCount = 1"
+                                                type="button"
+                                                class="p-4 border-2 rounded-xl text-left transition-all flex items-start gap-3"
+                                                :class="config.videoMode === 'single' ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-200' : 'bg-white border-gray-200 hover:border-gray-300'">
+                                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                                                 :class="config.videoMode === 'single' ? 'bg-blue-100' : 'bg-gray-100'">🎬</div>
+                                            <div class="flex-1">
+                                                <div class="font-semibold text-sm" :class="config.videoMode === 'single' ? 'text-blue-900' : 'text-gray-900'">Single Video</div>
+                                                <div class="text-xs text-gray-500 mt-0.5">One complete video from entire content</div>
+                                            </div>
+                                            <div x-show="config.videoMode === 'single'" class="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                            </div>
+                                        </button>
+                                        <button @click="config.videoMode = 'set'; config.videoCount = config.videoCount < 2 ? 4 : config.videoCount"
+                                                type="button"
+                                                class="p-4 border-2 rounded-xl text-left transition-all flex items-start gap-3"
+                                                :class="config.videoMode === 'set' ? 'bg-purple-50 border-purple-500 ring-1 ring-purple-200' : 'bg-white border-gray-200 hover:border-gray-300'">
+                                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl"
+                                                 :class="config.videoMode === 'set' ? 'bg-purple-100' : 'bg-gray-100'">📚</div>
+                                            <div class="flex-1">
+                                                <div class="font-semibold text-sm" :class="config.videoMode === 'set' ? 'text-purple-900' : 'text-gray-900'">Video Series</div>
+                                                <div class="text-xs text-gray-500 mt-0.5">Split into multiple videos by section</div>
+                                            </div>
+                                            <div x-show="config.videoMode === 'set'" class="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                            </div>
+                                        </button>
+                                    </div>
+
+                                    <!-- Video count for series -->
+                                    <div x-show="config.videoMode === 'set'" x-transition x-cloak class="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                                        <div class="flex items-center gap-4">
+                                            <label for="video-count" class="text-sm font-medium text-purple-900">Number of videos:</label>
+                                            <input type="number" id="video-count" x-model.number="config.videoCount" min="2" max="10"
+                                                   class="w-20 px-3 py-1.5 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 text-center">
+                                            <div class="flex gap-1">
+                                                <template x-for="i in Math.min(config.videoCount, 6)" :key="i">
+                                                    <div class="w-6 h-5 bg-purple-200 border border-purple-300 rounded text-xs flex items-center justify-center text-purple-700" x-text="i"></div>
+                                                </template>
+                                                <span x-show="config.videoCount > 6" class="text-xs text-purple-400 self-center ml-1">+<span x-text="config.videoCount - 6"></span></span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <!-- Visual representation -->
-                        <div class="flex items-center gap-1 p-2 bg-white rounded border">
-                            <span class="text-xs text-gray-500">Videos:</span>
-                            <template x-for="i in Math.min(config.videoCount, 8)" :key="i">
-                                <div class="w-8 h-6 bg-blue-100 border border-blue-300 rounded text-xs flex items-center justify-center text-blue-700" x-text="i"></div>
-                            </template>
-                            <span x-show="config.videoCount > 8" class="text-xs text-gray-400">...</span>
-                        </div>
                     </div>
-                </div>
 
-                <!-- NEW: Multi-Language Selector Component -->
-                <div class="md:col-span-2">
-                    {% include 'components/multi-language-selector.html' %}
-                </div>
-
-                <!-- NEW: Multi-Voice Selector Component -->
-                <div class="md:col-span-2">
-                    {% include 'components/multi-voice-selector.html' %}
-                </div>
-
-                <!-- Color Theme with visual preview -->
-                <div>
-                    <label for="config-color" class="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        Color Theme
-                        <span class="inline-flex items-center justify-center w-4 h-4 bg-gray-200 rounded-full text-xs text-gray-600 cursor-help"
-                              title="Primary accent color used throughout your video for titles, highlights, and graphics">?</span>
-                    </label>
-                    <div class="flex items-center gap-3">
-                        <select id="config-color" x-model="config.color"
-                                aria-label="Color theme selection"
-                                class="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="blue">Blue - Corporate & Professional</option>
-                            <option value="green">Green - Educational & Growth</option>
-                            <option value="purple">Purple - Creative & Premium</option>
-                            <option value="cyan">Cyan - Technical & Modern</option>
-                        </select>
-                        <!-- Color preview swatch -->
-                        <div class="w-10 h-10 rounded-lg border-2 border-gray-200 shadow-inner"
-                             :class="{
-                                 'bg-blue-500': config.color === 'blue',
-                                 'bg-green-500': config.color === 'green',
-                                 'bg-purple-500': config.color === 'purple',
-                                 'bg-cyan-500': config.color === 'cyan'
-                             }"
-                             :title="'Preview: ' + config.color + ' theme'">
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-500 mt-1">
-                        Used for titles, progress bars, and accent graphics
-                    </div>
-                </div>
-
-                <!-- AI Narration Info (ALWAYS ENABLED - No toggle) -->
-                <div class="md:col-span-2">
-                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-4">
-                        <div class="flex items-center gap-3">
-                            <div class="text-2xl">🤖</div>
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-900">AI Narration Enhancement</div>
-                                <div class="text-sm text-gray-600">Powered by Claude Sonnet 4.5 - Always Enabled</div>
+                    <!-- SECTION 2: Languages & Voices (Primary - Always Visible) -->
+                    <div class="config-section config-section--primary bg-white border-2 border-blue-200 rounded-xl overflow-hidden shadow-sm">
+                        <div class="px-5 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🌍</span>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">Languages & Voices</h3>
+                                        <p class="text-xs text-gray-600">Select target languages and voice preferences</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full"
+                                          x-text="(config.languageMode === 'single' ? 1 : config.targetLanguages.length) + ' language' + ((config.languageMode === 'single' ? 1 : config.targetLanguages.length) !== 1 ? 's' : '')"></span>
+                                </div>
                             </div>
-                            <div class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">ACTIVE</div>
                         </div>
-                        <div class="text-xs text-gray-500 mt-2">All videos include AI-powered narration for superior quality</div>
+
+                        <div class="p-5">
+                            <!-- Language Tabs -->
+                            <div class="flex border-b border-gray-200 mb-4 -mx-5 px-5">
+                                <button @click="languageTab = 'popular'" type="button"
+                                        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
+                                        :class="languageTab === 'popular' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+                                    Popular
+                                    <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full"
+                                          :class="languageTab === 'popular' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'">8</span>
+                                </button>
+                                <button @click="languageTab = 'all'" type="button"
+                                        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
+                                        :class="languageTab === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+                                    All Languages
+                                    <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full"
+                                          :class="languageTab === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'">29</span>
+                                </button>
+                                <button @click="languageTab = 'selected'" type="button"
+                                        class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px"
+                                        :class="languageTab === 'selected' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'">
+                                    Selected
+                                    <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full"
+                                          :class="languageTab === 'selected' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+                                          x-text="config.languageMode === 'single' ? 1 : config.targetLanguages.length"></span>
+                                </button>
+                            </div>
+
+                            <!-- Tab Content: Popular -->
+                            <div x-show="languageTab === 'popular'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                    <template x-for="lang in [
+                                        {code: 'en', name: 'English', flag: '🇺🇸'},
+                                        {code: 'es', name: 'Spanish', flag: '🇪🇸'},
+                                        {code: 'fr', name: 'French', flag: '🇫🇷'},
+                                        {code: 'de', name: 'German', flag: '🇩🇪'},
+                                        {code: 'zh', name: 'Chinese', flag: '🇨🇳'},
+                                        {code: 'ja', name: 'Japanese', flag: '🇯🇵'},
+                                        {code: 'pt', name: 'Portuguese', flag: '🇧🇷'},
+                                        {code: 'it', name: 'Italian', flag: '🇮🇹'}
+                                    ]" :key="lang.code">
+                                        <button @click="toggleLanguageSelection(lang.code)" type="button"
+                                                class="p-3 rounded-xl border-2 transition-all flex items-center gap-2.5 text-left"
+                                                :class="config.targetLanguages.includes(lang.code) ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-200' : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'">
+                                            <span class="text-xl" x-text="lang.flag"></span>
+                                            <span class="text-sm font-medium" :class="config.targetLanguages.includes(lang.code) ? 'text-blue-900' : 'text-gray-700'" x-text="lang.name"></span>
+                                            <div x-show="config.targetLanguages.includes(lang.code)" class="ml-auto w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                            </div>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <!-- Quick Presets -->
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <span class="text-xs text-gray-500 font-medium">Quick presets:</span>
+                                        <button @click="applyLanguagePreset('european')" type="button"
+                                                class="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                            European (6)
+                                        </button>
+                                        <button @click="applyLanguagePreset('asian')" type="button"
+                                                class="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                            Asian (5)
+                                        </button>
+                                        <button @click="applyLanguagePreset('global')" type="button"
+                                                class="px-3 py-1.5 text-xs font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                            Global Top 8
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab Content: All Languages -->
+                            <div x-show="languageTab === 'all'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                {% include 'components/multi-language-selector.html' %}
+                            </div>
+
+                            <!-- Tab Content: Selected -->
+                            <div x-show="languageTab === 'selected'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+                                <div x-show="config.targetLanguages.length === 0" class="text-center py-8">
+                                    <div class="text-4xl mb-3">🌐</div>
+                                    <p class="text-gray-500">No languages selected yet</p>
+                                    <button @click="languageTab = 'popular'" type="button" class="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                        Select from popular languages
+                                    </button>
+                                </div>
+                                <div x-show="config.targetLanguages.length > 0" class="space-y-2">
+                                    <template x-for="code in config.targetLanguages" :key="code">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-xl" x-text="getLanguageFlag(code)"></span>
+                                                <span class="font-medium text-gray-900" x-text="getLanguageName(code)"></span>
+                                            </div>
+                                            <button @click="toggleLanguageSelection(code)" type="button"
+                                                    class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                    :disabled="config.targetLanguages.length <= 1"
+                                                    :class="config.targetLanguages.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Voice Selection for Selected Languages -->
+                                <div x-show="config.targetLanguages.length > 0" class="mt-6 pt-5 border-t border-gray-200">
+                                    <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                        <span>🎙️</span> Voice Selection
+                                    </h4>
+                                    {% include 'components/multi-voice-selector.html' %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Appearance & Style (Collapsible) -->
+                    <div class="config-section bg-white border-2 border-gray-200 rounded-xl overflow-hidden transition-all"
+                         :class="expandedSections.appearance ? 'ring-2 ring-blue-200 border-blue-300' : 'hover:border-gray-300'">
+                        <button @click="expandedSections.appearance = !expandedSections.appearance"
+                                type="button"
+                                class="w-full px-5 py-4 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white hover:from-gray-100 hover:to-gray-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl">🎨</span>
+                                <div class="text-left">
+                                    <h3 class="font-semibold text-gray-900">Appearance & Style</h3>
+                                    <p class="text-xs text-gray-500">Color theme and visual preferences</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">Optional</span>
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-200"
+                                     :class="{
+                                         'bg-blue-500': config.color === 'blue',
+                                         'bg-green-500': config.color === 'green',
+                                         'bg-purple-500': config.color === 'purple',
+                                         'bg-cyan-500': config.color === 'cyan'
+                                     }"></div>
+                                <svg class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                                     :class="expandedSections.appearance ? 'rotate-180' : ''"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </button>
+
+                        <div x-show="expandedSections.appearance"
+                             x-collapse
+                             x-cloak>
+                            <div class="px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+                                <!-- Color Theme -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Color Theme</label>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <template x-for="theme in [
+                                            {id: 'blue', name: 'Corporate', class: 'bg-blue-500'},
+                                            {id: 'green', name: 'Growth', class: 'bg-green-500'},
+                                            {id: 'purple', name: 'Creative', class: 'bg-purple-500'},
+                                            {id: 'cyan', name: 'Technical', class: 'bg-cyan-500'}
+                                        ]" :key="theme.id">
+                                            <button @click="config.color = theme.id" type="button"
+                                                    class="p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2"
+                                                    :class="config.color === theme.id ? 'border-gray-900 ring-2 ring-gray-200 bg-gray-50' : 'border-gray-200 hover:border-gray-300'">
+                                                <div class="w-10 h-10 rounded-lg shadow-inner" :class="theme.class"></div>
+                                                <span class="text-xs font-medium" :class="config.color === theme.id ? 'text-gray-900' : 'text-gray-600'" x-text="theme.name"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- AI Narration Info -->
+                                <div class="mt-5 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-xl">🤖</div>
+                                        <div class="flex-1">
+                                            <div class="font-semibold text-sm text-gray-900">AI Narration Enhancement</div>
+                                            <div class="text-xs text-gray-600">Powered by Claude Sonnet 4.5</div>
+                                        </div>
+                                        <span class="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">ACTIVE</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Presets (Compact) -->
+                    <div class="flex flex-wrap items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                        <span class="text-sm font-medium text-amber-900 flex items-center gap-2">
+                            <span>⚡</span> Quick Presets:
+                        </span>
+                        <button @click="applyPreset('corporate')" type="button"
+                                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-all"
+                                :class="selectedPreset === 'corporate' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-amber-100 border border-amber-200'">
+                            💼 Corporate
+                        </button>
+                        <button @click="applyPreset('creative')" type="button"
+                                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-all"
+                                :class="selectedPreset === 'creative' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-amber-100 border border-amber-200'">
+                            🎨 Creative
+                        </button>
+                        <button @click="applyPreset('educational')" type="button"
+                                class="px-3 py-1.5 text-sm font-medium rounded-lg transition-all"
+                                :class="selectedPreset === 'educational' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-amber-100 border border-amber-200'">
+                            🎓 Educational
+                        </button>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="flex justify-between gap-3 pt-4">
+                        <button @click="previousStep()"
+                                class="px-6 py-3 rounded-lg font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all border border-gray-200">
+                            ← Back
+                        </button>
+                        <button @click="nextStep()" :disabled="!isStepValid(2)"
+                                class="px-6 py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                                :class="isStepValid(2) ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'">
+                            Next: Review →
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Navigation -->
-            <div class="flex justify-between gap-3 mt-6">
-                <button @click="previousStep()"
-                        class="px-6 py-3 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-all">
-                    ← Back
-                </button>
-                <button @click="nextStep()" :disabled="!isStepValid(2)"
-                        class="px-6 py-3 rounded-lg font-semibold transition-all"
-                        :class="isStepValid(2) ? 'bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:shadow-lg' : 'bg-gray-300 text-gray-500 cursor-not-allowed'">
-                    Next: Review →
-                </button>
+                <!-- Sticky Summary Sidebar -->
+                <div class="lg:w-80 lg:flex-shrink-0">
+                    <div class="lg:sticky lg:top-6 space-y-4">
+                        <!-- Generation Summary Card -->
+                        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 text-white rounded-2xl p-5 shadow-xl">
+                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                                <span>📊</span> Generation Summary
+                            </h3>
+
+                            <div class="space-y-4">
+                                <!-- Videos -->
+                                <div class="flex items-center justify-between">
+                                    <span class="text-indigo-200 text-sm">Videos</span>
+                                    <span class="text-2xl font-bold" x-text="config.videoMode === 'single' ? '1' : config.videoCount"></span>
+                                </div>
+
+                                <!-- Languages -->
+                                <div class="flex items-center justify-between">
+                                    <span class="text-indigo-200 text-sm">Languages</span>
+                                    <span class="text-2xl font-bold" x-text="config.languageMode === 'single' ? '1' : config.targetLanguages.length"></span>
+                                </div>
+
+                                <div class="border-t border-indigo-400/30 pt-4">
+                                    <!-- Total Output -->
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-indigo-200 text-sm">Total Files</span>
+                                        <span class="text-3xl font-bold text-white" x-text="getTotalVideoCount()"></span>
+                                    </div>
+                                    <div class="text-xs text-indigo-300 mt-1" x-text="getVideoCountExplanation()"></div>
+                                </div>
+
+                                <!-- Duration -->
+                                <div class="bg-indigo-500/30 rounded-xl p-3 mt-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-indigo-200 text-sm">Total Content</span>
+                                        <span class="text-xl font-bold" x-text="formatTotalDuration()"></span>
+                                    </div>
+                                    <div class="text-xs text-indigo-300 mt-0.5" x-text="'~' + config.duration + 's per video'"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Output Preview Card -->
+                        <div class="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm">
+                            <h4 class="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
+                                <span>📁</span> Output Preview
+                            </h4>
+                            <div class="space-y-2 text-xs">
+                                <template x-for="lang in (config.languageMode === 'single' ? ['en'] : config.targetLanguages.slice(0, 3))" :key="lang">
+                                    <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                                        <span x-text="getLanguageFlag(lang)"></span>
+                                        <code class="flex-1 text-gray-600 font-mono truncate" x-text="(config.videoId || 'video') + '_' + lang + '.mp4'"></code>
+                                    </div>
+                                </template>
+                                <div x-show="config.targetLanguages.length > 3 && config.languageMode !== 'single'"
+                                     class="text-center text-gray-400 py-1">
+                                    +<span x-text="config.targetLanguages.length - 3"></span> more files...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validation Status -->
+                        <div class="bg-white rounded-xl border-2 p-4 transition-colors"
+                             :class="isStepValid(2) ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center"
+                                     :class="isStepValid(2) ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'">
+                                    <svg x-show="isStepValid(2)" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <svg x-show="!isStepValid(2)" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-sm" :class="isStepValid(2) ? 'text-green-900' : 'text-amber-900'"
+                                         x-text="isStepValid(2) ? 'Ready to continue' : 'Missing required fields'"></div>
+                                    <div class="text-xs" :class="isStepValid(2) ? 'text-green-700' : 'text-amber-700'"
+                                         x-text="isStepValid(2) ? 'All settings configured' : 'Please fill in Video ID'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1089,6 +1272,45 @@ function unifiedCreator() {
             });
 
             this.costEstimate = estimate;
+        },
+
+        /**
+         * Toggle language selection (add/remove from targetLanguages)
+         */
+        toggleLanguageSelection(code) {
+            const index = this.config.targetLanguages.indexOf(code);
+            if (index > -1) {
+                // Don't remove if it's the last language
+                if (this.config.targetLanguages.length > 1) {
+                    this.config.targetLanguages.splice(index, 1);
+                }
+            } else {
+                this.config.targetLanguages.push(code);
+            }
+            // Update language mode based on selection count
+            this.config.languageMode = this.config.targetLanguages.length > 1 ? 'multi' : 'single';
+            this.updateCostEstimate();
+        },
+
+        /**
+         * Apply language preset (european, asian, global)
+         */
+        applyLanguagePreset(preset) {
+            const presets = {
+                'european': ['en', 'es', 'fr', 'de', 'it', 'pt'],
+                'asian': ['en', 'zh', 'ja', 'ko', 'vi'],
+                'global': ['en', 'es', 'zh', 'ar', 'hi', 'pt', 'ru', 'ja']
+            };
+
+            if (presets[preset]) {
+                this.config.targetLanguages = [...presets[preset]];
+                this.config.languageMode = this.config.targetLanguages.length > 1 ? 'multi' : 'single';
+                this.updateCostEstimate();
+
+                window.dispatchEvent(new CustomEvent('show-message', {
+                    detail: { message: `Applied ${preset} language preset (${this.config.targetLanguages.length} languages)`, type: 'success' }
+                }));
+            }
         },
 
         /**

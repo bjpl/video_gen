@@ -1448,6 +1448,32 @@ async def get_languages():
 
     return {"languages": languages, "total": len(languages)}
 
+def _extract_friendly_voice_name(edge_tts_voice_id: str) -> str:
+    """
+    Extract a friendly display name from an Edge-TTS voice ID.
+
+    Examples:
+        'en-US-AndrewMultilingualNeural' -> 'Andrew'
+        'en-US-AriaNeural' -> 'Aria'
+        'es-ES-AlvaroNeural' -> 'Alvaro'
+        'zh-CN-XiaoxiaoNeural' -> 'Xiaoxiao'
+    """
+    # Split by dash and get the last part (name + suffix)
+    parts = edge_tts_voice_id.split('-')
+    if len(parts) >= 3:
+        name_part = parts[-1]  # e.g., 'AndrewMultilingualNeural' or 'AriaNeural'
+    else:
+        name_part = edge_tts_voice_id
+
+    # Remove common suffixes
+    for suffix in ['MultilingualNeural', 'Neural', 'Multilingual']:
+        if name_part.endswith(suffix):
+            name_part = name_part[:-len(suffix)]
+            break
+
+    return name_part if name_part else edge_tts_voice_id
+
+
 @app.get("/api/languages/{lang_code}/voices")
 async def get_language_voices(lang_code: str):
     """Get available voices for a specific language with enhanced metadata"""
@@ -1457,29 +1483,47 @@ async def get_language_voices(lang_code: str):
     voices = MULTILINGUAL_VOICES[lang_code]
     voice_objects = []
 
-    for voice_id, voice_name in voices.items():
-        # Determine gender from voice name patterns
-        name_lower = voice_name.lower()
-        if any(f in name_lower for f in ['female', 'woman', 'girl', 'jenny', 'aria', 'emma', 'sonia', 'jane']):
+    for voice_key, edge_tts_voice_id in voices.items():
+        # Extract friendly name from Edge-TTS voice ID
+        friendly_name = _extract_friendly_voice_name(edge_tts_voice_id)
+
+        # Determine gender from the voice key (e.g., 'male', 'female', 'uk_female')
+        key_lower = voice_key.lower()
+        if 'female' in key_lower:
             gender = 'female'
-            gender_symbol = '♀️'
+            gender_symbol = '♀'
             desc = "Clear, friendly"
-        elif any(m in name_lower for m in ['male', 'man', 'boy', 'guy', 'andrew', 'brian', 'tony', 'davis']):
+        elif 'male' in key_lower:
             gender = 'male'
-            gender_symbol = '♂️'
+            gender_symbol = '♂'
             desc = "Professional, confident"
         else:
-            gender = 'neutral'
-            gender_symbol = '⚧'
-            desc = "Versatile"
+            # Fallback: check the voice ID patterns
+            voice_lower = edge_tts_voice_id.lower()
+            if any(f in voice_lower for f in ['aria', 'emma', 'sonia', 'jenny', 'denise', 'elvira', 'katja', 'francisca', 'elsa', 'nanami', 'xiaoxiao', 'sunhi']):
+                gender = 'female'
+                gender_symbol = '♀'
+                desc = "Clear, friendly"
+            else:
+                gender = 'male'
+                gender_symbol = '♂'
+                desc = "Professional, confident"
+
+        # Create variant label if applicable (e.g., 'UK', 'MX', 'BR')
+        variant_label = ""
+        for variant in ['uk', 'au', 'mx', 'ar', 'co', 'ca', 'br', 'pt', 'at', 'ch', 'hk', 'tw', 'eg', 'be']:
+            if voice_key.startswith(variant + '_'):
+                variant_label = f" ({variant.upper()})"
+                break
 
         voice_objects.append({
-            "id": voice_id,
-            "name": voice_name,
-            "display_name": f"{voice_name} ({gender.capitalize()})",
+            "id": voice_key,
+            "name": f"{friendly_name}{variant_label}",
+            "display_name": f"{friendly_name} ({gender.capitalize()}){variant_label}",
             "description": desc,
             "gender": gender,
             "gender_symbol": gender_symbol,
+            "edge_tts_id": edge_tts_voice_id,
             "sample_url": f"/static/audio/samples/{lang_code}_{gender}.mp3"
         })
 
