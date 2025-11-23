@@ -154,7 +154,7 @@ class TestDocumentWorkflow:
         md_path = Path(__file__).parent.parent / "inputs" / "Internet_Guide_Vol1_Core_Infrastructure.md"
         assert md_path.exists(), f"Test file not found: {md_path}"
 
-        adapter = DocumentAdapter(target_duration=60, test_mode=True)
+        adapter = DocumentAdapter(test_mode=True)
         result = adapter.parse(str(md_path))
 
         # Verify VideoSet structure
@@ -205,15 +205,15 @@ Each option can be configured separately.
             video = result.videos[0]
             scenes = video.scenes
 
-            # Should have title scene
-            assert scenes[0]['type'] == 'title'
+            # Should have title scene (scenes are now SceneConfig objects)
+            assert scenes[0].scene_type == 'title'
 
             # Should detect command scene (has code block)
-            scene_types = [s['type'] for s in scenes]
+            scene_types = [s.scene_type for s in scenes]
             assert 'command' in scene_types or 'list' in scene_types
 
             # Should have outro
-            assert scenes[-1]['type'] == 'outro'
+            assert scenes[-1].scene_type == 'outro'
 
         finally:
             Path(md_path).unlink(missing_ok=True)
@@ -380,10 +380,10 @@ class TestMultiStageValidation:
             assert result is not None
             assert len(result.videos) >= 1
 
-            # Verify scenes structure
+            # Verify scenes structure (scenes are now SceneConfig objects)
             video = result.videos[0]
             assert isinstance(video.scenes, list)
-            assert all('type' in scene for scene in video.scenes)
+            assert all(hasattr(scene, 'scene_type') for scene in video.scenes)
 
         finally:
             Path(md_path).unlink(missing_ok=True)
@@ -392,6 +392,7 @@ class TestMultiStageValidation:
         """Test that parsed scenes have valid structure"""
         from video_gen.input_adapters.compat import YAMLAdapter
 
+        # Updated YAML format with required fields: scene_id and narration
         yaml_content = {
             'video': {
                 'id': 'validation_test',
@@ -399,21 +400,33 @@ class TestMultiStageValidation:
             },
             'scenes': [
                 {
-                    'type': 'title',
-                    'title': 'Test',
-                    'subtitle': 'Validation'
+                    'scene_id': 'scene_1',
+                    'scene_type': 'title',
+                    'narration': 'Welcome to the validation test',
+                    'visual_content': {
+                        'title': 'Test',
+                        'subtitle': 'Validation'
+                    }
                 },
                 {
-                    'type': 'command',
-                    'header': 'Commands',
-                    'description': 'Run these',
-                    'commands': ['$ cmd1', '$ cmd2']
+                    'scene_id': 'scene_2',
+                    'scene_type': 'command',
+                    'narration': 'Run these commands',
+                    'visual_content': {
+                        'header': 'Commands',
+                        'description': 'Run these',
+                        'commands': ['$ cmd1', '$ cmd2']
+                    }
                 },
                 {
-                    'type': 'list',
-                    'header': 'Items',
-                    'description': 'Key items',
-                    'items': ['Item 1', 'Item 2']
+                    'scene_id': 'scene_3',
+                    'scene_type': 'list',
+                    'narration': 'Here are the key items',
+                    'visual_content': {
+                        'header': 'Items',
+                        'description': 'Key items',
+                        'items': ['Item 1', 'Item 2']
+                    }
                 }
             ]
         }
@@ -428,21 +441,21 @@ class TestMultiStageValidation:
 
             video = result.videos[0]
 
-            # Validate each scene type has required fields
+            # Validate each scene type has required fields (scenes are SceneConfig objects)
             for scene in video.scenes:
-                assert 'type' in scene
+                assert hasattr(scene, 'scene_type')
 
-                if scene['type'] == 'title':
-                    assert 'title' in scene
-                    assert 'subtitle' in scene
+                if scene.scene_type == 'title':
+                    assert 'title' in scene.visual_content
+                    assert 'subtitle' in scene.visual_content
 
-                elif scene['type'] == 'command':
-                    assert 'header' in scene
-                    assert 'commands' in scene
+                elif scene.scene_type == 'command':
+                    assert 'header' in scene.visual_content
+                    assert 'commands' in scene.visual_content
 
-                elif scene['type'] == 'list':
-                    assert 'header' in scene
-                    assert 'items' in scene
+                elif scene.scene_type == 'list':
+                    assert 'header' in scene.visual_content
+                    assert 'items' in scene.visual_content
 
         finally:
             Path(yaml_path).unlink(missing_ok=True)
@@ -487,7 +500,8 @@ class TestErrorHandling:
         try:
             adapter = YAMLAdapter(test_mode=True)
 
-            with pytest.raises(ValueError, match="Invalid YAML structure"):
+            # Updated error message pattern to match new validation format
+            with pytest.raises(ValueError, match="YAML validation failed|Missing required field"):
                 adapter.parse(yaml_path)
 
         finally:
@@ -499,7 +513,8 @@ class TestErrorHandling:
 
         adapter = YAMLAdapter(test_mode=True)
 
-        with pytest.raises(FileNotFoundError):
+        # Compat layer wraps FileNotFoundError in ValueError
+        with pytest.raises(ValueError, match="File not found"):
             adapter.parse('/nonexistent/path/file.yaml')
 
     def test_empty_document(self):
@@ -512,10 +527,9 @@ class TestErrorHandling:
 
         try:
             adapter = DocumentAdapter(test_mode=True)
-            result = adapter.parse(empty_path)
-
-            # Should handle gracefully (may return minimal structure)
-            assert result is not None
+            # Empty documents now raise ValueError through compat layer
+            with pytest.raises(ValueError, match="Failed to read document|empty|no content"):
+                adapter.parse(empty_path)
 
         finally:
             Path(empty_path).unlink(missing_ok=True)
@@ -699,7 +713,8 @@ Each method has its own advantages.
             result = adapter.parse(md_path)
 
             video = result.videos[0]
-            scene_types = [s['type'] for s in video.scenes]
+            # Scenes are now SceneConfig objects, use attribute access
+            scene_types = [s.scene_type for s in video.scenes]
 
             # Should have multiple scene types
             assert 'title' in scene_types

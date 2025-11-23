@@ -321,6 +321,50 @@ class YouTubeAdapter(CompatAdapter):
         from .youtube import YouTubeAdapter as AsyncYouTubeAdapter
         super().__init__(AsyncYouTubeAdapter(test_mode=test_mode))
 
+    def _extract_video_id(self, url: str) -> str | None:
+        """Extract single video ID from YouTube URL.
+
+        Convenience method for extracting a single video ID.
+        Wraps the internal _extract_video_ids method.
+
+        Args:
+            url: YouTube URL
+
+        Returns:
+            Video ID string or None if extraction fails
+        """
+        video_ids = self._adapter._extract_video_ids(url)
+        return video_ids[0] if video_ids else None
+
+    def _has_commands(self, text: str) -> bool:
+        """Check if text contains command-like patterns.
+
+        Detects terminal/shell commands in transcript text for
+        identifying tutorial or technical content.
+
+        Args:
+            text: Text to check for commands
+
+        Returns:
+            True if commands detected, False otherwise
+        """
+        import re
+        # Command indicators
+        command_patterns = [
+            r'\b(npm|pip|yarn|cargo|go|git|docker|kubectl)\s+\w+',  # Package managers and tools
+            r'\b(run|execute|install|clone|build|start|deploy)\s+\w+',  # Action verbs
+            r'\$\s*\w+',  # Shell prompt commands
+            r'^[>\$#]\s*\w+',  # Line starting with prompt
+            r'\b(python|node|ruby|java|bash|sh)\s+\w+',  # Language interpreters
+            r'--?\w+',  # Command flags
+        ]
+
+        text_lower = text.lower()
+        for pattern in command_patterns:
+            if re.search(pattern, text_lower, re.IGNORECASE):
+                return True
+        return False
+
 
 class YAMLAdapter(CompatAdapter):
     """Backward-compatible YAMLAdapter.

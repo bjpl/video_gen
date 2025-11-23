@@ -107,18 +107,20 @@
         </div>
 
         <div x-show="multilingualEnabled"
-             @keydown.escape.window="if (multilingualEnabled) multilingualEnabled = false"
+             @keydown.escape="multilingualEnabled = false"
              class="space-y-6"
              role="region"
              aria-label="Multilingual settings">
             <!-- Source Language -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="builder-source-language" class="block text-sm font-medium text-gray-700 mb-2">
                     Source Language
                     <span class="text-xs text-gray-500">(Original content language)</span>
                 </label>
-                <select x-model="sourceLanguage"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                <select id="builder-source-language"
+                        x-model="sourceLanguage"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                        aria-label="Source language selection">
                     <option value="en">English</option>
                     <option value="es">Spanish</option>
                     <option value="fr">French</option>
@@ -157,116 +159,116 @@
                     <span class="text-xs text-gray-500">(Videos will be generated for each selected language)</span>
                 </label>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="en" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-en" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-en" value="en" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="English">
                         <span class="text-sm">English</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="es" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-es" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-es" value="es" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Spanish">
                         <span class="text-sm">Spanish</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="fr" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-fr" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-fr" value="fr" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="French">
                         <span class="text-sm">French</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="de" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-de" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-de" value="de" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="German">
                         <span class="text-sm">German</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="it" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-it" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-it" value="it" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Italian">
                         <span class="text-sm">Italian</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="pt" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-pt" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-pt" value="pt" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Portuguese">
                         <span class="text-sm">Portuguese</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="nl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-nl" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-nl" value="nl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Dutch">
                         <span class="text-sm">Dutch</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="ru" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-ru" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-ru" value="ru" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Russian">
                         <span class="text-sm">Russian</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="ja" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-ja" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-ja" value="ja" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Japanese">
                         <span class="text-sm">Japanese</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="zh" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-zh" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-zh" value="zh" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Chinese">
                         <span class="text-sm">Chinese</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="ko" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-ko" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-ko" value="ko" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Korean">
                         <span class="text-sm">Korean</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="ar" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-ar" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-ar" value="ar" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Arabic">
                         <span class="text-sm">Arabic</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="hi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-hi" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-hi" value="hi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Hindi">
                         <span class="text-sm">Hindi</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="tr" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-tr" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-tr" value="tr" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Turkish">
                         <span class="text-sm">Turkish</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="pl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-pl" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-pl" value="pl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Polish">
                         <span class="text-sm">Polish</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="sv" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-sv" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-sv" value="sv" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Swedish">
                         <span class="text-sm">Swedish</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="no" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-no" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-no" value="no" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Norwegian">
                         <span class="text-sm">Norwegian</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="da" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-da" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-da" value="da" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Danish">
                         <span class="text-sm">Danish</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="fi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-fi" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-fi" value="fi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Finnish">
                         <span class="text-sm">Finnish</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="el" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-el" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-el" value="el" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Greek">
                         <span class="text-sm">Greek</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="he" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-he" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-he" value="he" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Hebrew">
                         <span class="text-sm">Hebrew</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="th" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-th" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-th" value="th" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Thai">
                         <span class="text-sm">Thai</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="vi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-vi" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-vi" value="vi" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Vietnamese">
                         <span class="text-sm">Vietnamese</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="id" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-id" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-id" value="id" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Indonesian">
                         <span class="text-sm">Indonesian</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="ms" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-ms" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-ms" value="ms" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Malay">
                         <span class="text-sm">Malay</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="tl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-tl" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-tl" value="tl" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Filipino">
                         <span class="text-sm">Filipino</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="cs" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-cs" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-cs" value="cs" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Czech">
                         <span class="text-sm">Czech</span>
                     </label>
-                    <label class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                        <input type="checkbox" value="hu" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded">
+                    <label for="target-lang-hu" class="flex items-center space-x-2 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="target-lang-hu" value="hu" x-model="targetLanguages" class="w-4 h-4 text-primary-600 border-gray-300 rounded" aria-label="Hungarian">
                         <span class="text-sm">Hungarian</span>
                     </label>
                 </div>
@@ -276,7 +278,10 @@
             </div>
 
             <!-- Per-Language Voice Assignment -->
-            <div x-show="targetLanguages.length > 0">
+            <div x-show="targetLanguages.length > 0"
+                 @keydown.escape="targetLanguages = []"
+                 role="region"
+                 aria-label="Voice assignment per language">
                 <label class="block text-sm font-medium text-gray-700 mb-3">
                     Voice Assignment per Language
                     <span class="text-xs text-gray-500">(Optional: customize voice for each target language)</span>
@@ -286,6 +291,7 @@
                         <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                             <span class="text-sm font-medium text-gray-700 w-32" x-text="getLanguageName(lang)"></span>
                             <select x-model="languageVoices[lang]"
+                                    aria-label="Voice selection for language"
                                     class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500">
                                 <option value="">Default Voice</option>
                                 <option value="male">Andrew (Male)</option>
@@ -454,33 +460,33 @@
                                 <!-- Title Scene -->
                                 <template x-if="scene.type === 'title'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <input type="text" x-model="scene.subtitle" placeholder="Subtitle" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.title" placeholder="Title" aria-label="Scene title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.subtitle" placeholder="Subtitle" aria-label="Scene subtitle" class="w-full px-3 py-2 border border-gray-300 rounded">
                                     </div>
                                 </template>
 
                                 <!-- Command Scene -->
                                 <template x-if="scene.type === 'command'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <input type="text" x-model="scene.description" placeholder="Description" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <textarea x-model="scene.commands" rows="3" placeholder="Commands (one per line)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.title" placeholder="Title" aria-label="Command scene title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.description" placeholder="Description" aria-label="Command description" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.commands" rows="3" placeholder="Commands (one per line)" aria-label="Commands list" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                     </div>
                                 </template>
 
                                 <!-- List Scene -->
                                 <template x-if="scene.type === 'list'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Title" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <textarea x-model="scene.items" rows="4" placeholder="Items (one per line)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.title" placeholder="Title" aria-label="List scene title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.items" rows="4" placeholder="Items (one per line)" aria-label="List items" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                     </div>
                                 </template>
 
                                 <!-- Outro Scene -->
                                 <template x-if="scene.type === 'outro'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.message" placeholder="Message" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <input type="text" x-model="scene.cta" placeholder="Call to Action" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.message" placeholder="Message" aria-label="Outro message" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.cta" placeholder="Call to Action" aria-label="Call to action text" class="w-full px-3 py-2 border border-gray-300 rounded">
                                     </div>
                                 </template>
 
@@ -488,17 +494,17 @@
                                 <template x-if="scene.type === 'code_comparison'">
                                     <div class="space-y-3">
                                         <div class="grid grid-cols-2 gap-3">
-                                            <input type="text" x-model="scene.before_label" placeholder="Before Label (default: Before)" class="px-3 py-2 border border-gray-300 rounded text-sm">
-                                            <input type="text" x-model="scene.after_label" placeholder="After Label (default: After)" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                            <input type="text" x-model="scene.before_label" placeholder="Before Label (default: Before)" aria-label="Before code label" class="px-3 py-2 border border-gray-300 rounded text-sm">
+                                            <input type="text" x-model="scene.after_label" placeholder="After Label (default: After)" aria-label="After code label" class="px-3 py-2 border border-gray-300 rounded text-sm">
                                         </div>
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Original Code</label>
-                                                <textarea x-model="scene.before_code" rows="8" placeholder="def old():\n    pass" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
+                                                <label for="scene-before-code" class="block text-xs text-gray-600 mb-1">Original Code</label>
+                                                <textarea id="scene-before-code" x-model="scene.before_code" rows="8" placeholder="def old():\n    pass" aria-label="Original code before refactoring" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
                                             </div>
                                             <div>
-                                                <label class="block text-xs text-gray-600 mb-1">Refactored Code</label>
-                                                <textarea x-model="scene.after_code" rows="8" placeholder="def new():\n    return True" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
+                                                <label for="scene-after-code" class="block text-xs text-gray-600 mb-1">Refactored Code</label>
+                                                <textarea id="scene-after-code" x-model="scene.after_code" rows="8" placeholder="def new():\n    return True" aria-label="Refactored code after changes" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
                                             </div>
                                         </div>
                                         <p class="text-xs text-gray-500">💡 Max 10 lines per side for readability</p>
@@ -508,18 +514,18 @@
                                 <!-- Quote Scene -->
                                 <template x-if="scene.type === 'quote'">
                                     <div class="space-y-3">
-                                        <textarea x-model="scene.quote_text" rows="4" placeholder="Quote text (e.g., 'Code is like humor...')" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
-                                        <input type="text" x-model="scene.attribution" placeholder="Attribution (optional, e.g., 'Cory House')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.quote_text" rows="4" placeholder="Quote text (e.g., 'Code is like humor...')" aria-label="Quote text" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.attribution" placeholder="Attribution (optional, e.g., 'Cory House')" aria-label="Quote attribution" class="w-full px-3 py-2 border border-gray-300 rounded">
                                     </div>
                                 </template>
 
                                 <!-- Learning Objectives Scene -->
                                 <template x-if="scene.type === 'learning_objectives'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Lesson Title (e.g., 'Lesson Goals')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.title" placeholder="Lesson Title (e.g., 'Lesson Goals')" aria-label="Lesson title" class="w-full px-3 py-2 border border-gray-300 rounded">
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">Learning Objectives (one per line, max 5)</label>
-                                            <textarea x-model="scene.objectives" rows="5" placeholder="Understand variables&#10;Use basic data types&#10;Write simple functions" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                            <textarea x-model="scene.objectives" rows="5" placeholder="Understand variables&#10;Use basic data types&#10;Write simple functions" aria-label="Learning objectives list" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                         </div>
                                         <p class="text-xs text-gray-500">ℹ️ Each line becomes a bullet point (max 5 for readability)</p>
                                     </div>
@@ -528,11 +534,11 @@
                                 <!-- Problem Scene -->
                                 <template x-if="scene.type === 'problem'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Problem Title (e.g., 'Reverse a String')" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <textarea x-model="scene.problem_text" rows="4" placeholder="Problem description" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.title" placeholder="Problem Title (e.g., 'Reverse a String')" aria-label="Problem title" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.problem_text" rows="4" placeholder="Problem description" aria-label="Problem description" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Difficulty (affects accent color in scene)</label>
-                                            <select x-model="scene.difficulty" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                            <select x-model="scene.difficulty" aria-label="Problem difficulty" class="w-full px-3 py-2 border border-gray-300 rounded">
                                                 <option value="easy">🟢 Easy (Green accent)</option>
                                                 <option value="medium">🟡 Medium (Orange accent)</option>
                                                 <option value="hard">🔴 Hard (Red accent)</option>
@@ -546,11 +552,11 @@
                                     <div class="space-y-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Solution Code (one line per line, max 12)</label>
-                                            <textarea x-model="scene.code" rows="8" placeholder="def reverse_string(s):\n    return s[::-1]" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
+                                            <textarea x-model="scene.code" rows="8" placeholder="def reverse_string(s):\n    return s[::-1]" aria-label="Solution code" class="w-full px-3 py-2 border border-gray-300 rounded font-mono text-sm"></textarea>
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Explanation</label>
-                                            <textarea x-model="scene.explanation" rows="3" placeholder="Explain how the solution works" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                            <textarea x-model="scene.explanation" rows="3" placeholder="Explain how the solution works" aria-label="Solution explanation" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                         </div>
                                     </div>
                                 </template>
@@ -558,14 +564,14 @@
                                 <!-- Exercise Scene -->
                                 <template x-if="scene.type === 'exercise'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.title" placeholder="Exercise Title (e.g., 'Practice: Variables')" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.title" placeholder="Exercise Title (e.g., 'Practice: Variables')" aria-label="Exercise title" class="w-full px-3 py-2 border border-gray-300 rounded">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Instructions</label>
-                                            <textarea x-model="scene.instructions" rows="3" placeholder="What the learner should do (e.g., 'Create three variables: name, age, city')" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                            <textarea x-model="scene.instructions" rows="3" placeholder="What the learner should do (e.g., 'Create three variables: name, age, city')" aria-label="Exercise instructions" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Hints (one per line, max 3)</label>
-                                            <textarea x-model="scene.hints" rows="3" placeholder="Use descriptive names&#10;age should be an integer&#10;Use quotes for strings" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                            <textarea x-model="scene.hints" rows="3" placeholder="Use descriptive names&#10;age should be an integer&#10;Use quotes for strings" aria-label="Exercise hints" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                         </div>
                                     </div>
                                 </template>
@@ -575,29 +581,29 @@
                                     <div class="space-y-3">
                                         <div class="grid grid-cols-2 gap-3">
                                             <div>
-                                                <label class="block text-xs font-medium text-gray-700 mb-1">✓ Learned Topics (max 6)</label>
-                                                <textarea x-model="scene.learned_topics" rows="6" placeholder="Variables&#10;Data types&#10;Functions" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Learned Topics (max 6)</label>
+                                                <textarea x-model="scene.learned_topics" rows="6" placeholder="Variables&#10;Data types&#10;Functions" aria-label="Learned topics list" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-medium text-gray-700 mb-1">→ Next Topics (max 6)</label>
-                                                <textarea x-model="scene.next_topics" rows="6" placeholder="Classes&#10;Modules&#10;File I/O" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                                <label class="block text-xs font-medium text-gray-700 mb-1">Next Topics (max 6)</label>
+                                                <textarea x-model="scene.next_topics" rows="6" placeholder="Classes&#10;Modules&#10;File I/O" aria-label="Next topics list" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
                                             </div>
                                         </div>
-                                        <p class="text-xs text-gray-500">ℹ️ Left column: what was covered. Right column: what's coming next.</p>
+                                        <p class="text-xs text-gray-500">Left column: what was covered. Right column: what is coming next.</p>
                                     </div>
                                 </template>
 
                                 <!-- Quiz Scene -->
                                 <template x-if="scene.type === 'quiz'">
                                     <div class="space-y-3">
-                                        <input type="text" x-model="scene.question" placeholder="Question" class="w-full px-3 py-2 border border-gray-300 rounded">
-                                        <textarea x-model="scene.options" rows="4" placeholder="Options (one per line, max 4)" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
-                                        <input type="text" x-model="scene.answer" placeholder="Correct Answer" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <input type="text" x-model="scene.question" placeholder="Question" aria-label="Quiz question" class="w-full px-3 py-2 border border-gray-300 rounded">
+                                        <textarea x-model="scene.options" rows="4" placeholder="Options (one per line, max 4)" aria-label="Quiz options" class="w-full px-3 py-2 border border-gray-300 rounded"></textarea>
+                                        <input type="text" x-model="scene.answer" placeholder="Correct Answer" aria-label="Correct answer" class="w-full px-3 py-2 border border-gray-300 rounded">
                                     </div>
                                 </template>
 
                                 <!-- Voice Selection -->
-                                <select x-model="scene.voice" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                                <select x-model="scene.voice" aria-label="Voice selection" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
                                     <option value="male">Andrew (Male)</option>
                                     <option value="male_warm">Brandon (Male Warm)</option>
                                     <option value="female">Aria (Female)</option>
@@ -607,7 +613,7 @@
                                 <!-- Duration Controls (injected into all scene types) -->
                                 <div class="pt-3 mt-3 border-t border-gray-200">
                                     <div class="text-xs font-medium text-gray-600 mb-2">
-                                        ⏱️ Duration Control
+                                        Duration Control
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <div>
@@ -618,6 +624,7 @@
                                                    x-model.number="scene.min_duration"
                                                    min="1" max="60" step="0.5"
                                                    placeholder="3.0"
+                                                   aria-label="Minimum duration in seconds"
                                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded">
                                         </div>
                                         <div>
@@ -628,11 +635,12 @@
                                                    x-model.number="scene.max_duration"
                                                    min="1" max="60" step="0.5"
                                                    placeholder="15.0"
+                                                   aria-label="Maximum duration in seconds"
                                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded">
                                         </div>
                                     </div>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        ℹ️ System generates audio, then adjusts to fit duration range
+                                        System generates audio, then adjusts to fit duration range
                                     </p>
                                 </div>
                             </div>
@@ -640,7 +648,12 @@
                     </template>
 
                     <!-- Empty State -->
-                    <div x-show="scenes.length === 0" class="text-center py-12 text-gray-500">
+                    <div x-cloak
+                         x-show="scenes.length === 0"
+                         @keydown.escape="$event.stopPropagation()"
+                         class="text-center py-12 text-gray-500"
+                         role="status"
+                         aria-live="polite">
                         <p>No scenes yet. Add your first scene from the left panel.</p>
                     </div>
                 </div>
@@ -650,6 +663,7 @@
 
     <!-- Loading Modal -->
     <div x-show="generating"
+         x-on:keydown.escape="generating = false"
          @keydown.escape.window="generating = false"
          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
          role="dialog"

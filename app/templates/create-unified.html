@@ -115,9 +115,10 @@
             <div class="space-y-4">
                 <!-- URL Input -->
                 <div x-show="inputType === 'url'">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter URL</label>
-                    <input type="url" x-model="inputData.url" @input="validateInput()"
+                    <label for="input-url" class="block text-sm font-medium text-gray-700 mb-2">Enter URL</label>
+                    <input type="url" id="input-url" x-model="inputData.url" @input="validateInput()"
                            placeholder="https://example.com/article"
+                           aria-label="Source URL"
                            class="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            :class="inputError ? 'border-red-500' : 'border-gray-300'">
                 </div>
@@ -126,21 +127,49 @@
                 <div x-show="inputType === 'file'">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
                     <div class="border-2 border-dashed rounded-lg p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer"
-                         :class="inputError ? 'border-red-500' : 'border-gray-300'"
-                         @click="$refs.fileInput.click()">
-                        <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" class="hidden" accept=".txt,.md,.pdf,.docx">
-                        <div class="text-4xl mb-2">📁</div>
-                        <div class="text-gray-600" x-text="inputData.fileName || 'Click to select file'"></div>
-                        <div class="text-sm text-gray-500 mt-2">Supported: TXT, MD, PDF, DOCX</div>
+                         :class="inputError ? 'border-red-500' : inputData.fileContent ? 'border-green-500 bg-green-50' : 'border-gray-300'"
+                         @click="!isReadingFile && $refs.fileInput.click()">
+                        <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" class="hidden"
+                               aria-label="File upload"
+                               :accept="inputMethod === 'yaml' ? '.yaml,.yml' : '.txt,.md,.pdf,.docx'">
+
+                        <!-- Loading state -->
+                        <template x-if="isReadingFile">
+                            <div>
+                                <div class="text-4xl mb-2 animate-spin">⏳</div>
+                                <div class="text-gray-600">Reading file...</div>
+                            </div>
+                        </template>
+
+                        <!-- Success state -->
+                        <template x-if="!isReadingFile && inputData.fileContent">
+                            <div>
+                                <div class="text-4xl mb-2">✅</div>
+                                <div class="text-green-700 font-medium" x-text="inputData.fileName"></div>
+                                <div class="text-sm text-green-600 mt-1" x-text="(inputData.fileContent.length / 1024).toFixed(1) + ' KB loaded'"></div>
+                                <div class="text-xs text-gray-500 mt-2">Click to replace</div>
+                            </div>
+                        </template>
+
+                        <!-- Default state -->
+                        <template x-if="!isReadingFile && !inputData.fileContent">
+                            <div>
+                                <div class="text-4xl mb-2">📁</div>
+                                <div class="text-gray-600" x-text="inputData.fileName || 'Click to select file'"></div>
+                                <div class="text-sm text-gray-500 mt-2"
+                                     x-text="inputMethod === 'yaml' ? 'Supported: YAML, YML' : 'Supported: TXT, MD, PDF, DOCX'"></div>
+                            </div>
+                        </template>
                     </div>
                 </div>
 
                 <!-- Text Input -->
                 <div x-show="inputType === 'text'">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter Content</label>
-                    <textarea x-model="inputData.text" @input="validateInput()"
+                    <label for="input-text-content" class="block text-sm font-medium text-gray-700 mb-2">Enter Content</label>
+                    <textarea id="input-text-content" x-model="inputData.text" @input="validateInput()"
                               rows="8"
                               placeholder="Paste or type your content here..."
+                              aria-label="Content text"
                               class="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                               :class="inputError ? 'border-red-500' : 'border-gray-300'"></textarea>
                 </div>
@@ -203,9 +232,10 @@
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- Video ID -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Video ID</label>
-                    <input type="text" x-model="config.videoId" @input="validateConfig()"
+                    <label for="config-video-id" class="block text-sm font-medium text-gray-700 mb-2">Video ID</label>
+                    <input type="text" id="config-video-id" x-model="config.videoId" @input="validateConfig()"
                            placeholder="my-video"
+                           aria-label="Video identifier"
                            class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            :class="configErrors.videoId ? 'border-red-500' : 'border-gray-300'">
                     <div x-show="configErrors.videoId" class="text-red-600 text-xs mt-1" x-text="configErrors.videoId"></div>
@@ -213,17 +243,19 @@
 
                 <!-- Duration -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Duration (seconds)</label>
-                    <input type="number" x-model.number="config.duration" @input="validateConfig(); updateCostEstimate()"
+                    <label for="config-duration" class="block text-sm font-medium text-gray-700 mb-2">Duration (seconds)</label>
+                    <input type="number" id="config-duration" x-model.number="config.duration" @input="validateConfig(); updateCostEstimate()"
                            min="30" max="600"
+                           aria-label="Video duration in seconds"
                            class="w-full px-4 py-2 border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300">
                     <div class="text-xs text-gray-500 mt-1">Recommended: 120-300 seconds</div>
                 </div>
 
                 <!-- Language Mode -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Languages</label>
-                    <select x-model="config.languageMode" @change="updateCostEstimate()"
+                    <label for="config-language-mode" class="block text-sm font-medium text-gray-700 mb-2">Languages</label>
+                    <select id="config-language-mode" x-model="config.languageMode" @change="updateCostEstimate()"
+                            aria-label="Language mode selection"
                             class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="single">Single Language</option>
                         <option value="multiple">Multiple Languages</option>
@@ -237,6 +269,7 @@
                         <template x-for="lang in availableLanguages" :key="lang.code">
                             <label class="flex items-center gap-2">
                                 <input type="checkbox" :value="lang.code" x-model="config.targetLanguages" @change="updateCostEstimate()"
+                                       aria-label="Target language option"
                                        class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
                                 <span class="text-sm" x-text="lang.name"></span>
                             </label>
@@ -246,8 +279,9 @@
 
                 <!-- Voice Selection -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Voice</label>
-                    <select x-model="config.primaryVoice"
+                    <label for="config-voice" class="block text-sm font-medium text-gray-700 mb-2">Voice</label>
+                    <select id="config-voice" x-model="config.primaryVoice"
+                            aria-label="Voice selection"
                             class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <optgroup label="English - US">
                             <option value="en-US-JennyNeural">Jenny (Female, Friendly)</option>
@@ -258,8 +292,9 @@
 
                 <!-- Color Theme -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Color Theme</label>
-                    <select x-model="config.color"
+                    <label for="config-color" class="block text-sm font-medium text-gray-700 mb-2">Color Theme</label>
+                    <select id="config-color" x-model="config.color"
+                            aria-label="Color theme selection"
                             class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="blue">Blue (Corporate)</option>
                         <option value="green">Green (Educational)</option>
@@ -271,7 +306,8 @@
                 <!-- AI Enhancements -->
                 <div class="md:col-span-2">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" x-model="config.useAI" @change="updateCostEstimate()"
+                        <input type="checkbox" id="config-use-ai" x-model="config.useAI" @change="updateCostEstimate()"
+                               aria-label="Enable AI narration enhancement"
                                class="rounded border-gray-300 text-blue-500 focus:ring-blue-500">
                         <span class="text-sm font-medium text-gray-700">Enable AI Narration Enhancement</span>
                         <span class="text-xs text-gray-500">(Claude Sonnet 4.5)</span>
@@ -443,9 +479,11 @@ function unifiedCreator() {
             url: '',
             file: null,
             fileName: '',
+            fileContent: '', // Actual file content (read via FileReader)
             text: ''
         },
         inputError: '',
+        isReadingFile: false, // Track async file reading state
 
         // Configuration
         config: {
@@ -547,11 +585,15 @@ function unifiedCreator() {
         },
 
         hasValidInput() {
+            // Don't allow proceeding while file is being read
+            if (this.isReadingFile) return false;
+
             switch(this.inputType) {
                 case 'url':
                     return this.inputData.url && this.inputData.url.trim().length > 0;
                 case 'file':
-                    return this.inputData.file !== null;
+                    // Must have both file object AND content read successfully
+                    return this.inputData.file !== null && this.inputData.fileContent.length > 0;
                 case 'text':
                     return this.inputData.text && this.inputData.text.trim().length > 0;
                 default:
@@ -583,13 +625,125 @@ function unifiedCreator() {
             }
         },
 
-        handleFileUpload(event) {
+        async handleFileUpload(event) {
             const file = event.target.files[0];
-            if (file) {
-                this.inputData.file = file;
-                this.inputData.fileName = file.name;
-                this.inputError = '';
+            if (!file) return;
+
+            // Validate file type based on input method
+            const allowedTypes = this.inputMethod === 'yaml'
+                ? ['.yaml', '.yml']
+                : ['.txt', '.md', '.pdf', '.docx'];
+
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            if (!allowedTypes.some(ext => fileExtension === ext)) {
+                this.inputError = `Invalid file type. Allowed: ${allowedTypes.join(', ')}`;
+                return;
             }
+
+            // Check file size (max 10MB for documents, 1MB for YAML)
+            const maxSize = this.inputMethod === 'yaml' ? 1 * 1024 * 1024 : 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                const maxMB = maxSize / (1024 * 1024);
+                this.inputError = `File too large. Maximum size: ${maxMB}MB`;
+                return;
+            }
+
+            // Store file metadata immediately
+            this.inputData.file = file;
+            this.inputData.fileName = file.name;
+            this.inputError = '';
+            this.isReadingFile = true;
+
+            try {
+                // Handle binary files (PDF, DOCX) differently from text files
+                if (fileExtension === '.pdf' || fileExtension === '.docx') {
+                    // For binary files, we'll send as base64
+                    const content = await this.readFileAsBase64(file);
+                    this.inputData.fileContent = content;
+                    this.inputData.fileType = fileExtension.substring(1); // 'pdf' or 'docx'
+                } else {
+                    // For text files (txt, md, yaml, yml), read as text
+                    const content = await this.readFileAsText(file);
+
+                    // Validate content isn't empty
+                    if (!content || content.trim().length === 0) {
+                        this.inputError = 'File is empty';
+                        this.inputData.file = null;
+                        this.inputData.fileName = '';
+                        this.inputData.fileContent = '';
+                        return;
+                    }
+
+                    // For YAML, do basic syntax validation
+                    if (this.inputMethod === 'yaml') {
+                        if (!this.isValidYamlSyntax(content)) {
+                            this.inputError = 'Invalid YAML syntax. Please check your file.';
+                            this.inputData.file = null;
+                            this.inputData.fileName = '';
+                            this.inputData.fileContent = '';
+                            return;
+                        }
+                    }
+
+                    this.inputData.fileContent = content;
+                    this.inputData.fileType = 'text';
+                }
+
+                console.log(`File read successfully: ${file.name} (${this.inputData.fileContent.length} chars)`);
+            } catch (error) {
+                console.error('File read error:', error);
+                this.inputError = 'Failed to read file: ' + error.message;
+                this.inputData.file = null;
+                this.inputData.fileName = '';
+                this.inputData.fileContent = '';
+            } finally {
+                this.isReadingFile = false;
+            }
+        },
+
+        // Read file as text using FileReader API
+        readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('Failed to read file'));
+                reader.readAsText(file, 'UTF-8');
+            });
+        },
+
+        // Read file as base64 for binary files (PDF, DOCX)
+        readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Remove data URL prefix to get pure base64
+                    const base64 = e.target.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = (e) => reject(new Error('Failed to read file'));
+                reader.readAsDataURL(file);
+            });
+        },
+
+        // Basic YAML syntax validation
+        isValidYamlSyntax(content) {
+            // Check for common YAML structure indicators
+            const lines = content.split('\n');
+            let hasValidStructure = false;
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                // Skip empty lines and comments
+                if (!trimmed || trimmed.startsWith('#')) continue;
+
+                // Check for key-value pairs or list items
+                if (trimmed.includes(':') || trimmed.startsWith('-')) {
+                    hasValidStructure = true;
+                    break;
+                }
+            }
+
+            return hasValidStructure;
         },
 
         applyPreset(presetId) {
@@ -650,10 +804,33 @@ function unifiedCreator() {
                         duration: this.config.duration,
                         accent_color: this.config.color
                     };
+                } else if (this.inputMethod === 'yaml') {
+                    // YAML configuration - send to YAML-specific endpoint
+                    endpoint = '/api/parse/yaml';
+                    payload = {
+                        content: this.inputData.fileContent, // Send actual YAML content, NOT filename
+                        filename: this.inputData.fileName,
+                        accent_color: this.config.color,
+                        voice: this.config.primaryVoice
+                    };
                 } else if (this.inputMethod === 'document' || this.inputType === 'file' || this.inputType === 'text') {
                     endpoint = '/api/parse/document';
+
+                    // Determine content source: text input, file content, or URL
+                    let content = '';
+                    if (this.inputType === 'text') {
+                        content = this.inputData.text;
+                    } else if (this.inputType === 'file') {
+                        // BUG FIX: Send actual file CONTENT, not filename
+                        content = this.inputData.fileContent;
+                    } else if (this.inputType === 'url') {
+                        content = this.inputData.url;
+                    }
+
                     payload = {
-                        content: this.inputData.text || this.inputData.fileName || this.inputData.url,
+                        content: content,
+                        filename: this.inputData.fileName || null, // Include filename for context
+                        file_type: this.inputData.fileType || 'text', // 'text', 'pdf', or 'docx'
                         accent_color: this.config.color,
                         voice: this.config.primaryVoice,
                         video_count: 1,
@@ -738,8 +915,9 @@ function unifiedCreator() {
         reset() {
             this.currentStep = 1;
             this.inputType = 'url';
-            this.inputData = { url: '', file: null, fileName: '', text: '' };
+            this.inputData = { url: '', file: null, fileName: '', fileContent: '', fileType: '', text: '' };
             this.inputError = '';
+            this.isReadingFile = false;
             this.config = {
                 videoId: '',
                 duration: 120,
