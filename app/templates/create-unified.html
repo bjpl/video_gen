@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto" x-data="unifiedCreator()" x-init="init(); $cleanup && $cleanup(() => destroy())" @beforeunload.window="destroy()">
+<div class="max-w-5xl mx-auto" x-data="unifiedCreator()" x-init="init()" @beforeunload.window="destroy()">
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Video</h1>
@@ -160,7 +160,7 @@
                  languageSearch: '',
                  expandedSections: { output: true, appearance: false }
              }"
-             x-init="$watch('$root.config.videoId', value => { if (value) expandedSections.output = false })"
+             x-init="$watch(() => $root.config?.videoId, value => { if (value) expandedSections.output = false })"
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0 transform translate-x-4"
              x-transition:enter-end="opacity-100 transform translate-x-0">
