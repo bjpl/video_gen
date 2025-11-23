@@ -32,6 +32,9 @@ document.addEventListener('alpine:init', () => {
         onVoicesChanged: config.onVoicesChanged || null,
         onError: config.onError || null,
 
+        // Cache configuration
+        cacheTTL: config.cacheTTL || 5 * 60 * 1000, // 5 minutes default
+
         // ==================== STATE ====================
 
         // Selected languages (reactive from language selector)
@@ -141,7 +144,7 @@ document.addEventListener('alpine:init', () => {
         // ==================== API METHODS ====================
 
         /**
-         * Fetch available voices for a specific language
+         * Fetch available voices for a specific language with caching
          */
         async fetchVoicesForLanguage(langCode) {
             if (this.isLoading[langCode]) {
@@ -149,18 +152,54 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
+            const cacheKey = `voices:${langCode}`;
+
+            // Check cache first (via global voiceCache or apiCache)
+            const cache = window.voiceCache || window.apiCache;
+            if (cache) {
+                const cached = cache.get(cacheKey);
+                if (cached) {
+                    this.availableVoices[langCode] = cached;
+
+                    // Auto-select first voice if none selected
+                    if (!this.languageVoices[langCode] || this.languageVoices[langCode].length === 0) {
+                        if (this.availableVoices[langCode].length > 0) {
+                            this.languageVoices[langCode] = [this.availableVoices[langCode][0].id];
+                            this.emitVoicesChanged(langCode);
+                        }
+                    }
+
+                    console.log(`[MultiVoiceSelector] Loaded ${this.availableVoices[langCode].length} voices for ${langCode} from cache`);
+                    return;
+                }
+            }
+
             this.isLoading[langCode] = true;
             this.error = null;
 
             try {
-                const response = await fetch(`${this.voicesEndpointBase}/${langCode}/voices`);
+                // Use centralized API client if available
+                let data;
+                if (window.api && window.api.languages) {
+                    data = await window.api.languages.getVoices(langCode);
+                } else {
+                    const response = await fetch(`${this.voicesEndpointBase}/${langCode}/voices`);
 
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch voices: ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch voices: ${response.statusText}`);
+                    }
+
+                    data = await response.json();
                 }
 
-                const data = await response.json();
-                this.availableVoices[langCode] = data.voices || [];
+                const voices = data.voices || [];
+
+                // Cache the result
+                if (cache) {
+                    cache.set(cacheKey, voices, this.cacheTTL);
+                }
+
+                this.availableVoices[langCode] = voices;
 
                 // Auto-select first voice if none selected
                 if (!this.languageVoices[langCode] || this.languageVoices[langCode].length === 0) {
@@ -170,7 +209,7 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
 
-                console.log(`[MultiVoiceSelector] Loaded ${this.availableVoices[langCode].length} voices for ${langCode}`);
+                console.log(`[MultiVoiceSelector] Loaded ${this.availableVoices[langCode].length} voices for ${langCode} from API`);
 
             } catch (error) {
                 console.error(`[MultiVoiceSelector] Error fetching voices for ${langCode}:`, error);

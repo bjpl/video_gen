@@ -755,6 +755,92 @@
                         </div>
                     </div>
 
+                    <!-- 4. OUTPUT SETTINGS (Tier 1 Must-Have Features) -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">📹</span>
+                            4. Output Settings
+                        </h3>
+
+                        <div class="space-y-4">
+                            <!-- Video Quality -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Video Quality</label>
+                                <select x-model="single.quality"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white">
+                                    <option value="1080p">1080p HD (1920x1080) - Recommended</option>
+                                    <option value="720p">720p HD (1280x720) - Faster</option>
+                                    <option value="480p">480p SD (854x480) - Smallest</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Higher quality = larger file size</p>
+                            </div>
+
+                            <!-- Aspect Ratio -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Aspect Ratio</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button type="button" @click="single.aspectRatio = '16:9'"
+                                            :class="single.aspectRatio === '16:9' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300 bg-white'"
+                                            class="p-3 border-2 rounded-lg text-center hover:border-blue-400 transition-all">
+                                        <div class="w-12 h-7 bg-gray-300 rounded mx-auto mb-1" :class="single.aspectRatio === '16:9' ? 'bg-blue-400' : ''"></div>
+                                        <div class="font-semibold text-sm">16:9</div>
+                                        <div class="text-xs text-gray-600">Landscape</div>
+                                    </button>
+                                    <button type="button" @click="single.aspectRatio = '9:16'"
+                                            :class="single.aspectRatio === '9:16' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300 bg-white'"
+                                            class="p-3 border-2 rounded-lg text-center hover:border-blue-400 transition-all">
+                                        <div class="w-7 h-12 bg-gray-300 rounded mx-auto mb-1" :class="single.aspectRatio === '9:16' ? 'bg-blue-400' : ''"></div>
+                                        <div class="font-semibold text-sm">9:16</div>
+                                        <div class="text-xs text-gray-600">Portrait</div>
+                                    </button>
+                                    <button type="button" @click="single.aspectRatio = '1:1'"
+                                            :class="single.aspectRatio === '1:1' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-300 bg-white'"
+                                            class="p-3 border-2 rounded-lg text-center hover:border-blue-400 transition-all">
+                                        <div class="w-10 h-10 bg-gray-300 rounded mx-auto mb-1" :class="single.aspectRatio === '1:1' ? 'bg-blue-400' : ''"></div>
+                                        <div class="font-semibold text-sm">1:1</div>
+                                        <div class="text-xs text-gray-600">Square</div>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">16:9 for YouTube/TV, 9:16 for TikTok/Reels, 1:1 for Instagram</p>
+                            </div>
+
+                            <!-- Output Format -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer"
+                                           :class="single.outputFormat === 'mp4' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'">
+                                        <input type="radio" x-model="single.outputFormat" value="mp4" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">MP4</div>
+                                            <div class="text-xs text-gray-600">Recommended - Best compatibility</div>
+                                        </div>
+                                    </label>
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer"
+                                           :class="single.outputFormat === 'webm' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'">
+                                        <input type="radio" x-model="single.outputFormat" value="webm" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">WebM</div>
+                                            <div class="text-xs text-gray-600">Web optimized - Smaller size</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Subtitles Toggle -->
+                            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                                <div class="flex-1">
+                                    <div class="font-medium text-sm text-gray-900">Include Subtitles/Captions</div>
+                                    <div class="text-xs text-gray-500">Burn subtitles into the video for accessibility</div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer ml-3">
+                                    <input type="checkbox" x-model="single.includeSubtitles" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Per-Video Configuration -->
                     <div class="mb-6">
                         <div class="bg-white border-2 border-blue-200 rounded-xl overflow-hidden">
@@ -892,7 +978,7 @@
                             <span>📋</span>
                             Generation Summary
                         </h3>
-                        <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                             <div class="bg-white p-3 rounded-lg">
                                 <div class="text-xs text-gray-500 uppercase">Input Method</div>
                                 <div class="font-medium text-gray-900" x-text="single.inputMethod === 'manual' ? '✍️ Manual' : single.inputMethod === 'document' ? '📄 Document' : single.inputMethod === 'youtube' ? '📺 YouTube' : '📝 YAML'"></div>
@@ -909,11 +995,29 @@
                                 <div class="text-xs text-gray-500 uppercase">Languages</div>
                                 <div class="font-medium text-gray-900" x-text="single.languageMode === 'multiple' ? single.targetLanguages.length + ' languages' : '1 language'"></div>
                             </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Quality</div>
+                                <div class="font-medium text-gray-900" x-text="single.quality"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Aspect Ratio</div>
+                                <div class="font-medium text-gray-900" x-text="single.aspectRatio"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Format</div>
+                                <div class="font-medium text-gray-900" x-text="single.outputFormat.toUpperCase()"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Subtitles</div>
+                                <div class="font-medium text-gray-900" x-text="single.includeSubtitles ? 'Yes' : 'No'"></div>
+                            </div>
                         </div>
-                        <div class="mt-3 flex items-center gap-2 text-xs text-blue-800">
+                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-blue-800">
                             <span x-show="single.useAI">✓ AI Enhancement</span>
                             <span x-show="single.languageMode === 'multiple'">✓ Multilingual (<span x-text="single.targetLanguages.length"></span> langs)</span>
                             <span x-show="single.videos[0].voiceTracks.length > 1">✓ Multi-voice (<span x-text="single.videos[0].voiceTracks.length"></span> tracks)</span>
+                            <span x-show="single.includeSubtitles">✓ Subtitles</span>
+                            <span x-show="single.aspectRatio !== '16:9'">✓ <span x-text="single.aspectRatio === '9:16' ? 'Portrait' : 'Square'"></span> mode</span>
                         </div>
                     </div>
 
@@ -1377,6 +1481,92 @@
                         </div>
                     </div>
 
+                    <!-- 4. OUTPUT SETTINGS (Tier 1 Must-Have Features) - SET MODE -->
+                    <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <span class="text-2xl">📹</span>
+                            4. Output Settings
+                        </h3>
+
+                        <div class="space-y-4">
+                            <!-- Video Quality -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Video Quality</label>
+                                <select x-model="set.quality"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white">
+                                    <option value="1080p">1080p HD (1920x1080) - Recommended</option>
+                                    <option value="720p">720p HD (1280x720) - Faster</option>
+                                    <option value="480p">480p SD (854x480) - Smallest</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Higher quality = larger file size</p>
+                            </div>
+
+                            <!-- Aspect Ratio -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Aspect Ratio</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button type="button" @click="set.aspectRatio = '16:9'"
+                                            :class="set.aspectRatio === '16:9' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300 bg-white'"
+                                            class="p-3 border-2 rounded-lg text-center hover:border-purple-400 transition-all">
+                                        <div class="w-12 h-7 bg-gray-300 rounded mx-auto mb-1" :class="set.aspectRatio === '16:9' ? 'bg-purple-400' : ''"></div>
+                                        <div class="font-semibold text-sm">16:9</div>
+                                        <div class="text-xs text-gray-600">Landscape</div>
+                                    </button>
+                                    <button type="button" @click="set.aspectRatio = '9:16'"
+                                            :class="set.aspectRatio === '9:16' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300 bg-white'"
+                                            class="p-3 border-2 rounded-lg text-center hover:border-purple-400 transition-all">
+                                        <div class="w-7 h-12 bg-gray-300 rounded mx-auto mb-1" :class="set.aspectRatio === '9:16' ? 'bg-purple-400' : ''"></div>
+                                        <div class="font-semibold text-sm">9:16</div>
+                                        <div class="text-xs text-gray-600">Portrait</div>
+                                    </button>
+                                    <button type="button" @click="set.aspectRatio = '1:1'"
+                                            :class="set.aspectRatio === '1:1' ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' : 'border-gray-300 bg-white'"
+                                            class="p-3 border-2 rounded-lg text-center hover:border-purple-400 transition-all">
+                                        <div class="w-10 h-10 bg-gray-300 rounded mx-auto mb-1" :class="set.aspectRatio === '1:1' ? 'bg-purple-400' : ''"></div>
+                                        <div class="font-semibold text-sm">1:1</div>
+                                        <div class="text-xs text-gray-600">Square</div>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">16:9 for YouTube/TV, 9:16 for TikTok/Reels, 1:1 for Instagram</p>
+                            </div>
+
+                            <!-- Output Format -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer"
+                                           :class="set.outputFormat === 'mp4' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white'">
+                                        <input type="radio" x-model="set.outputFormat" value="mp4" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">MP4</div>
+                                            <div class="text-xs text-gray-600">Recommended - Best compatibility</div>
+                                        </div>
+                                    </label>
+                                    <label class="relative flex items-center p-3 border-2 rounded-lg cursor-pointer"
+                                           :class="set.outputFormat === 'webm' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white'">
+                                        <input type="radio" x-model="set.outputFormat" value="webm" class="sr-only">
+                                        <div>
+                                            <div class="font-medium">WebM</div>
+                                            <div class="text-xs text-gray-600">Web optimized - Smaller size</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Subtitles Toggle -->
+                            <div class="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
+                                <div class="flex-1">
+                                    <div class="font-medium text-sm text-gray-900">Include Subtitles/Captions</div>
+                                    <div class="text-xs text-gray-500">Burn subtitles into all videos for accessibility</div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer ml-3">
+                                    <input type="checkbox" x-model="set.includeSubtitles" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Per-Video Configuration - CUSTOMIZE EACH VIDEO -->
                     <div class="mb-6">
                         <div class="bg-white border-2 border-purple-200 rounded-xl overflow-hidden">
@@ -1593,7 +1783,7 @@
                             <span>📋</span>
                             Generation Summary
                         </h3>
-                        <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                             <div class="bg-white p-3 rounded-lg">
                                 <div class="text-xs text-gray-500 uppercase">Videos</div>
                                 <div class="font-medium text-gray-900" x-text="set.videos.length + ' videos'"></div>
@@ -1610,11 +1800,29 @@
                                 <div class="text-xs text-gray-500 uppercase">Languages</div>
                                 <div class="font-medium text-gray-900" x-text="set.languageMode === 'multiple' ? set.targetLanguages.length + ' langs' : '1 lang'"></div>
                             </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Quality</div>
+                                <div class="font-medium text-gray-900" x-text="set.quality"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Aspect Ratio</div>
+                                <div class="font-medium text-gray-900" x-text="set.aspectRatio"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Format</div>
+                                <div class="font-medium text-gray-900" x-text="set.outputFormat.toUpperCase()"></div>
+                            </div>
+                            <div class="bg-white p-3 rounded-lg">
+                                <div class="text-xs text-gray-500 uppercase">Subtitles</div>
+                                <div class="font-medium text-gray-900" x-text="set.includeSubtitles ? 'Yes' : 'No'"></div>
+                            </div>
                         </div>
-                        <div class="mt-3 flex items-center gap-2 text-xs text-purple-800">
+                        <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-purple-800">
                             <span x-show="set.useAI">✓ AI Enhancement</span>
                             <span x-show="set.languageMode === 'multiple'">✓ Multilingual (<span x-text="set.targetLanguages.length"></span> langs)</span>
                             <span x-show="set.videos.some(v => v.voiceTracks.length > 1)">✓ Multi-voice in some videos</span>
+                            <span x-show="set.includeSubtitles">✓ Subtitles</span>
+                            <span x-show="set.aspectRatio !== '16:9'">✓ <span x-text="set.aspectRatio === '9:16' ? 'Portrait' : 'Square'"></span> mode</span>
                         </div>
                         <div x-show="set.languageMode === 'multiple'" class="mt-2 p-2 bg-purple-100 rounded text-xs text-purple-800">
                             <strong>Total videos to generate:</strong> <span x-text="set.videos.length * set.targetLanguages.length"></span>
@@ -1846,6 +2054,13 @@ function videoCreator() {
             useAI: false,
             color: 'blue',
             showAdvanced: false,
+
+            // OUTPUT SETTINGS (Tier 1 Must-Have)
+            quality: '1080p',        // Video quality: '1080p', '720p', '480p'
+            outputFormat: 'mp4',     // Output format: 'mp4', 'webm'
+            aspectRatio: '16:9',     // Aspect ratio: '16:9', '9:16', '1:1'
+            includeSubtitles: false, // Include subtitles/captions
+
             videos: [{
                 title: '',
                 voiceTracks: ['male'],  // For multi-voice conversations
@@ -1876,6 +2091,13 @@ function videoCreator() {
             useAI: false,
             color: 'purple',
             showAdvanced: false,
+
+            // OUTPUT SETTINGS (Tier 1 Must-Have)
+            quality: '1080p',        // Video quality: '1080p', '720p', '480p'
+            outputFormat: 'mp4',     // Output format: 'mp4', 'webm'
+            aspectRatio: '16:9',     // Aspect ratio: '16:9', '9:16', '1:1'
+            includeSubtitles: false, // Include subtitles/captions
+
             videos: [
                 { title: 'Video 1', voiceTracks: ['male'], duration: null, scenes: [], showScenes: false },
                 { title: 'Video 2', voiceTracks: ['male'], duration: null, scenes: [], showScenes: false },

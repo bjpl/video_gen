@@ -32,6 +32,9 @@ document.addEventListener('alpine:init', () => {
         onSelectionChange: config.onSelectionChange || null,
         onError: config.onError || null,
 
+        // Cache configuration
+        cacheTTL: config.cacheTTL || 5 * 60 * 1000, // 5 minutes default
+
         // ==================== STATE ====================
 
         // All available languages from API
@@ -84,26 +87,55 @@ document.addEventListener('alpine:init', () => {
         // ==================== API METHODS ====================
 
         /**
-         * Fetch available languages from API
+         * Fetch available languages from API with caching
          */
         async fetchLanguages() {
             this.isLoading = true;
             this.error = null;
 
-            try {
-                const response = await fetch(this.languagesEndpoint);
+            const cacheKey = 'languages:all';
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+                // Check cache first (via global languageCache or apiCache)
+                const cache = window.languageCache || window.apiCache;
+                if (cache) {
+                    const cached = cache.get(cacheKey);
+                    if (cached) {
+                        this.languages = this.sortLanguages(cached);
+                        this.validateSelection();
+                        this.isLoading = false;
+                        console.log('[MultiLanguageSelector] Loaded', this.languages.length, 'languages from cache');
+                        return;
+                    }
                 }
 
-                const data = await response.json();
-                this.languages = this.sortLanguages(data.languages || data || []);
+                // Use centralized API client if available
+                let data;
+                if (window.api && window.api.languages) {
+                    data = await window.api.languages.list();
+                } else {
+                    const response = await fetch(this.languagesEndpoint);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    data = await response.json();
+                }
+
+                const languages = data.languages || data || [];
+
+                // Cache the result
+                if (cache) {
+                    cache.set(cacheKey, languages, this.cacheTTL);
+                }
+
+                this.languages = this.sortLanguages(languages);
 
                 // Validate initial selection against available languages
                 this.validateSelection();
 
-                console.log('[MultiLanguageSelector] Loaded', this.languages.length, 'languages');
+                console.log('[MultiLanguageSelector] Loaded', this.languages.length, 'languages from API');
             } catch (error) {
                 console.error('[MultiLanguageSelector] Failed to fetch languages:', error);
                 this.error = 'Failed to load languages. Using defaults.';
