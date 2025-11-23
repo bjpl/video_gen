@@ -477,22 +477,76 @@
                                     </div>
 
                                     <!-- Voice selector for each selected language -->
-                                    <div class="space-y-4">
+                                    <div class="space-y-4"
+                                         x-data="{
+                                             voices: {},
+                                             selectedVoices: {},
+                                             loading: {},
+
+                                             async loadVoices(lang) {
+                                                 if (this.voices[lang]) return;
+                                                 this.loading[lang] = true;
+                                                 try {
+                                                     const res = await fetch(`/api/languages/${lang}/voices`);
+                                                     const data = await res.json();
+                                                     this.voices[lang] = data.voices || [];
+                                                     if (!this.selectedVoices[lang] && this.voices[lang][0]) {
+                                                         this.selectedVoices[lang] = this.voices[lang][0].id;
+                                                     }
+                                                 } catch(e) {
+                                                     console.error('Voice load error:', e);
+                                                     this.voices[lang] = [{id: 'male', name: 'Default Voice', gender: 'male', gender_symbol: '♂'}];
+                                                     this.selectedVoices[lang] = 'male';
+                                                 }
+                                                 this.loading[lang] = false;
+                                             }
+                                         }"
+                                         x-init="config.targetLanguages.forEach(lang => loadVoices(lang))">
+
                                         <template x-for="langCode in config.targetLanguages" :key="langCode">
-                                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 p-4">
+                                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 p-4"
+                                                 x-init="loadVoices(langCode)">
                                                 <!-- Language Header -->
                                                 <div class="flex items-center gap-3 mb-3">
                                                     <span class="text-2xl" x-text="getLanguageFlag(langCode)"></span>
                                                     <h5 class="font-semibold text-gray-900" x-text="getLanguageName(langCode)"></h5>
-                                                    <span class="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">Select 1-4 voices</span>
+                                                    <span class="text-xs text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">Choose voice</span>
                                                 </div>
 
-                                                <!-- Inline voice checkboxes (simplified - will be replaced by component) -->
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                    <!-- Placeholder for voices - component will populate -->
-                                                    <div class="p-3 bg-white rounded-lg border border-purple-100 text-sm text-gray-600">
-                                                        <span class="animate-pulse">Loading voices...</span>
-                                                    </div>
+                                                <!-- Loading -->
+                                                <div x-show="loading[langCode]" class="flex items-center gap-2 p-3 bg-white rounded-lg">
+                                                    <svg class="animate-spin w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    <span class="text-sm text-gray-600">Loading voices...</span>
+                                                </div>
+
+                                                <!-- Voice Radio Buttons -->
+                                                <div x-show="!loading[langCode] && voices[langCode]" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                    <template x-for="voice in (voices[langCode] || [])" :key="voice.id">
+                                                        <label class="flex items-center gap-3 p-3 bg-white rounded-lg border-2 transition-all cursor-pointer hover:border-purple-300"
+                                                               :class="selectedVoices[langCode] === voice.id ? 'border-purple-500 bg-purple-50 ring-1 ring-purple-200' : 'border-purple-100'">
+                                                            <input type="radio"
+                                                                   :name="'voice-' + langCode"
+                                                                   :value="voice.id"
+                                                                   x-model="selectedVoices[langCode]"
+                                                                   class="text-purple-600 focus:ring-purple-500 w-4 h-4">
+                                                            <div class="flex-1 min-w-0">
+                                                                <div class="flex items-center gap-2">
+                                                                    <span class="font-medium text-sm text-gray-900 truncate" x-text="voice.name || voice.id"></span>
+                                                                    <span class="text-base" x-text="voice.gender_symbol || (voice.gender === 'male' ? '♂' : '♀')"></span>
+                                                                </div>
+                                                                <div class="text-xs text-gray-500 truncate" x-text="voice.description || ''"></div>
+                                                            </div>
+                                                            <button @click.stop.prevent="console.log('Preview:', voice.id)"
+                                                                    type="button"
+                                                                    class="p-1.5 text-purple-500 hover:bg-purple-100 rounded-lg transition-colors flex-shrink-0"
+                                                                    title="Preview voice">
+                                                                🔊
+                                                            </button>
+                                                        </label>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </template>
