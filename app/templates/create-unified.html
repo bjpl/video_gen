@@ -986,7 +986,9 @@
             <h2 class="text-2xl font-bold mb-4">🚀 Generate Video</h2>
 
             <!-- NEW: Progress Indicator Component -->
-            {% include 'components/progress-indicator.html' %}
+            <div x-data="progressIndicator()">
+                {% include 'components/progress-indicator.html' %}
+            </div>
 
             <!-- Generation Status (Legacy - kept for fallback) -->
             <div x-show="!generationComplete && !$store.appState.progress.isProcessing" class="space-y-4">
