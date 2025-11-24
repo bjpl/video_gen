@@ -109,7 +109,9 @@ class TaskState:
         self.add_stage(stage_name)
         self.stages[stage_name].status = TaskStatus.RUNNING
         self.stages[stage_name].started_at = datetime.now()
+        self.stages[stage_name].progress = 0.0  # Ensure progress starts at 0
         self.current_stage = stage_name
+        self._recalculate_overall_progress()  # Update overall progress
 
     def update_stage_progress(self, stage_name: str, progress: float):
         """Update progress for a stage."""
@@ -131,8 +133,11 @@ class TaskState:
         """Mark a stage as failed."""
         if stage_name in self.stages:
             self.stages[stage_name].status = TaskStatus.FAILED
+            self.stages[stage_name].progress = 0.0  # Failed stages contribute 0 to progress
             self.stages[stage_name].error = error
+            self.stages[stage_name].completed_at = datetime.now()  # Record end time
             self.errors.append(f"{stage_name}: {error}")
+            self._recalculate_overall_progress()  # Update overall progress
 
     def _recalculate_overall_progress(self):
         """Recalculate overall progress based on stage progress."""

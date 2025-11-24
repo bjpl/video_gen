@@ -386,15 +386,38 @@ class YAMLFileAdapter(InputAdapter):
         if any(file_path_str.startswith(d) for d in self.SYSTEM_DIRS):
             raise ValueError(f"Access to system directories denied: {file_path}")
 
-        # Path traversal protection: Ensure file is under project root
-        # Skip this check in test mode to allow temporary test files
+        # Path traversal protection with whitelist approach
+        # Allow: project files, /tmp directory, project uploads/ directory
+        # Block: parent directory traversal, unauthorized paths
         if not self.test_mode:
-            try:
-                file_path.relative_to(project_root)
-            except ValueError:
+            # Define allowed base paths
+            allowed_paths = [
+                project_root,  # Project directory
+                Path("/tmp"),  # System temp directory (for uploads)
+                project_root / "uploads"  # Project uploads directory
+            ]
+
+            # Check if file is under any allowed path
+            is_allowed = False
+            for allowed_path in allowed_paths:
+                try:
+                    file_path.relative_to(allowed_path)
+                    is_allowed = True
+                    break
+                except ValueError:
+                    continue
+
+            if not is_allowed:
+                # Build helpful error message
+                allowed_paths_str = ", ".join(str(p) for p in allowed_paths)
                 raise ValueError(
-                    f"Path traversal detected: {file_path} is outside project directory"
+                    f"Path traversal detected: {file_path} is not under any allowed directory. "
+                    f"Allowed directories: {allowed_paths_str}"
                 )
+
+            # Additional security: Detect parent directory traversal in original source
+            if ".." in source_str:
+                raise ValueError(f"Path traversal pattern detected in source: {source_str}")
 
         # Validate file exists and is actually a file
         if not file_path.exists():

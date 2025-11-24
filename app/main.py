@@ -519,8 +519,9 @@ async def upload_document(
         uploads_dir = Path(__file__).parent.parent / "uploads"
         uploads_dir.mkdir(exist_ok=True)
 
-        # Save uploaded file with task_id prefix
-        upload_path = uploads_dir / f"{task_id}_{file.filename}"
+        # Save uploaded file with task_id prefix and sanitized filename
+        sanitized_filename = file.filename.replace(" ", "_")  # Basic sanitization
+        upload_path = uploads_dir / f"{task_id}_{sanitized_filename}"
 
         with open(upload_path, "wb") as f:
             content = await file.read()
@@ -528,10 +529,16 @@ async def upload_document(
 
         logger.info(f"File uploaded: {upload_path} ({len(content)} bytes)")
 
-        # Create input config for pipeline
+        # CRITICAL: Convert Path to absolute string and ensure it's normalized
+        # This prevents path traversal and ensures correct path format
+        absolute_path = str(upload_path.resolve().absolute())
+
+        logger.info(f"Absolute upload path for pipeline: {absolute_path}")
+
+        # Create input config for pipeline with absolute path
         input_config = InputConfig(
             input_type="document",
-            source=str(upload_path),
+            source=absolute_path,  # Use absolute, resolved path
             accent_color=accent_color,
             voice=voice,
             languages=["en"],
@@ -550,7 +557,7 @@ async def upload_document(
             task_id
         )
 
-        logger.info(f"Document upload processing started: {task_id}")
+        logger.info(f"Document upload processing started: {task_id} for {absolute_path}")
 
         return {
             "task_id": task_id,
@@ -1664,6 +1671,174 @@ def _infer_type_from_input(input_config: Dict[str, Any]) -> str:
 
     return result_type
 
+
+# Stage display names mapping (internal name -> user-friendly name)
+STAGE_DISPLAY_NAMES = {
+    "input_adaptation": "Preparation",
+    "content_parsing": "Scenes",
+    "script_generation": "Narration",
+    "audio_generation": "Synthesis",
+    "video_generation": "Composition",
+    "output_handling": "Finalization",
+    "validation": "Validation",
+    "translation": "Translation",
+}
+
+# Ordered stages for display (matches the 6-stage pipeline)
+ORDERED_STAGES = [
+    "input_adaptation",
+    "content_parsing",
+    "script_generation",
+    "audio_generation",
+    "video_generation",
+    "output_handling",
+]
+
+
+def _format_job_for_monitor(task_state) -> Dict[str, Any]:
+    """
+    Format a TaskState for the jobs monitor frontend.
+
+    Converts internal stage data to the format expected by jobs.html JavaScript.
+
+    Args:
+        task_state: TaskState object from state manager
+
+    Returns:
+        Dictionary with job data for frontend display
+    """
+    from datetime import datetime
+
+    # Extract document/source name from input config
+    input_config = task_state.input_config or {}
+    source = input_config.get("source", "Unknown")
+
+    # Get friendly document name
+    if isinstance(source, str):
+        if source.startswith("{"):
+            # JSON data - try to extract set name
+            try:
+                import json
+                data = json.loads(source)
+                document_name = data.get("set_name", data.get("title", "Video Set"))
+            except:
+                document_name = "Video Set"
+        elif "/" in source or "\\" in source:
+            # File path - get filename
+            document_name = Path(source).stem
+        elif source.startswith("http"):
+            # URL - show truncated
+            document_name = source[:40] + "..." if len(source) > 40 else source
+        else:
+            document_name = source[:50] if len(source) > 50 else source
+    else:
+        document_name = "Video Generation"
+
+    # Calculate elapsed time
+    started_at = task_state.started_at
+    if started_at:
+        if isinstance(started_at, str):
+            started_at = datetime.fromisoformat(started_at)
+        elapsed_seconds = (datetime.now() - started_at).total_seconds()
+        elapsed = _format_duration(elapsed_seconds)
+    else:
+        elapsed = "0:00"
+
+    # Calculate total duration for completed jobs
+    total_duration = None
+    if task_state.completed_at and task_state.started_at:
+        completed_at = task_state.completed_at
+        if isinstance(completed_at, str):
+            completed_at = datetime.fromisoformat(completed_at)
+        if isinstance(started_at, str):
+            started_at = datetime.fromisoformat(started_at)
+        total_seconds = (completed_at - started_at).total_seconds()
+        total_duration = _format_duration(total_seconds)
+
+    # Build stage progress info
+    stages_info = []
+    current_stage_name = task_state.current_stage
+
+    for stage_name in ORDERED_STAGES:
+        stage_state = task_state.stages.get(stage_name)
+
+        if stage_state:
+            stage_status_value = stage_state.status.value if hasattr(stage_state.status, 'value') else stage_state.status
+
+            if stage_status_value == "completed":
+                status = "completed"
+            elif stage_status_value == "running":
+                status = "active"
+            elif stage_status_value == "failed":
+                status = "failed"
+            else:
+                status = "pending"
+
+            # Calculate stage duration
+            duration = None
+            if stage_state.started_at and stage_state.completed_at:
+                stage_start = stage_state.started_at
+                stage_end = stage_state.completed_at
+                if isinstance(stage_start, str):
+                    stage_start = datetime.fromisoformat(stage_start)
+                if isinstance(stage_end, str):
+                    stage_end = datetime.fromisoformat(stage_end)
+                duration = f"{(stage_end - stage_start).total_seconds():.1f}s"
+        else:
+            # Stage not yet registered
+            status = "pending"
+            duration = None
+
+        stages_info.append({
+            "name": STAGE_DISPLAY_NAMES.get(stage_name, stage_name),
+            "internal_name": stage_name,
+            "status": status,
+            "duration": duration
+        })
+
+    # Get current stage display name
+    current_stage_display = STAGE_DISPLAY_NAMES.get(
+        current_stage_name, current_stage_name or "Initializing"
+    )
+
+    # Calculate progress as percentage (0-100)
+    progress = int(task_state.overall_progress * 100)
+
+    return {
+        "id": task_state.task_id,
+        "document": document_name,
+        "current_stage": current_stage_display,
+        "progress": progress,
+        "elapsed": elapsed,
+        "total_duration": total_duration,
+        "stages": stages_info,
+        "status": task_state.status.value if hasattr(task_state.status, 'value') else task_state.status,
+        "errors": task_state.errors if task_state.errors else [],
+        "created_at": task_state.created_at.isoformat() if task_state.created_at else None,
+    }
+
+
+def _format_duration(seconds: float) -> str:
+    """Format duration in seconds to human-readable string (M:SS or H:MM:SS)."""
+    if seconds < 0:
+        return "0:00"
+
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
+
+
+def _add_queue_positions(queued_jobs: List[Dict]) -> List[Dict]:
+    """Add queue position numbers to queued jobs."""
+    for i, job in enumerate(queued_jobs, start=1):
+        job["queue_position"] = i
+    return queued_jobs
+
+
 # ============================================================================
 # Health & System Info
 # ============================================================================
@@ -1673,7 +1848,8 @@ async def get_jobs(request: Request):
     """
     Get all video generation jobs.
 
-    Returns rendered HTML for HTMX or JSON based on Accept header.
+    Returns JSON for JavaScript clients or HTML for HTMX based on Accept header.
+    Supports real-time monitoring with detailed stage information.
     """
     try:
         pipeline = get_pipeline()
@@ -1681,30 +1857,231 @@ async def get_jobs(request: Request):
         # Get all tasks from state manager
         tasks = pipeline.state_manager.list_tasks()
 
-        # Format jobs for template
-        jobs = []
-        for task in tasks:
-            jobs.append({
-                "job_id": task.task_id,
-                "input_method": _infer_type_from_input(task.input_config),
-                "status": _map_status(task.status.value),
-                "progress": int(task.overall_progress * 100),
-                "created_at": task.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        # Check Accept header to determine response format
+        accept_header = request.headers.get("Accept", "")
+        wants_html = "text/html" in accept_header and "application/json" not in accept_header
+
+        if wants_html:
+            # Return HTML for HTMX requests (legacy support)
+            jobs = []
+            for task in tasks:
+                jobs.append({
+                    "job_id": task.task_id,
+                    "input_method": _infer_type_from_input(task.input_config),
+                    "status": _map_status(task.status.value),
+                    "progress": int(task.overall_progress * 100),
+                    "created_at": task.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                })
+
+            return templates.TemplateResponse("job_list.html", {
+                "request": request,
+                "jobs": jobs
             })
 
-        # Return HTML for HTMX requests
-        return templates.TemplateResponse("job_list.html", {
-            "request": request,
-            "jobs": jobs
+        # Return JSON for JavaScript clients (modern jobs page)
+        active_jobs = []
+        queued_jobs = []
+        completed_jobs = []
+        failed_jobs = []
+
+        for task in tasks:
+            status = task.status.value
+            job_data = _format_job_for_monitor(task)
+
+            if status == "running":
+                active_jobs.append(job_data)
+            elif status == "pending":
+                queued_jobs.append(job_data)
+            elif status == "completed":
+                completed_jobs.append(job_data)
+            elif status in ["failed", "cancelled"]:
+                failed_jobs.append(job_data)
+
+        # Add queue positions to queued jobs
+        queued_jobs = _add_queue_positions(queued_jobs)
+
+        # Calculate stats
+        stats = {
+            "active": len(active_jobs),
+            "queued": len(queued_jobs),
+            "completed": len(completed_jobs),
+            "failed": len(failed_jobs)
+        }
+
+        return JSONResponse({
+            "stats": stats,
+            "active_jobs": active_jobs,
+            "queued_jobs": queued_jobs,
+            "completed_jobs": completed_jobs,
+            "failed_jobs": failed_jobs
         })
 
     except Exception as e:
         logger.error(f"Failed to get jobs: {e}", exc_info=True)
-        # Return empty list on error
-        return templates.TemplateResponse("job_list.html", {
-            "request": request,
-            "jobs": []
+        # Return empty response on error
+        accept_header = request.headers.get("Accept", "")
+        if "text/html" in accept_header:
+            return templates.TemplateResponse("job_list.html", {
+                "request": request,
+                "jobs": []
+            })
+        return JSONResponse({
+            "stats": {"active": 0, "queued": 0, "completed": 0, "failed": 0},
+            "active_jobs": [],
+            "queued_jobs": [],
+            "completed_jobs": [],
+            "failed_jobs": []
         })
+
+
+@app.get("/api/videos/jobs/{job_id}")
+async def get_job_detail(job_id: str):
+    """
+    Get detailed status for a specific job.
+
+    Returns comprehensive job information including:
+    - Current stage and progress
+    - All stage statuses and durations
+    - Error information if failed
+    - Result data if completed
+
+    Args:
+        job_id: The job/task ID to query
+
+    Returns:
+        JSON with detailed job information
+    """
+    try:
+        pipeline = get_pipeline()
+        task_state = pipeline.state_manager.load(job_id)
+
+        if not task_state:
+            raise HTTPException(status_code=404, detail=f"Job {job_id} not found")
+
+        # Format detailed response
+        job_data = _format_job_for_monitor(task_state)
+
+        # Add additional details for individual job view
+        job_data["input_config"] = task_state.input_config
+        job_data["result"] = task_state.result
+        job_data["warnings"] = task_state.warnings
+
+        return JSONResponse({
+            "status": "success",
+            "job": job_data
+        })
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get job {job_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/videos/jobs/{job_id}/events")
+async def stream_job_events(job_id: str):
+    """
+    Stream real-time events for a specific job via SSE.
+
+    This endpoint provides Server-Sent Events for real-time job monitoring.
+    The frontend can subscribe to receive live updates on job progress.
+
+    Args:
+        job_id: The job/task ID to stream events for
+
+    Returns:
+        SSE stream with job progress updates
+    """
+    async def event_generator():
+        pipeline = get_pipeline()
+
+        # Check if task exists
+        if not pipeline.state_manager.exists(job_id):
+            yield f"data: {json.dumps({'error': 'Job not found', 'job_id': job_id})}\n\n"
+            return
+
+        last_progress = -1
+        last_stage = None
+
+        # Poll for updates
+        while True:
+            try:
+                task_state = pipeline.state_manager.load(job_id)
+                if not task_state:
+                    break
+
+                current_progress = int(task_state.overall_progress * 100)
+                current_stage = task_state.current_stage
+
+                # Send update if progress or stage changed
+                if current_progress != last_progress or current_stage != last_stage:
+                    last_progress = current_progress
+                    last_stage = current_stage
+
+                    # Build event data
+                    event_data = {
+                        "job_id": job_id,
+                        "status": task_state.status.value,
+                        "progress": current_progress,
+                        "current_stage": STAGE_DISPLAY_NAMES.get(
+                            current_stage, current_stage or "Initializing"
+                        ),
+                        "stages": []
+                    }
+
+                    # Add stage details
+                    for stage_name in ORDERED_STAGES:
+                        stage_state = task_state.stages.get(stage_name)
+                        if stage_state:
+                            stage_status = stage_state.status.value if hasattr(stage_state.status, 'value') else stage_state.status
+                            status_map = {
+                                "completed": "completed",
+                                "running": "active",
+                                "failed": "failed"
+                            }
+                            event_data["stages"].append({
+                                "name": STAGE_DISPLAY_NAMES.get(stage_name, stage_name),
+                                "status": status_map.get(stage_status, "pending")
+                            })
+                        else:
+                            event_data["stages"].append({
+                                "name": STAGE_DISPLAY_NAMES.get(stage_name, stage_name),
+                                "status": "pending"
+                            })
+
+                    yield f"data: {json.dumps(event_data)}\n\n"
+
+                # Stop if completed or failed
+                if task_state.status.value in ["completed", "failed", "cancelled"]:
+                    # Send final event
+                    final_data = {
+                        "job_id": job_id,
+                        "status": task_state.status.value,
+                        "progress": 100 if task_state.status.value == "completed" else current_progress,
+                        "final": True
+                    }
+                    if task_state.errors:
+                        final_data["errors"] = task_state.errors
+                    yield f"data: {json.dumps(final_data)}\n\n"
+                    break
+
+                await asyncio.sleep(0.5)
+
+            except Exception as e:
+                logger.error(f"Error streaming job events: {e}")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                break
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive"
+        }
+    )
+
 
 @app.get("/api/health")
 async def health_check():
