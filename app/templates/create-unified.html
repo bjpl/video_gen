@@ -1491,16 +1491,28 @@ function unifiedCreator() {
          * Handle file-ready event from drag-drop component
          * Receives file data and advances to next step
          */
-        handleFileReady(event) {
+        async handleFileReady(event) {
             console.log('[UnifiedCreator] File ready event received:', event.detail);
 
             if (event.detail && event.detail.file) {
                 // Update parent state with file data
                 this.inputData.file = event.detail.file;
                 this.inputData.fileName = event.detail.file.name;
+                this.inputData.fileType = event.detail.file.type || 'text/plain';
 
-                // Store file content (we'll read it when generating)
-                this.inputData.fileContent = 'file-uploaded';
+                // Read file content immediately using FileReader
+                try {
+                    this.isReadingFile = true;
+                    const content = await this.readFileAsText(event.detail.file);
+                    this.inputData.fileContent = content;
+                    console.log('[UnifiedCreator] File content loaded:', content.substring(0, 100) + '...');
+                } catch (error) {
+                    console.error('[UnifiedCreator] Failed to read file:', error);
+                    this.inputError = 'Failed to read file content: ' + error.message;
+                    return;
+                } finally {
+                    this.isReadingFile = false;
+                }
 
                 // Clear any errors
                 this.inputError = '';
@@ -1879,13 +1891,19 @@ function unifiedCreator() {
                 console.log('Input method:', this.inputMethod);
                 console.log('Input type:', this.inputType);
 
+                // Calculate actual video count based on mode (used across all input methods)
+                const videoCount = this.config.videoMode === 'single' ? 1 : this.config.videoCount;
+                const splitByH2 = this.config.videoMode === 'set';
+
                 // Determine which API endpoint to use based on input method
                 if (this.inputMethod === 'youtube' || (this.inputType === 'url' && this.inputData.url.includes('youtube'))) {
                     endpoint = '/api/parse/youtube';
                     payload = {
                         url: window.securityUtils ? window.securityUtils.sanitizeUrl(this.inputData.url) : this.inputData.url,
                         duration: this.config.duration,
-                        accent_color: this.config.color
+                        accent_color: this.config.color,
+                        voice: this.config.primaryVoice,
+                        video_count: videoCount
                     };
                 } else if (this.inputMethod === 'yaml') {
                     // YAML configuration - send to YAML-specific endpoint
@@ -1894,7 +1912,8 @@ function unifiedCreator() {
                         content: this.inputData.fileContent,
                         filename: window.securityUtils ? window.securityUtils.sanitizeFilename(this.inputData.fileName) : this.inputData.fileName,
                         accent_color: this.config.color,
-                        voice: this.config.primaryVoice
+                        voice: this.config.primaryVoice,
+                        video_count: videoCount
                     };
                 } else if (this.inputMethod === 'document' || this.inputType === 'file' || this.inputType === 'text') {
                     endpoint = '/api/parse/document';
@@ -1915,8 +1934,8 @@ function unifiedCreator() {
                         file_type: this.inputData.fileType || 'text',
                         accent_color: this.config.color,
                         voice: this.config.primaryVoice,
-                        video_count: 1,
-                        generate_set: false
+                        video_count: videoCount,
+                        split_by_h2: splitByH2 // Split into multiple videos when in set mode
                     };
                 } else {
                     throw new Error('Unknown input method');
