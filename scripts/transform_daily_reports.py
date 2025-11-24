@@ -144,7 +144,7 @@ def map_to_template(filepath):
 
 def main():
     """Transform all daily reports to unified format"""
-    reports_dir = Path(__file__).parent.parent / "daily_reports"
+    reports_dir = Path(__file__).parent.parent / "docs" / "development" / "daily-reports"
 
     # Get all markdown files except README
     report_files = sorted([f for f in reports_dir.glob("*.md") if f.name != "README.md"])
