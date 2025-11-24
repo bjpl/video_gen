@@ -1,5 +1,6 @@
 <!-- Language Configuration Component -->
 <!-- Usage: {% include 'components/language-selector.html' with mode='single' %} -->
+{% set mode = mode | default('single') %}
 
 <div class="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-xl">
     <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">

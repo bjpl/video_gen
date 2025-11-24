@@ -34,7 +34,25 @@
         accentColor: 'blue',
         loading: false,
 
+        // Getter with default fallback
+        getVoice(lang) {
+            return this.languageVoices[lang] || 'male';
+        },
+
+        // Setter that ensures reactivity
+        setVoice(lang, voice) {
+            this.languageVoices[lang] = voice;
+            this.languageVoices = {...this.languageVoices};
+        },
+
         async init() {
+            // Initialize voices for current languages
+            this.targetLanguages.forEach(lang => {
+                if (!this.languageVoices[lang]) {
+                    this.languageVoices[lang] = 'male';
+                }
+            });
+
             // Fetch available languages
             const response = await fetch('/api/languages');
             const data = await response.json();

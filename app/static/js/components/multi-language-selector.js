@@ -450,16 +450,22 @@ document.addEventListener('alpine:init', () => {
         // ==================== STATE MANAGEMENT ====================
 
         /**
-         * Update global Alpine store
+         * Update global Alpine store (using store methods when available)
          */
         updateGlobalStore() {
-            if (Alpine.store('appState')) {
-                // Update video config
-                if (!Alpine.store('appState').videoConfig) {
-                    Alpine.store('appState').videoConfig = {};
+            const store = Alpine.store('appState');
+            if (!store) return;
+
+            // Use store method if available, otherwise direct mutation
+            if (typeof store.selectLanguages === 'function') {
+                store.selectLanguages(this.selectedLanguages);
+            } else {
+                // Fallback to direct mutation
+                if (!store.videoConfig) {
+                    store.videoConfig = {};
                 }
-                Alpine.store('appState').videoConfig.selectedLanguages = [...this.selectedLanguages];
-                Alpine.store('appState').videoConfig.targetLanguages = [...this.selectedLanguages];
+                store.videoConfig.selectedLanguages = [...this.selectedLanguages];
+                store.videoConfig.targetLanguages = [...this.selectedLanguages];
             }
         },
 

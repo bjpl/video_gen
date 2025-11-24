@@ -70,14 +70,16 @@ document.addEventListener('alpine:init', () => {
                     this.selectedLanguages = [...storeLangs];
                 }
 
-                // Watch store for changes
-                this.$watch('$store.appState.languages.selected', (newLangs) => {
-                    console.log('[MultiVoiceSelector] Languages changed from store:', newLangs);
-                    if (newLangs && Array.isArray(newLangs)) {
-                        this.handleLanguageChange(newLangs, this.selectedLanguages);
-                        this.selectedLanguages = [...newLangs];
-                    }
-                });
+                // Watch store for changes (with null check)
+                if (Alpine.store('appState')?.languages) {
+                    this.$watch('$store.appState.languages.selected', (newLangs) => {
+                        console.log('[MultiVoiceSelector] Languages changed from store:', newLangs);
+                        if (newLangs && Array.isArray(newLangs)) {
+                            this.handleLanguageChange(newLangs, this.selectedLanguages);
+                            this.selectedLanguages = [...newLangs];
+                        }
+                    });
+                }
             }
 
             // Initialize state for each selected language

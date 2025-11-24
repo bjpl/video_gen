@@ -4,7 +4,7 @@
 <div x-show="{{ mode }}.inputMethod === 'document'" class="mb-6">
     <label class="block text-sm font-medium text-gray-700 mb-2">Document Path or URL</label>
     <input x-model="{{ mode }}.documentPath"
-           @change="detectAndApplyDefaults?.({{ mode }}.documentPath)"
+           @change="typeof detectAndApplyDefaults === 'function' && detectAndApplyDefaults({{ mode }}.documentPath)"
            x-validate="file_path"
            type="text"
            placeholder="README.md or https://github.com/user/repo"
