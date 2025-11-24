@@ -53,7 +53,7 @@ class DocumentAdapter(InputAdapter):
         self.ai_enhancer: Optional[AIScriptEnhancer] = None
         if use_ai:
             try:
-                self.ai_enhancer = AIScriptEnhancer(api_key=api_api_key)
+                self.ai_enhancer = AIScriptEnhancer(api_key=ai_api_key)
                 self.logger.info("AI enhancement enabled for slide content")
             except Exception as e:
                 self.logger.warning(f"AI enhancement initialization failed: {e}")
