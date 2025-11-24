@@ -446,7 +446,7 @@ class UnifiedVideoGenerator:
         frames: List[np.ndarray],
         video_id: str
     ) -> Path:
-        """Encode video with GPU acceleration (NVENC)"""
+        """Encode video with GPU acceleration (NVENC) or fallback to CPU"""
         temp_dir = Path(f"temp_unified_{video_id}")
         temp_dir.mkdir(exist_ok=True)
 
@@ -470,12 +470,13 @@ class UnifiedVideoGenerator:
                     f.write(f"duration {1/FPS}\n")
             f.write(f"file '{frame_files[-1].absolute()}'\n")
 
-        # Encode with GPU
+        # Encode with GPU or CPU fallback
         output_file = self.output_dir / f"{video_id}_silent.mp4"
 
-        logger.info("GPU encoding video...")
+        # Try GPU encoding first
+        logger.info("Attempting GPU encoding (NVENC)...")
 
-        cmd = [
+        gpu_cmd = [
             self.ffmpeg_path,
             "-y", "-f", "concat", "-safe", "0", "-i", str(concat_file),
             "-c:v", "h264_nvenc",
@@ -491,11 +492,32 @@ class UnifiedVideoGenerator:
             str(output_file)
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = subprocess.run(gpu_cmd, capture_output=True, text=True)
 
+        # If GPU encoding fails, fallback to CPU encoding
         if result.returncode != 0:
-            logger.error(f"Encoding failed: {result.stderr[:300]}")
-            raise RuntimeError("Video encoding failed")
+            logger.warning(f"GPU encoding failed, falling back to CPU encoding...")
+            logger.debug(f"GPU error: {result.stderr[:200]}")
+
+            cpu_cmd = [
+                self.ffmpeg_path,
+                "-y", "-f", "concat", "-safe", "0", "-i", str(concat_file),
+                "-c:v", "libx264",
+                "-preset", "medium",
+                "-crf", "23",
+                "-pix_fmt", "yuv420p",
+                str(output_file)
+            ]
+
+            result = subprocess.run(cpu_cmd, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                logger.error(f"CPU encoding also failed: {result.stderr[:300]}")
+                raise RuntimeError("Video encoding failed (both GPU and CPU attempts)")
+
+            logger.info("✓ Video encoded with CPU (libx264)")
+        else:
+            logger.info("✓ Video encoded with GPU (NVENC)")
 
         # Cleanup with error handling
         try:
