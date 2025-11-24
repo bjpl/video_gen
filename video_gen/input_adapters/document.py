@@ -5,7 +5,7 @@ video generation with AI-enhanced slide content.
 """
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict  # Added Dict for type hints
 import re  # For markdown cleaning
 import asyncio
 import logging
@@ -21,6 +21,11 @@ class DocumentAdapter(InputAdapter):
     This adapter reads document files, extracts text and structure, and
     converts them into VideoSet objects for video generation with AI-enhanced
     slide content and narration.
+
+    Features:
+    - Intelligent content splitting for multi-video generation (works with ANY file type)
+    - AI-powered narration generation
+    - Multiple splitting strategies (auto, AI, headers, paragraphs, etc.)
     """
 
     def __init__(self, test_mode: bool = False, use_ai: bool = True, ai_api_key: Optional[str] = None):
@@ -48,18 +53,33 @@ class DocumentAdapter(InputAdapter):
         self.ai_enhancer: Optional[AIScriptEnhancer] = None
         if use_ai:
             try:
-                self.ai_enhancer = AIScriptEnhancer(api_key=ai_api_key)
+                self.ai_enhancer = AIScriptEnhancer(api_key=api_api_key)
                 self.logger.info("AI enhancement enabled for slide content")
             except Exception as e:
                 self.logger.warning(f"AI enhancement initialization failed: {e}")
                 self.use_ai = False
+
+        # Initialize intelligent content splitter
+        try:
+            from .content_splitter import ContentSplitter
+            self.content_splitter = ContentSplitter(
+                ai_api_key=ai_api_key,
+                use_ai=use_ai
+            )
+            self.logger.info("Intelligent content splitter initialized")
+        except Exception as e:
+            self.logger.warning(f"Content splitter initialization failed: {e}")
+            self.content_splitter = None
 
     async def adapt(self, source: Any, **kwargs) -> InputAdapterResult:
         """Adapt a document file to VideoSet structure.
 
         Args:
             source: Path to document file or URL
-            **kwargs: Additional parameters (accent_color, voice, etc.)
+            **kwargs: Additional parameters including:
+                - video_count: Number of videos to create (default 1)
+                - split_strategy: Strategy to use (auto, ai, headers, etc.)
+                - accent_color, voice: Visual/audio settings
 
         Returns:
             InputAdapterResult with VideoSet
@@ -74,25 +94,68 @@ class DocumentAdapter(InputAdapter):
                     error=f"Failed to read document: {source}"
                 )
 
-            # Parse markdown structure
-            structure = self._parse_markdown_structure(content)
+            # Get splitting parameters
+            video_count = kwargs.get('video_count', 1)
+            split_strategy = kwargs.get('split_strategy', 'auto')
+            enable_ai_splitting = kwargs.get('enable_ai_splitting', True)
 
-            # Generate video set from structure (with AI enhancement)
-            video_set = await self._create_video_set_from_structure(
-                structure,
-                source,
-                **kwargs
-            )
+            # 🚀 NEW PATH: Use intelligent content splitter for multi-video
+            if video_count > 1 and self.content_splitter:
+                self.logger.info(f"Using intelligent splitter: {video_count} videos, strategy={split_strategy}")
 
-            return InputAdapterResult(
-                success=True,
-                video_set=video_set,
-                metadata={
-                    "source": str(source),
-                    "sections_found": len(structure.get('sections', [])),
-                    "videos_generated": len(video_set.videos)
-                }
-            )
+                from .content_splitter import SplitStrategy
+
+                # Split content intelligently
+                split_result = await self.content_splitter.split(
+                    content=content,
+                    num_sections=video_count,
+                    strategy=SplitStrategy(split_strategy) if split_strategy != 'auto' else SplitStrategy.AUTO,
+                    **kwargs
+                )
+
+                # Create video set from intelligently split sections
+                video_set = await self._create_video_set_from_sections(
+                    sections=split_result.sections,
+                    source=source,
+                    split_metadata=split_result.metadata,
+                    **kwargs
+                )
+
+                return InputAdapterResult(
+                    success=True,
+                    video_set=video_set,
+                    metadata={
+                        "source": str(source),
+                        "split_strategy": split_result.strategy_used.value,
+                        "split_confidence": split_result.confidence,
+                        "videos_generated": len(video_set.videos),
+                        **split_result.metadata
+                    }
+                )
+
+            # 📊 OLD PATH: Use traditional markdown structure parsing (single video or fallback)
+            else:
+                self.logger.info("Using traditional markdown structure parsing")
+
+                # Parse markdown structure
+                structure = self._parse_markdown_structure(content)
+
+                # Generate video set from structure (with AI enhancement)
+                video_set = await self._create_video_set_from_structure(
+                    structure,
+                    source,
+                    **kwargs
+                )
+
+                return InputAdapterResult(
+                    success=True,
+                    video_set=video_set,
+                    metadata={
+                        "source": str(source),
+                        "sections_found": len(structure.get('sections', [])),
+                        "videos_generated": len(video_set.videos)
+                    }
+                )
 
         except Exception as e:
             return InputAdapterResult(
@@ -582,6 +645,118 @@ class DocumentAdapter(InputAdapter):
                 "video_count": len(videos),
                 "total_sections": len(structure['sections']),
                 # Store custom options for config.defaults backward compat
+                "accent_color": accent_color,
+                "voice": voice
+            }
+        )
+
+    async def _create_video_set_from_sections(
+        self,
+        sections: List['ContentSection'],
+        source: Any,
+        split_metadata: Dict[str, Any],
+        **kwargs
+    ) -> VideoSet:
+        """Create VideoSet from ContentSection objects (intelligent splitter output).
+
+        This is the NEW path for AI-powered multi-video generation.
+        Sections already have AI-generated narration from the ContentSplitter.
+
+        Args:
+            sections: List of ContentSection objects from ContentSplitter
+            source: Original document source
+            split_metadata: Metadata from splitting process
+            **kwargs: accent_color, voice, etc.
+
+        Returns:
+            VideoSet with one video per section
+        """
+        from ..shared.models import VideoSet, VideoConfig, SceneConfig
+        import re
+
+        # Generate set ID from source
+        if isinstance(source, str) and source.startswith('http'):
+            set_id = re.sub(r'[^a-z0-9_-]', '_', Path(source).stem.lower())
+        else:
+            set_id = re.sub(r'[^a-z0-9_-]', '_', Path(source).stem.lower())
+
+        accent_color = kwargs.get('accent_color', 'blue')
+        voice = kwargs.get('voice', 'male')
+
+        # Create one video per section
+        videos = []
+        for idx, section in enumerate(sections):
+            video_id = f"{set_id}_part_{idx + 1}"
+
+            # Create scenes for this video
+            scenes = []
+
+            # 1. Title scene (using section title)
+            title_narration = section.narration_hook or f"Welcome to {section.title}"
+
+            scenes.append(SceneConfig(
+                scene_id=f"{video_id}_title",
+                scene_type="title",
+                narration=title_narration,
+                visual_content={
+                    'title': section.title,
+                    'subtitle': f"Part {idx + 1} of {len(sections)}"
+                },
+                voice=voice
+            ))
+
+            # 2. Main content scene (using AI-generated narration!)
+            # The narration was already generated by ContentSplitter._generate_narration_for_sections
+            main_narration = section.narration or section.content[:500]
+
+            scenes.append(SceneConfig(
+                scene_id=f"{video_id}_content",
+                scene_type="info",  # Info card scene
+                narration=main_narration,  # ✨ AI-generated narration!
+                visual_content={
+                    'header': section.title,
+                    'description': section.key_takeaway or section.content[:200],
+                    'content': section.content[:300]
+                },
+                voice=voice
+            ))
+
+            # 3. Outro scene (with takeaway if available)
+            outro_text = section.key_takeaway or "Thanks for watching!"
+            outro_narration = f"{outro_text} Continue to the next part to learn more."
+
+            scenes.append(SceneConfig(
+                scene_id=f"{video_id}_outro",
+                scene_type="outro",
+                narration=outro_narration,
+                visual_content={
+                    'main_text': 'Key Takeaway',
+                    'sub_text': section.key_takeaway or 'Continue Learning'
+                },
+                voice=voice
+            ))
+
+            # Create video config
+            video = VideoConfig(
+                video_id=video_id,
+                title=section.title,
+                description=f"Part {idx + 1}: {section.title}",
+                scenes=scenes,
+                accent_color=accent_color
+            )
+            videos.append(video)
+
+        # Return video set
+        return VideoSet(
+            set_id=set_id,
+            name=f"{sections[0].title} (Video Series)" if sections else "Video Series",
+            description=f"Videos generated from document: {source} using {split_metadata.get('ai_model', 'intelligent splitter')}",
+            videos=videos,
+            metadata={
+                "source": str(source),
+                "video_count": len(videos),
+                "split_strategy": split_metadata.get('ai_model', 'unknown'),
+                "ai_narration_generated": split_metadata.get('narration_generated', False),
                 "accent_color": accent_color,
                 "voice": voice
             }

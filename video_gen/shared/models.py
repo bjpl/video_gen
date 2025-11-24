@@ -161,9 +161,11 @@ class InputConfig:
     resume_from: Optional[str] = None
     use_ai_narration: bool = False  # Enable AI-enhanced narration (requires ANTHROPIC_API_KEY)
 
-    # Document splitting options
+    # Document splitting options (intelligent multi-video generation)
     video_count: Optional[int] = 1  # Number of videos to split document into
-    split_by_h2: bool = False  # Split document by level 2 headings
+    split_strategy: str = "auto"  # Strategy: auto, ai, headers, paragraph, sentence, length, manual
+    split_by_h2: bool = False  # Legacy: Split document by level 2 headings (deprecated, use split_strategy)
+    enable_ai_splitting: bool = True  # Enable AI-powered semantic splitting and narration
 
     # Backward compatibility fields (deprecated, for old tests)
     config: Optional[Dict[str, Any]] = None

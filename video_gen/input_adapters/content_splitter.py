@@ -38,13 +38,16 @@ class SplitStrategy(str, Enum):
 
 @dataclass
 class ContentSection:
-    """A section of split content."""
+    """A section of split content with video narration."""
     title: str
     content: str
     start_index: int
     end_index: int
     word_count: int
     metadata: Dict[str, Any]
+    narration: Optional[str] = None  # ✨ AI-generated narration script
+    narration_hook: Optional[str] = None  # Opening line suggestion
+    key_takeaway: Optional[str] = None  # Main point for this section
 
 
 @dataclass
@@ -157,37 +160,49 @@ class ContentSplitter:
         num_sections: int,
         **kwargs
     ) -> SplitResult:
-        """Use AI to intelligently split content into semantic sections.
+        """Use AI to intelligently split content into video-optimized narration sections.
 
-        The AI analyzes the content and identifies natural topic boundaries,
-        creating sections that flow logically and maintain context.
+        The AI analyzes the content and creates sections specifically designed for
+        video narration, ensuring each section:
+        - Works as a standalone video narrative
+        - Has engaging opening and closing
+        - Maintains viewer attention
+        - Flows naturally when spoken aloud
         """
         try:
             from anthropic import AsyncAnthropic
 
             client = AsyncAnthropic(api_key=self.ai_api_key)
 
-            # Construct prompt for section detection
-            prompt = f"""Analyze this document and split it into exactly {num_sections} logical sections.
+            # Construct prompt for VIDEO-AWARE section detection
+            prompt = f"""You are creating sections from this document for VIDEO NARRATION. Each section will become a separate video with AI-generated voiceover.
 
 Document:
 {content}
 
-Requirements:
-1. Identify natural topic boundaries and transitions
-2. Each section should cover a distinct theme or concept
-3. Maintain context and flow between sections
-4. Aim for relatively balanced section lengths
-5. Suggest a clear title for each section
+Task: Split this into exactly {num_sections} sections optimized for video narration.
+
+CRITICAL Requirements for Video Narration:
+1. Each section must work as a STANDALONE video (clear beginning, middle, end)
+2. Opening must HOOK the viewer immediately (no boring intros)
+3. Content must be ENGAGING when spoken aloud (conversational, not academic)
+4. Each section should be 100-400 words (30-90 seconds of narration)
+5. Include natural transitions that work between videos
+6. Suggest a COMPELLING title that would work as a video title
+7. Each section should have a clear "takeaway" or conclusion
+
+Think like a YouTube content creator, not an academic researcher.
 
 Respond with JSON in this format:
 {{
   "sections": [
     {{
-      "title": "Section title",
+      "title": "Compelling video title (not academic)",
       "start_marker": "First few words to identify start...",
       "end_marker": "Last few words to identify end...",
-      "reasoning": "Why this is a logical section boundary"
+      "reasoning": "Why this makes a good standalone video",
+      "narration_hook": "Suggested opening line to grab attention",
+      "key_takeaway": "Main point viewers should remember"
     }}
   ]
 }}"""
@@ -210,17 +225,23 @@ Respond with JSON in this format:
 
             ai_result = json.loads(response_text)
 
-            # Convert AI sections to ContentSection objects
+            # Convert AI sections to ContentSection objects with narration hints
             sections = self._convert_ai_sections_to_content(content, ai_result['sections'])
 
+            # 🎯 PHASE 2: Generate initial narration for each section
+            sections_with_narration = await self._generate_narration_for_sections(
+                sections, content, **kwargs
+            )
+
             return SplitResult(
-                sections=sections,
+                sections=sections_with_narration,
                 strategy_used=SplitStrategy.AI_INTELLIGENT,
                 confidence=0.9,  # High confidence for AI-powered splits
                 metadata={
                     "ai_model": "claude-sonnet-4",
                     "input_tokens": response.usage.input_tokens,
-                    "output_tokens": response.usage.output_tokens
+                    "output_tokens": response.usage.output_tokens,
+                    "narration_generated": True
                 }
             )
 
@@ -430,7 +451,7 @@ Respond with JSON in this format:
         full_content: str,
         ai_sections: List[Dict[str, Any]]
     ) -> List[ContentSection]:
-        """Convert AI-identified sections to ContentSection objects."""
+        """Convert AI-identified sections to ContentSection objects with narration hints."""
         sections = []
 
         for i, ai_section in enumerate(ai_sections):
@@ -455,6 +476,8 @@ Respond with JSON in this format:
                 start_index=start_pos,
                 end_index=end_pos,
                 word_count=len(section_content.split()),
+                narration_hook=ai_section.get('narration_hook'),  # ✨ Opening suggestion
+                key_takeaway=ai_section.get('key_takeaway'),  # ✨ Main point
                 metadata={
                     "ai_reasoning": ai_section.get('reasoning', ''),
                     "ai_generated": True
@@ -462,6 +485,74 @@ Respond with JSON in this format:
             ))
 
         return sections
+
+    async def _generate_narration_for_sections(
+        self,
+        sections: List[ContentSection],
+        full_content: str,
+        **kwargs
+    ) -> List[ContentSection]:
+        """Generate initial narration scripts for each section using AI.
+
+        This creates a draft narration that will be further enhanced by
+        AIScriptEnhancer in the pipeline.
+        """
+        if not self.use_ai:
+            # No AI - just use content as-is
+            return sections
+
+        try:
+            from anthropic import AsyncAnthropic
+            client = AsyncAnthropic(api_key=self.ai_api_key)
+
+            # Generate narration for each section
+            for i, section in enumerate(sections):
+                try:
+                    # Create narration prompt
+                    prompt = f"""You are writing VIDEO NARRATION for a professional explainer video. This is video {i+1} of {len(sections)}.
+
+Section Title: {section.title}
+Section Content:
+{section.content}
+
+{f"Opening Hook Suggestion: {section.narration_hook}" if section.narration_hook else ""}
+{f"Key Takeaway: {section.key_takeaway}" if section.key_takeaway else ""}
+
+Task: Write engaging narration script (100-300 words) that:
+1. Opens with an attention-grabbing hook (use suggestion if provided)
+2. Explains the content conversationally (like talking to a friend)
+3. Uses simple, clear language (avoid jargon)
+4. Flows naturally when spoken aloud
+5. Ends with the key takeaway or smooth transition
+6. Is optimized for 30-90 seconds of voiceover
+
+Write ONLY the narration script, no titles or formatting."""
+
+                    response = await client.messages.create(
+                        model="claude-sonnet-4-20250514",
+                        max_tokens=800,
+                        temperature=0.7,  # Creative but controlled
+                        messages=[{"role": "user", "content": prompt}]
+                    )
+
+                    narration = response.content[0].text.strip()
+                    section.narration = narration
+
+                    logger.debug(f"Generated narration for section {i+1}: {len(narration)} chars")
+
+                except Exception as e:
+                    logger.warning(f"Failed to generate narration for section {i+1}: {e}")
+                    # Fallback: Use first 300 words of content
+                    section.narration = ' '.join(section.content.split()[:300])
+
+            return sections
+
+        except Exception as e:
+            logger.warning(f"Narration generation failed: {e}")
+            # Fallback: Use content as narration
+            for section in sections:
+                section.narration = ' '.join(section.content.split()[:300])
+            return sections
 
     def _adjust_section_count(
         self,

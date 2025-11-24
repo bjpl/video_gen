@@ -273,7 +273,8 @@
                                     </div>
 
                                     <!-- Video count for series -->
-                                    <div x-show="config.videoMode === 'set'" x-transition x-cloak class="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                                    <div x-show="config.videoMode === 'set'" x-transition x-cloak class="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100 space-y-4">
+                                        <!-- Video Count -->
                                         <div class="flex items-center gap-4">
                                             <label for="video-count" class="text-sm font-medium text-purple-900">Number of videos:</label>
                                             <input type="number" id="video-count" x-model.number="config.videoCount" min="2" max="10"
@@ -284,6 +285,30 @@
                                                 </template>
                                                 <span x-show="config.videoCount > 6" class="text-xs text-purple-400 self-center ml-1">+<span x-text="config.videoCount - 6"></span></span>
                                             </div>
+                                        </div>
+
+                                        <!-- Split Strategy Selector -->
+                                        <div>
+                                            <label for="split-strategy" class="block text-sm font-medium text-purple-900 mb-2">
+                                                Splitting Method
+                                            </label>
+                                            <select id="split-strategy" x-model="config.splitStrategy"
+                                                    class="w-full px-3 py-2 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 bg-white text-sm">
+                                                <option value="auto">🤖 Smart Auto-Select (Recommended)</option>
+                                                <option value="ai">✨ AI-Powered Semantic Splitting</option>
+                                                <option value="headers">📑 By Markdown Headers</option>
+                                                <option value="paragraph">¶ By Paragraphs</option>
+                                                <option value="sentence">📝 By Sentences</option>
+                                                <option value="length">📏 By Equal Length</option>
+                                            </select>
+                                            <p class="text-xs text-purple-700 mt-2">
+                                                <span x-show="config.splitStrategy === 'auto'">📚 System automatically chooses the best splitting method for your content</span>
+                                                <span x-show="config.splitStrategy === 'ai'">✨ AI analyzes your content and creates semantic sections with narration (~$0.01)</span>
+                                                <span x-show="config.splitStrategy === 'headers'">📑 Splits by markdown ## headers (requires markdown format)</span>
+                                                <span x-show="config.splitStrategy === 'paragraph'">¶ Splits by paragraph breaks (fast, free)</span>
+                                                <span x-show="config.splitStrategy === 'sentence'">📝 Splits evenly by sentences (fast, free)</span>
+                                                <span x-show="config.splitStrategy === 'length'">📏 Splits by word count (fast, free)</span>
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -1389,6 +1414,8 @@ function unifiedCreator() {
             duration: 120,
             videoMode: 'single', // 'single' or 'set'
             videoCount: 1, // Number of videos in set
+            splitStrategy: 'auto', // ✨ NEW: Splitting strategy (auto, ai, headers, paragraph, sentence, length)
+            enableAISplitting: true, // ✨ NEW: Enable AI-powered splitting
             languageMode: 'single',
             targetLanguages: ['en'],
             primaryVoice: 'en-US-JennyNeural',
@@ -1935,7 +1962,8 @@ function unifiedCreator() {
                         accent_color: this.config.color,
                         voice: this.config.primaryVoice,
                         video_count: videoCount,
-                        split_by_h2: splitByH2 // Split into multiple videos when in set mode
+                        split_strategy: this.config.splitStrategy,  // ✨ NEW: Intelligent splitting
+                        enable_ai_splitting: this.config.enableAISplitting  // ✨ NEW: AI toggle
                     };
                 } else {
                     throw new Error('Unknown input method');

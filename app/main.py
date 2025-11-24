@@ -319,7 +319,9 @@ class DocumentInput(BaseModel):
     accent_color: Optional[str] = "blue"
     voice: Optional[str] = "male"
     video_count: Optional[int] = Field(default=1, ge=1, le=10)  # Number of videos to split document into
-    generate_set: Optional[bool] = False  # Whether to generate a video set
+    split_strategy: Optional[str] = "auto"  # Splitting strategy (auto, ai, headers, paragraph, sentence, length)
+    split_by_h2: Optional[bool] = None  # Legacy: auto-calculated from video_count if not provided
+    enable_ai_splitting: Optional[bool] = True  # Enable AI-powered splitting
 
     @field_validator('content')
     @classmethod
@@ -463,7 +465,9 @@ async def parse_document(input: DocumentInput, background_tasks: BackgroundTasks
             voice=input.voice,
             languages=["en"],  # Default to English for document parsing
             video_count=input.video_count,  # Pass user's video count selection
-            split_by_h2=(input.video_count > 1)  # Auto-split if multiple videos requested
+            split_strategy=input.split_strategy,  # ✨ NEW: Intelligent splitting strategy
+            split_by_h2=(input.split_by_h2 if input.split_by_h2 is not None else (input.video_count > 1)),  # Legacy support
+            enable_ai_splitting=input.enable_ai_splitting  # ✨ NEW: AI toggle
         )
 
         # Get pipeline singleton
