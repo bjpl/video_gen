@@ -482,7 +482,7 @@
                                         </div>
                                         <div>
                                             <h4 class="text-lg font-bold text-gray-900">Voice Selection</h4>
-                                            <p class="text-xs text-gray-600">Choose a voice for each selected language</p>
+                                            <p class="text-xs text-gray-600">Select voices for each language - multiple voices enable rotation</p>
                                         </div>
                                     </div>
                                     <div class="px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
@@ -490,38 +490,170 @@
                                     </div>
                                 </div>
 
-                                <!-- Voice Selector Component -->
+                                <!-- Voice Selector Component (Multi-Select with Rotation) -->
                                 <div class="space-y-4"
                                      x-data="{
                                          voices: {},
                                          selectedVoices: {},
                                          loading: {},
 
+                                         // Multi-select and rotation state
+                                         rotationExpanded: {},
+                                         rotationStep: {},
+                                         rotationIntervals: {},
+
+                                         // Preview state management
+                                         previewPlayer: null,
+                                         previewState: 'idle',
+                                         currentlyPreviewing: null,
+                                         previewError: null,
+                                         waveformBars: [0,0,0,0,0],
+
+                                         init() {
+                                             // Initialize the VoicePreviewPlayer
+                                             this.previewPlayer = new VoicePreviewPlayer({
+                                                 onStateChange: (state, prev, voice) => {
+                                                     this.previewState = state;
+                                                     if (state === 'idle' || state === 'error') {
+                                                         this.currentlyPreviewing = null;
+                                                     }
+                                                 },
+                                                 onError: (msg, err) => {
+                                                     this.previewError = msg;
+                                                     setTimeout(() => this.previewError = null, 3000);
+                                                 },
+                                                 onWaveformData: (data) => {
+                                                     const step = Math.floor(data.length / 5);
+                                                     this.waveformBars = [
+                                                         Math.min(100, data[0] / 2.55),
+                                                         Math.min(100, data[step] / 2.55),
+                                                         Math.min(100, data[step*2] / 2.55),
+                                                         Math.min(100, data[step*3] / 2.55),
+                                                         Math.min(100, data[step*4] / 2.55)
+                                                     ];
+                                                 }
+                                             });
+                                             config.targetLanguages.forEach(lang => this.loadVoices(lang));
+                                         },
+
                                          async loadVoices(lang) {
                                              if (this.voices[lang]) return;
                                              this.loading[lang] = true;
+                                             this.rotationStep[lang] = 0;
                                              try {
                                                  const res = await fetch(`/api/languages/${lang}/voices`);
                                                  const data = await res.json();
                                                  this.voices[lang] = data.voices || [];
-                                                 // Auto-select first voice
-                                                 if (!this.selectedVoices[lang] && this.voices[lang][0]) {
-                                                     this.selectedVoices[lang] = this.voices[lang][0].id;
+                                                 // Auto-select first voice as array for multi-select
+                                                 if ((!this.selectedVoices[lang] || this.selectedVoices[lang].length === 0) && this.voices[lang][0]) {
+                                                     this.selectedVoices[lang] = [this.voices[lang][0].id];
                                                      config.languageVoices = config.languageVoices || {};
-                                                     config.languageVoices[lang] = this.voices[lang][0].id;
+                                                     config.languageVoices[lang] = [this.voices[lang][0].id];
                                                  }
                                              } catch(e) {
                                                  console.error('Voice load error:', e);
                                                  this.voices[lang] = [
-                                                     {id: 'male', name: 'Default Male', gender: 'male', gender_symbol: '♂', description: 'Professional, confident'},
-                                                     {id: 'female', name: 'Default Female', gender: 'female', gender_symbol: '♀', description: 'Clear, friendly'}
+                                                     {id: 'male', name: 'Default Male', gender: 'male', gender_symbol: '&#9794;', description: 'Professional, confident'},
+                                                     {id: 'female', name: 'Default Female', gender: 'female', gender_symbol: '&#9792;', description: 'Clear, friendly'}
                                                  ];
-                                                 this.selectedVoices[lang] = 'male';
+                                                 this.selectedVoices[lang] = ['male'];
                                              }
                                              this.loading[lang] = false;
+                                         },
+
+                                         toggleVoice(lang, voiceId) {
+                                             if (!this.selectedVoices[lang]) this.selectedVoices[lang] = [];
+                                             const idx = this.selectedVoices[lang].indexOf(voiceId);
+                                             if (idx > -1) {
+                                                 // Prevent removing last voice
+                                                 if (this.selectedVoices[lang].length > 1) {
+                                                     this.selectedVoices[lang].splice(idx, 1);
+                                                 }
+                                             } else {
+                                                 // Max 4 voices per language
+                                                 if (this.selectedVoices[lang].length < 4) {
+                                                     this.selectedVoices[lang].push(voiceId);
+                                                 }
+                                             }
+                                             this.selectedVoices[lang] = [...this.selectedVoices[lang]];
+                                             config.languageVoices = config.languageVoices || {};
+                                             config.languageVoices[lang] = [...this.selectedVoices[lang]];
+                                             this.updateRotationAnimation(lang);
+                                         },
+
+                                         isVoiceSelected(lang, voiceId) {
+                                             return (this.selectedVoices[lang] || []).includes(voiceId);
+                                         },
+
+                                         getSelectedCount(lang) {
+                                             return (this.selectedVoices[lang] || []).length;
+                                         },
+
+                                         getSelectedVoiceObjects(lang) {
+                                             const voiceList = this.voices[lang] || [];
+                                             const selected = this.selectedVoices[lang] || [];
+                                             return selected.map(id => voiceList.find(v => v.id === id)).filter(Boolean);
+                                         },
+
+                                         updateRotationAnimation(lang) {
+                                             if (this.rotationIntervals[lang]) clearInterval(this.rotationIntervals[lang]);
+                                             const count = this.getSelectedCount(lang);
+                                             if (count >= 2) {
+                                                 this.rotationStep[lang] = 0;
+                                                 this.rotationIntervals[lang] = setInterval(() => {
+                                                     this.rotationStep[lang] = (this.rotationStep[lang] + 1) % count;
+                                                 }, 1800);
+                                             }
+                                         },
+
+                                         async playPreview(langCode, voiceId) {
+                                             const previewKey = `${langCode}-${voiceId}`;
+                                             if (this.currentlyPreviewing === previewKey && this.previewState === 'playing') {
+                                                 this.stopPreview();
+                                                 return;
+                                             }
+                                             this.stopPreview();
+                                             this.currentlyPreviewing = previewKey;
+                                             this.previewState = 'loading';
+                                             this.previewError = null;
+                                             try {
+                                                 const response = await fetch('/api/voice-preview', {
+                                                     method: 'POST',
+                                                     headers: { 'Content-Type': 'application/json' },
+                                                     body: JSON.stringify({ language_code: langCode, voice_id: voiceId })
+                                                 });
+                                                 if (!response.ok) {
+                                                     const errorData = await response.json().catch(() => ({}));
+                                                     throw new Error(errorData.error || `HTTP ${response.status}`);
+                                                 }
+                                                 const audioBlob = await response.blob();
+                                                 if (this.currentlyPreviewing !== previewKey) return;
+                                                 await this.previewPlayer.play(audioBlob, { langCode, voiceId });
+                                             } catch (error) {
+                                                 console.error('Preview error:', error);
+                                                 this.previewState = 'error';
+                                                 this.previewError = error.message || 'Failed to load preview';
+                                                 this.currentlyPreviewing = null;
+                                                 setTimeout(() => this.previewError = null, 3000);
+                                             }
+                                         },
+
+                                         stopPreview() {
+                                             if (this.previewPlayer) this.previewPlayer.stop();
+                                             this.previewState = 'idle';
+                                             this.currentlyPreviewing = null;
+                                             this.waveformBars = [0,0,0,0,0];
+                                         },
+
+                                         isPreviewingVoice(langCode, voiceId) {
+                                             return this.currentlyPreviewing === `${langCode}-${voiceId}`;
+                                         },
+
+                                         getPreviewButtonState(langCode, voiceId) {
+                                             if (!this.isPreviewingVoice(langCode, voiceId)) return 'idle';
+                                             return this.previewState;
                                          }
                                      }"
-                                     x-init="config.targetLanguages.forEach(lang => loadVoices(lang))"
                                      @languages-changed.window="$nextTick(() => config.targetLanguages.forEach(lang => loadVoices(lang)))">
 
                                     <template x-for="langCode in config.targetLanguages" :key="langCode">
@@ -538,8 +670,8 @@
                                                             <p class="text-xs text-purple-700" x-text="!loading[langCode] && voices[langCode] ? voices[langCode].length + ' voices available' : 'Loading...'"></p>
                                                         </div>
                                                     </div>
-                                                    <span class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full shadow">
-                                                        Choose Voice
+                                                    <span class="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full shadow flex items-center gap-1.5">
+                                                        <span x-text="getSelectedCount(langCode)"></span>/<span>4</span> selected
                                                     </span>
                                                 </div>
                                             </div>
@@ -559,16 +691,17 @@
                                             <div x-show="!loading[langCode] && voices[langCode]" class="p-4">
                                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                     <template x-for="voice in (voices[langCode] || [])" :key="voice.id">
-                                                        <label class="relative flex flex-col gap-2 p-4 bg-white rounded-xl border-2 transition-all cursor-pointer group hover:border-purple-400 hover:shadow-md"
-                                                               :class="selectedVoices[langCode] === voice.id ? 'border-purple-600 bg-gradient-to-br from-purple-50 to-pink-50 ring-2 ring-purple-300 shadow-md' : 'border-purple-100'">
+                                                        <div @click="toggleVoice(langCode, voice.id)"
+                                                             class="relative flex flex-col gap-2 p-4 bg-white rounded-xl border-2 transition-all cursor-pointer group hover:border-purple-400 hover:shadow-md"
+                                                             :class="isVoiceSelected(langCode, voice.id) ? 'border-purple-600 bg-gradient-to-br from-purple-50 to-pink-50 ring-2 ring-purple-300 shadow-md' : 'border-purple-100'">
 
-                                                            <!-- Radio Input -->
-                                                            <input type="radio"
-                                                                   :name="'voice-' + langCode"
-                                                                   :value="voice.id"
-                                                                   x-model="selectedVoices[langCode]"
-                                                                   @change="config.languageVoices = config.languageVoices || {}; config.languageVoices[langCode] = voice.id"
-                                                                   class="absolute top-3 right-3 text-purple-600 focus:ring-2 focus:ring-purple-500 w-5 h-5">
+                                                            <!-- Checkbox Visual -->
+                                                            <div class="absolute top-3 right-3 w-5 h-5 rounded border-2 flex items-center justify-center transition-all"
+                                                                 :class="isVoiceSelected(langCode, voice.id) ? 'bg-purple-600 border-purple-600' : 'bg-white border-gray-300'">
+                                                                <svg x-show="isVoiceSelected(langCode, voice.id)" class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                                </svg>
+                                                            </div>
 
                                                             <!-- Voice Info -->
                                                             <div class="flex items-start gap-3 pr-8">
@@ -583,22 +716,82 @@
                                                             </div>
 
                                                             <!-- Preview Button -->
-                                                            <button @click.stop.prevent="console.log('Preview:', langCode, voice.id)"
+                                                            <button @click.stop.prevent="playPreview(langCode, voice.id)"
                                                                     type="button"
-                                                                    class="mt-2 w-full px-3 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow group-hover:scale-[1.02]"
-                                                                    title="Preview voice">
-                                                                <span>🔊</span>
-                                                                <span>Preview Voice</span>
+                                                                    class="mt-2 w-full px-3 py-2.5 text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow"
+                                                                    :class="{
+                                                                        'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 group-hover:scale-[1.02]': getPreviewButtonState(langCode, voice.id) === 'idle',
+                                                                        'bg-gradient-to-r from-amber-500 to-orange-500 cursor-wait': getPreviewButtonState(langCode, voice.id) === 'loading',
+                                                                        'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-red-500 hover:to-rose-500': getPreviewButtonState(langCode, voice.id) === 'playing',
+                                                                        'bg-gradient-to-r from-red-500 to-rose-500': getPreviewButtonState(langCode, voice.id) === 'error'
+                                                                    }"
+                                                                    :disabled="getPreviewButtonState(langCode, voice.id) === 'loading'"
+                                                                    :title="getPreviewButtonState(langCode, voice.id) === 'playing' ? 'Click to stop' : 'Preview voice'">
+
+                                                                <!-- Idle State -->
+                                                                <template x-if="getPreviewButtonState(langCode, voice.id) === 'idle'">
+                                                                    <span class="flex items-center gap-2">
+                                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.814L4.447 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.447l3.936-2.814A1 1 0 019.383 3.076zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"/>
+                                                                        </svg>
+                                                                        <span>Preview Voice</span>
+                                                                    </span>
+                                                                </template>
+
+                                                                <!-- Loading State -->
+                                                                <template x-if="getPreviewButtonState(langCode, voice.id) === 'loading'">
+                                                                    <span class="flex items-center gap-2">
+                                                                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                        </svg>
+                                                                        <span>Loading...</span>
+                                                                    </span>
+                                                                </template>
+
+                                                                <!-- Playing State with Waveform -->
+                                                                <template x-if="getPreviewButtonState(langCode, voice.id) === 'playing'">
+                                                                    <span class="flex items-center gap-2">
+                                                                        <!-- Waveform Visualization -->
+                                                                        <span class="flex items-end gap-0.5 h-4">
+                                                                            <template x-for="(bar, i) in waveformBars" :key="i">
+                                                                                <span class="w-1 bg-white rounded-full transition-all duration-75"
+                                                                                      :style="`height: ${Math.max(15, bar)}%`"></span>
+                                                                            </template>
+                                                                        </span>
+                                                                        <span>Playing... (click to stop)</span>
+                                                                    </span>
+                                                                </template>
+
+                                                                <!-- Error State -->
+                                                                <template x-if="getPreviewButtonState(langCode, voice.id) === 'error'">
+                                                                    <span class="flex items-center gap-2">
+                                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                                                        </svg>
+                                                                        <span>Error - Try Again</span>
+                                                                    </span>
+                                                                </template>
                                                             </button>
 
-                                                            <!-- Selected Indicator -->
-                                                            <div x-show="selectedVoices[langCode] === voice.id"
-                                                                 class="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg animate-bounce-slow">
-                                                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                                </svg>
+                                                            <!-- Error Toast (shows below button) -->
+                                                            <div x-show="previewError && isPreviewingVoice(langCode, voice.id)"
+                                                                 x-transition:enter="transition ease-out duration-200"
+                                                                 x-transition:enter-start="opacity-0 transform -translate-y-1"
+                                                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                                 x-transition:leave="transition ease-in duration-150"
+                                                                 x-transition:leave-start="opacity-100"
+                                                                 x-transition:leave-end="opacity-0"
+                                                                 class="mt-1 px-2 py-1 bg-red-100 border border-red-300 text-red-700 text-xs rounded-md">
+                                                                <span x-text="previewError"></span>
                                                             </div>
-                                                        </label>
+
+                                                            <!-- Selection Order Badge -->
+                                                            <div x-show="isVoiceSelected(langCode, voice.id)"
+                                                                 class="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg text-white text-xs font-bold">
+                                                                <span x-text="(selectedVoices[langCode] || []).indexOf(voice.id) + 1"></span>
+                                                            </div>
+                                                        </div>
                                                     </template>
                                                 </div>
 
@@ -607,20 +800,140 @@
                                                     <div class="text-4xl mb-2">🎤</div>
                                                     <p class="text-gray-500 text-sm">No voices available for this language</p>
                                                 </div>
+
+                                                <!-- Voice Rotation Visualization (shows when 2+ voices selected) -->
+                                                <div x-show="getSelectedCount(langCode) >= 2"
+                                                     x-transition:enter="transition ease-out duration-300"
+                                                     x-transition:enter-start="opacity-0 transform translate-y-2"
+                                                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                     class="mt-4 rounded-xl overflow-hidden border-2 border-purple-300 shadow-md"
+                                                     x-init="$watch('selectedVoices[langCode]', () => updateRotationAnimation(langCode))">
+
+                                                    <!-- Header with Gradient -->
+                                                    <div class="bg-gradient-to-r from-purple-600 via-pink-500 to-purple-600 px-4 py-3">
+                                                        <div class="flex items-center justify-between">
+                                                            <div class="flex items-center gap-2 text-white">
+                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                                </svg>
+                                                                <span class="font-bold text-sm">Voice Rotation Active</span>
+                                                            </div>
+                                                            <button @click="rotationExpanded[langCode] = !rotationExpanded[langCode]"
+                                                                    type="button"
+                                                                    class="text-white/80 hover:text-white text-xs flex items-center gap-1 transition-colors">
+                                                                <span x-text="rotationExpanded[langCode] ? 'Hide Details' : 'Learn More'"></span>
+                                                                <svg class="w-4 h-4 transition-transform duration-200" :class="rotationExpanded[langCode] ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Rotation Preview Animation -->
+                                                    <div class="bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 p-4">
+                                                        <!-- Voice Rotation Chain -->
+                                                        <div class="flex items-center justify-center gap-1 flex-wrap mb-3">
+                                                            <template x-for="(voice, idx) in getSelectedVoiceObjects(langCode)" :key="voice.id">
+                                                                <div class="flex items-center">
+                                                                    <!-- Voice Badge -->
+                                                                    <div class="px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all duration-500 shadow-sm"
+                                                                         :class="rotationStep[langCode] === idx ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white scale-110 shadow-lg ring-2 ring-purple-300' : 'bg-white text-gray-700 border border-purple-200'">
+                                                                        <span class="w-4 h-4 rounded-full flex items-center justify-center text-xs"
+                                                                              :class="voice.gender === 'male' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'"
+                                                                              x-text="voice.gender === 'male' ? '&#9794;' : '&#9792;'"></span>
+                                                                        <span x-text="voice.name || voice.id" class="max-w-20 truncate"></span>
+                                                                    </div>
+                                                                    <!-- Arrow (not after last item) -->
+                                                                    <svg x-show="idx < getSelectedVoiceObjects(langCode).length - 1"
+                                                                         class="w-5 h-5 text-purple-400 mx-1 flex-shrink-0"
+                                                                         :class="{'animate-pulse text-purple-600': rotationStep[langCode] === idx}"
+                                                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                                                    </svg>
+                                                                </div>
+                                                            </template>
+                                                            <!-- Circular arrow back to first -->
+                                                            <svg x-show="getSelectedCount(langCode) >= 2"
+                                                                 class="w-5 h-5 text-purple-400 mx-1"
+                                                                 :class="{'animate-pulse text-purple-600': rotationStep[langCode] === getSelectedCount(langCode) - 1}"
+                                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9"></path>
+                                                            </svg>
+                                                        </div>
+
+                                                        <!-- Scene Preview Example -->
+                                                        <div class="bg-white/80 rounded-lg p-3 border border-purple-100">
+                                                            <div class="text-xs text-gray-500 mb-2 font-medium text-center">Scene Narration Preview</div>
+                                                            <div class="flex items-center justify-center gap-2 flex-wrap">
+                                                                <template x-for="(voice, idx) in getSelectedVoiceObjects(langCode).slice(0, 4)" :key="'scene-' + voice.id">
+                                                                    <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-500"
+                                                                         :class="rotationStep[langCode] === idx ? 'bg-purple-100 border-2 border-purple-400 shadow' : 'bg-gray-50 border border-gray-200'">
+                                                                        <span class="font-bold text-purple-700" x-text="'Scene ' + (idx + 1) + ':'"></span>
+                                                                        <span class="text-gray-600" x-text="voice.name || voice.id"></span>
+                                                                        <span class="text-gray-400" x-text="voice.gender === 'male' ? '(male)' : '(female)'"></span>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                            <div class="text-center mt-2 text-xs text-gray-400">
+                                                                <span x-show="getSelectedCount(langCode) > 4">... and more scenes continue the rotation</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Expandable Details -->
+                                                    <div x-show="rotationExpanded[langCode]"
+                                                         x-collapse
+                                                         class="border-t border-purple-200 bg-white">
+                                                        <div class="p-4 space-y-3">
+                                                            <div class="flex gap-3">
+                                                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                                                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="text-xs text-gray-600 leading-relaxed">
+                                                                    <p class="font-semibold text-gray-800 mb-1">How Voice Rotation Works</p>
+                                                                    <p>When you select multiple voices, they automatically rotate for each scene in your video. This creates a more dynamic and engaging narration experience with varied vocal perspectives.</p>
+                                                                </div>
+                                                            </div>
+                                                            <div class="flex gap-3">
+                                                                <div class="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+                                                                    <svg class="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="text-xs text-gray-600 leading-relaxed">
+                                                                    <p class="font-semibold text-gray-800 mb-1">Pro Tip</p>
+                                                                    <p>Mixing male and female voices creates conversational dynamics. The order you select voices determines the rotation sequence shown in the badges above each voice card.</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </template>
                                 </div>
 
                                 <!-- Voice Selection Summary -->
-                                <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border-2 border-blue-200">
+                                <div class="mt-4 p-4 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 rounded-xl border-2 border-purple-200">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white text-sm font-bold shadow">
-                                            ✓
+                                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white shadow-md">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
                                         </div>
                                         <div class="flex-1">
-                                            <div class="font-semibold text-sm text-gray-900">Voice Configuration Complete</div>
-                                            <div class="text-xs text-gray-600">Each language now has a selected voice for narration</div>
+                                            <div class="font-semibold text-sm text-gray-900">Voice Configuration Ready</div>
+                                            <div class="text-xs text-gray-600">
+                                                <span>Select multiple voices per language for dynamic rotation, or use a single voice for consistent narration.</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded-lg">
+                                            <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span class="text-xs text-purple-700 font-medium">Max 4 per language</span>
                                         </div>
                                     </div>
                                 </div>

@@ -84,8 +84,9 @@ document.addEventListener('alpine:init', () => {
             });
 
             // Restore state from global store if available
-            if (Alpine.store('appState')?.input?.preview?.data) {
-                const storedPreview = Alpine.store('appState').input.preview;
+            // Fixed: Store has preview at root level, not under input
+            if (Alpine.store('appState')?.preview?.data) {
+                const storedPreview = Alpine.store('appState').preview;
                 if (storedPreview.loaded && storedPreview.data) {
                     this.preview = storedPreview.data;
                     this.previewType = storedPreview.type || 'document';

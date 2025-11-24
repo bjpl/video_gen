@@ -1,0 +1,211 @@
+{
+  "audit_metadata": {
+    "generated_at": "2025-11-23T00:00:00Z",
+    "files_analyzed": 27,
+    "total_issues": 12,
+    "critical_count": 2,
+    "high_count": 4,
+    "medium_count": 4,
+    "low_count": 2
+  },
+  "summary": {
+    "overall_health": "Good",
+    "alpine_version": "3.13.5",
+    "plugins_detected": ["@alpinejs/collapse"],
+    "global_store_present": true,
+    "registered_components": [
+      "multiLanguageSelector",
+      "multiVoiceSelector",
+      "previewPanel",
+      "progressIndicator",
+      "validationFeedback",
+      "dragDropZone",
+      "costEstimator",
+      "videoCreator",
+      "sceneBuilder",
+      "advancedFeatures",
+      "jobsMonitor"
+    ],
+    "key_findings": [
+      "All major components are properly registered via Alpine.data()",
+      "Global store (appState) is well-structured with proper initialization",
+      "x-collapse plugin is used but properly loaded in base.html",
+      "$root usage found in nested components - potential scope issues",
+      "Some templates use inline x-data without component registration"
+    ]
+  },
+  "issues": [
+    {
+      "id": 1,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/create.html",
+      "line_numbers": [610, 611, 612, 613, 617, 618],
+      "error_type": "scope_issue",
+      "severity": "critical",
+      "category": "$root access in nested x-data",
+      "current_code": "x-init=\"$watch('$root.single', () => updateEstimate({\\n    use_ai_narration: $root.single.useAI,\\n    target_languages: $root.single.languageMode === 'multiple' ? $root.single.targetLanguages : [$root.single.primaryLanguage],",
+      "description": "$root references parent x-data scope. When costEstimator() component is nested inside videoCreator(), $root.single accesses the parent's 'single' property. This works BUT is fragile - if the nesting structure changes, it will break silently.",
+      "suggested_fix": "Pass required values as config parameters to costEstimator() OR use Alpine.store('appState') for shared state:\n\n<div x-data=\"costEstimator({ watchTarget: 'single' })\"\n     x-init=\"initWithParent($data)\">\n\nOr better: emit events from parent, listen in costEstimator",
+      "impact": "Cost estimator may show incorrect values if component structure changes"
+    },
+    {
+      "id": 2,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/create-unified.html",
+      "line_numbers": [163],
+      "error_type": "scope_issue",
+      "severity": "critical",
+      "category": "$root access in nested component",
+      "current_code": "x-init=\"$watch(() => $root.config?.videoId, value => { if (value) expandedSections.output = false })\"",
+      "description": "$root.config references parent component's config property. This creates tight coupling between components and may fail if component hierarchy changes.",
+      "suggested_fix": "Use custom events to communicate between components:\n\nParent: $dispatch('video-id-changed', videoId)\nChild: @video-id-changed=\"expandedSections.output = false\"\n\nOr use Alpine.store for shared state",
+      "impact": "Section auto-collapse may not work if nesting changes"
+    },
+    {
+      "id": 3,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/components/document-form.html",
+      "line_numbers": [8],
+      "error_type": "undefined_property_access",
+      "severity": "high",
+      "category": "Optional chaining on potentially undefined function",
+      "current_code": "@change=\"detectAndApplyDefaults?.({{ mode }}.documentPath)\"",
+      "description": "detectAndApplyDefaults is called with optional chaining (?.), suggesting it may not always exist. This is a Jinja template using {{ mode }}, so the actual variable name depends on how the template is included. If detectAndApplyDefaults is not defined in the parent x-data, this will silently fail.",
+      "suggested_fix": "Ensure detectAndApplyDefaults is defined in all parent components that include this template, OR check explicitly:\n\n@change=\"typeof detectAndApplyDefaults === 'function' && detectAndApplyDefaults({{ mode }}.documentPath)\"",
+      "impact": "Smart defaults detection may silently fail to trigger"
+    },
+    {
+      "id": 4,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/create.html",
+      "line_numbers": [548],
+      "error_type": "undefined_property_access",
+      "severity": "high",
+      "category": "Optional chaining on potentially undefined function",
+      "current_code": "<span x-show=\"isRecommended?.('voice', voice.id)\" x-text=\"' Recommended'\"></span>",
+      "description": "isRecommended is called with optional chaining. If not defined in videoCreator() component, this will return undefined (falsy), hiding the badge. Should verify isRecommended exists.",
+      "suggested_fix": "Define isRecommended in videoCreator() component or remove optional chaining if it's guaranteed to exist:\n\nisRecommended(type, value) {\n    // Implementation\n    return false; // default\n}",
+      "impact": "Recommendation badges may never show even when they should"
+    },
+    {
+      "id": 5,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/components/language-selector.html",
+      "line_numbers": [38, 50, 54, 68, 70, 71, 83, 90],
+      "error_type": "template_variable_access",
+      "severity": "high",
+      "category": "Jinja template variable in Alpine expressions",
+      "current_code": "<select x-model=\"{{ mode }}.primaryLanguage\">",
+      "description": "This template uses Jinja {{ mode }} variable which gets replaced at server render time. If mode is 'single', it becomes x-model=\"single.primaryLanguage\". This is fine but requires the parent component to have a 'single' or 'set' property. If the template is included without proper mode context, Alpine will throw errors.",
+      "suggested_fix": "Add validation or provide default:\n{% set mode = mode | default('single') %}\n\nAnd ensure parent component has the required property structure",
+      "impact": "Template inclusion without proper mode will cause Alpine binding errors"
+    },
+    {
+      "id": 6,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/scene_editor_component.html",
+      "line_numbers": [6, 7, 11, 18, 52],
+      "error_type": "assumed_parent_structure",
+      "severity": "high",
+      "category": "Component assumes specific parent data structure",
+      "current_code": "x-show=\"single.videos[0].showScenes\"",
+      "description": "This component assumes parent has single.videos[0].showScenes structure. It's tightly coupled to the videoCreator() parent. If single.videos is empty or undefined, this will throw an error.",
+      "suggested_fix": "Add defensive checks:\n\nx-show=\"single?.videos?.[0]?.showScenes\"\n\nOr better: refactor to accept data via props/config pattern",
+      "impact": "Component will fail if included in wrong context or if videos array is empty"
+    },
+    {
+      "id": 7,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/static/js/components/multi-voice-selector.js",
+      "line_numbers": [74, 75, 76, 77, 78, 79],
+      "error_type": "store_dependency",
+      "severity": "medium",
+      "category": "Store watch without null check",
+      "current_code": "this.$watch('$store.appState.languages.selected', (newLangs) => {...}",
+      "description": "The component watches $store.appState.languages.selected, but the watch is set up regardless of whether appState store exists. If Alpine.store('appState') is not initialized, this watch will fail.",
+      "suggested_fix": "Add null check before setting up watch:\n\nif (Alpine.store('appState')?.languages) {\n    this.$watch('$store.appState.languages.selected', ...)\n}",
+      "impact": "Component may fail to react to language changes if store initialization order is wrong"
+    },
+    {
+      "id": 8,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/static/js/components/preview-panel.js",
+      "line_numbers": [87, 88, 89, 90, 91],
+      "error_type": "store_path_access",
+      "severity": "medium",
+      "category": "Deep property access without null checks",
+      "current_code": "if (Alpine.store('appState')?.input?.preview?.data) {...}",
+      "description": "While this uses optional chaining for safety, it accesses Alpine.store('appState').input.preview which may not match the actual store structure. The store has 'preview' at root level, not under 'input'.",
+      "suggested_fix": "Verify correct store path. Based on app-state.js, it should be:\n\nAlpine.store('appState')?.preview?.data\n\nNot: Alpine.store('appState')?.input?.preview?.data",
+      "impact": "Preview state restoration from store will never work due to wrong path"
+    },
+    {
+      "id": 9,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/create.html",
+      "line_numbers": [859],
+      "error_type": "plugin_usage",
+      "severity": "medium",
+      "category": "x-collapse plugin used without x-if wrapper",
+      "current_code": "<div x-show=\"single.showAdvanced\" x-collapse class=\"p-4...\">",
+      "description": "x-collapse is used with x-show. This is the correct pattern and works well. However, x-collapse modifies the element's height and overflow properties. If there's dynamic content inside, ensure the collapse animation accounts for content changes.",
+      "suggested_fix": "Current usage is correct. For dynamic content, consider using x-collapse.duration.500ms for smoother animations with varying content heights.",
+      "impact": "Minor - animation may be choppy with dynamic content"
+    },
+    {
+      "id": 10,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/multilingual.html",
+      "line_numbers": [28, 30, 31],
+      "error_type": "uninitialized_reactive_property",
+      "severity": "medium",
+      "category": "Reactive object property may be undefined",
+      "current_code": "languageVoices: {},  // Store selected voice per language",
+      "description": "languageVoices is initialized as empty object. When accessing languageVoices[lang] for a language not yet selected, it returns undefined. The x-model binding to this undefined value may cause issues.",
+      "suggested_fix": "Initialize with default values for common languages OR use a getter that returns default:\n\ngetVoice(lang) {\n    return this.languageVoices[lang] || 'male';\n}",
+      "impact": "Voice selector may show empty/undefined for newly added languages"
+    },
+    {
+      "id": 11,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/templates/home.html",
+      "line_numbers": [6],
+      "error_type": "simple_component",
+      "severity": "low",
+      "category": "Inline x-data for simple state",
+      "current_code": "<div x-data=\"{ hoveredCard: null }\">",
+      "description": "Simple inline x-data is used for hover state. This is perfectly fine for simple, isolated state. No issues detected.",
+      "suggested_fix": "No fix needed. This is appropriate usage for simple UI state.",
+      "impact": "None"
+    },
+    {
+      "id": 12,
+      "file": "/mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/app/static/js/components/multi-language-selector.js",
+      "line_numbers": [456, 457, 458, 459, 460, 461, 462, 463],
+      "error_type": "store_mutation",
+      "severity": "low",
+      "category": "Direct store mutation without method",
+      "current_code": "if (Alpine.store('appState')) {\n    if (!Alpine.store('appState').videoConfig) {\n        Alpine.store('appState').videoConfig = {};\n    }\n    Alpine.store('appState').videoConfig.selectedLanguages = [...this.selectedLanguages];",
+      "description": "Component directly mutates the store's videoConfig property. While this works, it bypasses the store's own methods (selectLanguage, etc.) which may have additional logic like persistence.",
+      "suggested_fix": "Use store methods when available:\n\nif (Alpine.store('appState')?.setLanguages) {\n    Alpine.store('appState').setLanguages(this.selectedLanguages);\n} else {\n    // fallback to direct mutation\n}",
+      "impact": "Minor - store persistence or event emission may be skipped"
+    }
+  ],
+  "recommendations": {
+    "immediate_actions": [
+      "Fix issue #8 (preview-panel.js wrong store path) - currently prevents state restoration",
+      "Review all $root usages in create.html and create-unified.html for potential refactoring"
+    ],
+    "best_practices": [
+      "Consider using Alpine.store for cross-component communication instead of $root",
+      "Add defensive null checks when accessing deeply nested properties",
+      "Document expected parent component structure for reusable template components",
+      "Use custom events ($dispatch) for child-to-parent communication"
+    ],
+    "testing_suggestions": [
+      "Test cost estimator in different component hierarchy configurations",
+      "Verify language selector works when template is included with different modes",
+      "Test scene editor component with empty videos array",
+      "Verify preview panel state restoration after page refresh"
+    ]
+  },
+  "positive_findings": [
+    "Alpine.js Collapse plugin is properly loaded before Alpine core",
+    "Global store (appState) has comprehensive state management with init, persistence, and reset methods",
+    "All major components use Alpine.data() registration pattern correctly",
+    "Components properly use $dispatch for event communication",
+    "Error handling with try/catch is present in async operations",
+    "Accessibility (ARIA) attributes are well-implemented across components",
+    "Loading and error states are handled consistently",
+    "Cache utilities (apiCache, languageCache) are properly integrated"
+  ]
+}
