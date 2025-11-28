@@ -6,12 +6,17 @@ from pathlib import Path
 from typing import Dict, Any, List
 import json
 import shutil
+import asyncio
 from datetime import datetime
 
 from ..pipeline.stage import Stage, StageResult
 from ..shared.models import VideoConfig
 from ..shared.config import config
 from ..shared.exceptions import StageError
+
+# Set matplotlib backend BEFORE importing pyplot to avoid GUI issues on headless servers
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend - MUST be before pyplot import
 
 
 class OutputStage(Stage):
@@ -67,10 +72,10 @@ class OutputStage(Stage):
         # Emit progress
         await self.emit_progress(context["task_id"], 0.3, "Organizing output files")
 
-        # Copy final video to output directory if needed
+        # Copy final video to output directory if needed (use asyncio.to_thread for non-blocking)
         output_video_path = output_dir / f"{video_config.video_id}_final.mp4"
         if final_video_path != output_video_path:
-            shutil.copy(final_video_path, output_video_path)
+            await asyncio.to_thread(shutil.copy, final_video_path, output_video_path)
 
         # Emit progress
         await self.emit_progress(context["task_id"], 0.5, "Generating metadata")
@@ -82,13 +87,20 @@ class OutputStage(Stage):
         # Emit progress
         await self.emit_progress(context["task_id"], 0.7, "Creating thumbnail")
 
-        # Generate thumbnail
+        # Generate thumbnail with timeout
         thumbnail_path = output_dir / f"{video_config.video_id}_thumbnail.jpg"
-        await self._generate_thumbnail(output_video_path, thumbnail_path)
+        try:
+            await asyncio.wait_for(
+                self._generate_thumbnail(output_video_path, thumbnail_path),
+                timeout=30.0  # 30 second timeout for thumbnail
+            )
+        except asyncio.TimeoutError:
+            self.logger.warning("Thumbnail generation timed out, skipping")
 
-        # Copy additional files
+        # Copy additional files (non-blocking)
         if "timing_report" in context:
-            shutil.copy(
+            await asyncio.to_thread(
+                shutil.copy,
                 context["timing_report"],
                 output_dir / f"{video_config.video_id}_timing.json"
             )
@@ -134,9 +146,9 @@ class OutputStage(Stage):
         # Emit progress
         await self.emit_progress(context["task_id"], 0.2, "Combining scene videos")
 
-        # Combine videos
+        # Combine videos (run in thread pool to avoid blocking)
         final_video_path = output_dir / f"{video_config.video_id}_final.mp4"
-        await self._combine_videos(scene_videos, final_video_path)
+        await asyncio.to_thread(self._combine_videos_sync, scene_videos, final_video_path)
 
         # Emit progress
         await self.emit_progress(context["task_id"], 0.6, "Generating metadata")
@@ -148,13 +160,20 @@ class OutputStage(Stage):
         # Emit progress
         await self.emit_progress(context["task_id"], 0.8, "Creating thumbnail")
 
-        # Generate thumbnail
+        # Generate thumbnail with timeout
         thumbnail_path = output_dir / f"{video_config.video_id}_thumbnail.jpg"
-        await self._generate_thumbnail(final_video_path, thumbnail_path)
+        try:
+            await asyncio.wait_for(
+                self._generate_thumbnail(final_video_path, thumbnail_path),
+                timeout=30.0  # 30 second timeout for thumbnail
+            )
+        except asyncio.TimeoutError:
+            self.logger.warning("Thumbnail generation timed out, skipping")
 
-        # Copy additional files
+        # Copy additional files (non-blocking)
         if "timing_report" in context:
-            shutil.copy(
+            await asyncio.to_thread(
+                shutil.copy,
                 context["timing_report"],
                 output_dir / f"{video_config.video_id}_timing.json"
             )
@@ -181,10 +200,13 @@ class OutputStage(Stage):
             }
         )
 
-    async def _combine_videos(self, scene_videos: List[Path], output_path: Path):
-        """Combine scene videos into final video."""
+    def _combine_videos_sync(self, scene_videos: List[Path], output_path: Path):
+        """Combine scene videos into final video (synchronous version for thread pool)."""
         from moviepy import VideoFileClip, concatenate_videoclips
         import warnings
+
+        clips = []
+        final_clip = None
 
         try:
             # Filter warnings about corrupted frames (we'll handle them gracefully)
@@ -206,16 +228,12 @@ class OutputStage(Stage):
                     )
 
             # Load all scene clips with error handling
-            clips = []
             for video in scene_videos:
                 try:
                     clip = VideoFileClip(str(video), audio=True, fps_source='fps')
                     clips.append(clip)
                 except Exception as e:
                     self.logger.error(f"Failed to load video {video}: {e}")
-                    # Clean up any loaded clips
-                    for c in clips:
-                        c.close()
                     raise
 
             # Concatenate with method="compose" to handle varying dimensions
@@ -239,20 +257,31 @@ class OutputStage(Stage):
                 ]
             )
 
-            # Clean up
-            final_clip.close()
-            for clip in clips:
-                clip.close()
-
-            # Restore warnings
-            warnings.filterwarnings('default')
-
         except Exception as e:
             raise StageError(
                 f"Failed to combine videos: {e}",
                 stage=self.name,
                 details={"error": str(e), "scene_count": len(scene_videos)}
             )
+
+        finally:
+            # Always clean up resources
+            if final_clip is not None:
+                try:
+                    final_clip.close()
+                except Exception:
+                    pass
+            for clip in clips:
+                try:
+                    clip.close()
+                except Exception:
+                    pass
+            # Restore warnings
+            warnings.filterwarnings('default')
+
+    async def _combine_videos(self, scene_videos: List[Path], output_path: Path):
+        """Combine scene videos into final video (async wrapper)."""
+        await asyncio.to_thread(self._combine_videos_sync, scene_videos, output_path)
 
     async def _generate_metadata(
         self,
@@ -291,25 +320,42 @@ class OutputStage(Stage):
             ]
         }
 
-        with open(output_path, 'w') as f:
-            json.dump(metadata, f, indent=2)
+        # Write metadata (use to_thread for non-blocking)
+        def write_json():
+            with open(output_path, 'w') as f:
+                json.dump(metadata, f, indent=2)
+
+        await asyncio.to_thread(write_json)
 
     async def _generate_thumbnail(self, video_path: Path, output_path: Path):
         """Generate video thumbnail."""
-        from moviepy import VideoFileClip
+        # Run thumbnail generation in thread pool to avoid blocking
+        await asyncio.to_thread(self._generate_thumbnail_sync, video_path, output_path)
 
+    def _generate_thumbnail_sync(self, video_path: Path, output_path: Path):
+        """Generate video thumbnail (synchronous version for thread pool)."""
+        from moviepy import VideoFileClip
+        import matplotlib.pyplot as plt
+
+        clip = None
         try:
             clip = VideoFileClip(str(video_path))
             # Extract frame from middle of video
             frame_time = clip.duration / 2
             frame = clip.get_frame(frame_time)
 
-            # Save as image
-            import matplotlib.pyplot as plt
+            # Save as image (matplotlib already configured with Agg backend at module level)
             plt.imsave(str(output_path), frame)
-
-            clip.close()
+            plt.close('all')  # Clean up any matplotlib resources
 
         except Exception as e:
             self.logger.warning(f"Failed to generate thumbnail: {e}")
             # Thumbnail generation is optional, don't fail the stage
+
+        finally:
+            # Always clean up clip resources
+            if clip is not None:
+                try:
+                    clip.close()
+                except Exception:
+                    pass
