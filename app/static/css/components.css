@@ -60,17 +60,13 @@ textarea.border-green-500 {
 input.border-red-500:focus,
 textarea.border-red-500:focus {
     outline: none;
-    ring: 2px;
-    ring-color: #EF4444;
-    ring-opacity: 0.5;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5);
 }
 
 input.border-green-500:focus,
 textarea.border-green-500:focus {
     outline: none;
-    ring: 2px;
-    ring-color: #10B981;
-    ring-opacity: 0.5;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
 }
 
 /* ========================================
