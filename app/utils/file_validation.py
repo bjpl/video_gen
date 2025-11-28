@@ -55,8 +55,8 @@ BINARY_SIGNATURES = [
     (b'OggS', 'OGG audio'),
 ]
 
-# Characters not allowed in filenames
-UNSAFE_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+# Characters not allowed in filenames (includes shell metacharacters)
+UNSAFE_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f;`$()&!#]')
 PATH_TRAVERSAL_PATTERN = re.compile(r'\.\.[\\/]|[\\/]\.\.')
 
 
@@ -454,8 +454,12 @@ def validate_upload(
     if not validate_content_type(content_type) and content_type not in ['', None]:
         warnings.append(f"Unusual content type: {content_type}")
 
+    # Check for empty content
+    if len(content) == 0:
+        errors.append("Empty file. Please upload a file with content.")
+
     # Check for binary content
-    if is_binary_content(content):
+    if len(content) > 0 and is_binary_content(content):
         errors.append("Binary content detected. Please upload a text file.")
 
     # Sanitize filename

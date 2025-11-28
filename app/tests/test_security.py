@@ -709,6 +709,7 @@ class TestDoSPrevention:
         assert response.status_code in [400, 422, 500]
 
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="SIGALRM not available on Windows")
     def test_regex_dos_prevention(self, authenticated_client):
         """Test prevention of ReDoS (Regular Expression DoS)."""
         # Pattern that can cause catastrophic backtracking

@@ -458,6 +458,20 @@ async def parse_document(input: DocumentInput, background_tasks: BackgroundTasks
         # Strip any surrounding quotes from the path (handles copy-paste with quotes)
         document_path = str(input.content).strip().strip('"').strip("'")
 
+        # Security: Validate path doesn't contain traversal attempts
+        if '..' in document_path or document_path.startswith('/etc') or document_path.startswith('/proc'):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid document path: Path traversal not allowed"
+            )
+
+        # Security: Check for Windows sensitive paths
+        if any(p in document_path.lower() for p in ['\\windows\\', '\\system32\\', 'c:\\windows']):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid document path: Access to system directories not allowed"
+            )
+
         input_config = InputConfig(
             input_type="document",
             source=document_path,  # Cleaned document path
@@ -533,14 +547,12 @@ async def upload_document(
         uploads_dir = Path(__file__).parent.parent / "uploads"
         uploads_dir.mkdir(exist_ok=True)
 
-        # Sanitize filename: remove dangerous characters, unicode tricks, path traversal
-        sanitized_filename = file.filename.replace(" ", "_")
-        # Remove unicode control characters (RTLO, etc.)
+        # Sanitize filename using comprehensive validation
+        sanitized_filename = sanitize_filename(file.filename)
+        # Additional removal of unicode control characters (RTLO, etc.)
         sanitized_filename = ''.join(c for c in sanitized_filename if ord(c) < 0x202A or ord(c) > 0x202E)
         # Remove null bytes
         sanitized_filename = sanitized_filename.replace('\x00', '')
-        # Remove path separators
-        sanitized_filename = sanitized_filename.replace('/', '_').replace('\\', '_').replace('..', '_')
         upload_path = uploads_dir / f"{task_id}_{sanitized_filename}"
 
         with open(upload_path, "wb") as f:
@@ -1334,7 +1346,12 @@ async def get_task_status(task_id: str):
     """
     try:
         pipeline = get_pipeline()
-        task_state = pipeline.state_manager.load(task_id)
+        try:
+            task_state = pipeline.state_manager.load(task_id)
+        except Exception as load_error:
+            # State loading failed - task doesn't exist
+            logger.debug(f"Task not found: {task_id} - {load_error}")
+            raise HTTPException(status_code=404, detail="Task not found")
 
         if not task_state:
             raise HTTPException(status_code=404, detail="Task not found")
