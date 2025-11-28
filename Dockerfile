@@ -1,8 +1,26 @@
 # Video Generation System - Production Dockerfile
 # Multi-stage build for optimized image size
 
-# Stage 1: Build stage
-FROM python:3.12-slim as builder
+# Stage 1: Frontend build stage (Node.js for Tailwind CSS)
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /frontend
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production 2>/dev/null || npm install
+
+# Copy Tailwind config and source files
+COPY tailwind.config.js postcss.config.js ./
+COPY app/static/css/src/ ./app/static/css/src/
+COPY app/templates/ ./app/templates/
+COPY app/static/js/ ./app/static/js/
+
+# Build production CSS
+RUN npm run build:css
+
+# Stage 2: Python build stage
+FROM python:3.12-slim AS builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -26,7 +44,7 @@ COPY requirements.txt /tmp/
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r /tmp/requirements.txt
 
-# Stage 2: Runtime stage
+# Stage 3: Runtime stage
 FROM python:3.12-slim
 
 # Set environment variables
@@ -54,6 +72,9 @@ WORKDIR /app
 
 # Copy application code
 COPY --chown=videogen:videogen . .
+
+# Copy built Tailwind CSS from frontend builder
+COPY --from=frontend-builder --chown=videogen:videogen /frontend/app/static/css/tailwind.min.css /app/app/static/css/tailwind.min.css
 
 # Create necessary directories
 RUN mkdir -p \

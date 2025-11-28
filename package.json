@@ -1,0 +1,21 @@
+{
+  "name": "video-gen-frontend",
+  "version": "2.0.0",
+  "description": "Video Generation System - Frontend Build Tools",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./app/static/css/src/main.css -o ./app/static/css/tailwind.min.css --minify",
+    "build:css:dev": "tailwindcss -i ./app/static/css/src/main.css -o ./app/static/css/tailwind.min.css",
+    "watch:css": "tailwindcss -i ./app/static/css/src/main.css -o ./app/static/css/tailwind.min.css --watch",
+    "build": "npm run build:css",
+    "dev": "npm run watch:css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

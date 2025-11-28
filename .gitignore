@@ -1,3 +1,10 @@
+# Node.js (Tailwind build)
+node_modules/
+package-lock.json
+
+# Generated CSS (built during Docker build)
+app/static/css/tailwind.min.css
+
 # Python
 __pycache__/
 *.py[cod]
