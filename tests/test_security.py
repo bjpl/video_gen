@@ -43,6 +43,7 @@ class TestPathTraversalProtection:
             assert ("outside workspace directory" in result.error or
                     "outside project directory" in result.error or
                     "system directories denied" in result.error or
+                    "path traversal" in result.error.lower() or
                     "not found" in result.error.lower())
 
     @pytest.mark.asyncio
