@@ -516,20 +516,35 @@ async def upload_document(
                 detail=f"Unsupported file type: {file_ext}. Allowed: {', '.join(allowed_extensions)}"
             )
 
-        # Generate task ID
-        task_id = f"upload_{int(time.time())}"
+        # File size validation (max 10MB)
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB"
+            )
+        # Content already read above, no need to read again
+
+        # Generate task ID with millisecond precision and random suffix for uniqueness
+        task_id = f"upload_{int(time.time() * 1000)}_{secrets.token_hex(4)}"
 
         # Create uploads directory if it doesn't exist
         uploads_dir = Path(__file__).parent.parent / "uploads"
         uploads_dir.mkdir(exist_ok=True)
 
-        # Save uploaded file with task_id prefix and sanitized filename
-        sanitized_filename = file.filename.replace(" ", "_")  # Basic sanitization
+        # Sanitize filename: remove dangerous characters, unicode tricks, path traversal
+        sanitized_filename = file.filename.replace(" ", "_")
+        # Remove unicode control characters (RTLO, etc.)
+        sanitized_filename = ''.join(c for c in sanitized_filename if ord(c) < 0x202A or ord(c) > 0x202E)
+        # Remove null bytes
+        sanitized_filename = sanitized_filename.replace('\x00', '')
+        # Remove path separators
+        sanitized_filename = sanitized_filename.replace('/', '_').replace('\\', '_').replace('..', '_')
         upload_path = uploads_dir / f"{task_id}_{sanitized_filename}"
 
         with open(upload_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
+            f.write(content)  # Use content already read during size validation
 
         logger.info(f"File uploaded: {upload_path} ({len(content)} bytes)")
 
@@ -566,8 +581,8 @@ async def upload_document(
         return {
             "task_id": task_id,
             "status": "started",
-            "message": f"File '{file.filename}' uploaded successfully and processing started",
-            "filename": file.filename,
+            "message": f"File '{sanitized_filename}' uploaded successfully and processing started",
+            "filename": sanitized_filename,
             "size": len(content)
         }
 
