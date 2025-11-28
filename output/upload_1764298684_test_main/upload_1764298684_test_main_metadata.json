@@ -1,0 +1,33 @@
+{
+  "video_id": "upload_1764298684_test_main",
+  "title": "Test",
+  "description": "Generated from C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\uploads\\upload_1764298684_test.md",
+  "language": "en",
+  "total_duration": 10.86,
+  "scene_count": 3,
+  "generated_at": "2025-11-27T18:58:37.154643",
+  "pipeline": {
+    "task_id": "upload_1764298684",
+    "input_type": "document"
+  },
+  "scenes": [
+    {
+      "scene_id": "upload_1764298684_test_main_title",
+      "type": "title",
+      "title": "Test",
+      "duration": 3.0
+    },
+    {
+      "scene_id": "upload_1764298684_test_main_list_0",
+      "type": "list",
+      "title": "upload_1764298684_test_main_list_0",
+      "duration": 3.0
+    },
+    {
+      "scene_id": "upload_1764298684_test_main_outro",
+      "type": "outro",
+      "title": "upload_1764298684_test_main_outro",
+      "duration": 4.859999999999999
+    }
+  ]
+}

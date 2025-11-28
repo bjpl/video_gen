@@ -1,0 +1,27 @@
+{
+  "video_id": "upload_1764315505828_aedcc05a_huge_main",
+  "title": "",
+  "description": "Generated from C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\uploads\\upload_1764315505828_aedcc05a_huge.md",
+  "language": "en",
+  "total_duration": 12.0,
+  "scene_count": 2,
+  "generated_at": "2025-11-27T23:39:04.131724",
+  "pipeline": {
+    "task_id": "upload_1764315505828_aedcc05a",
+    "input_type": "document"
+  },
+  "scenes": [
+    {
+      "scene_id": "upload_1764315505828_aedcc05a_huge_main_title",
+      "type": "title",
+      "title": "",
+      "duration": 6.0
+    },
+    {
+      "scene_id": "upload_1764315505828_aedcc05a_huge_main_outro",
+      "type": "outro",
+      "title": "upload_1764315505828_aedcc05a_huge_main_outro",
+      "duration": 6.0
+    }
+  ]
+}

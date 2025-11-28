@@ -14,7 +14,15 @@ def main():
     print("=" * 60)
 
     # Get port from environment (Railway provides PORT)
-    port = os.environ.get("PORT", "8000")
+    port_raw = os.environ.get("PORT", "8000")
+
+    # Handle case where PORT might be set to literal "$PORT" string
+    if port_raw == "$PORT" or not port_raw.isdigit():
+        print(f"WARNING: Invalid PORT value '{port_raw}', defaulting to 8000")
+        port = "8000"
+    else:
+        port = port_raw
+
     host = os.environ.get("HOST", "0.0.0.0")
 
     print(f"PORT: {port}")

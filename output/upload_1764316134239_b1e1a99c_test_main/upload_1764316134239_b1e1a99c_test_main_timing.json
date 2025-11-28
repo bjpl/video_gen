@@ -1,0 +1,77 @@
+{
+  "video_id": "upload_1764316134239_b1e1a99c_test_main",
+  "title": "Test",
+  "total_duration": 18.0,
+  "total_scenes": 3,
+  "voices_config": [
+    "male"
+  ],
+  "audio_dir": "C:\\Users\\brand\\Development\\Project_Workspace\\active-development\\video_gen\\tests\\..\\audio\\unified_system\\upload_1764316134239_b1e1a99c_test_main_audio",
+  "accent_color": [
+    59,
+    130,
+    246
+  ],
+  "scenes": [
+    {
+      "scene_id": "upload_1764316134239_b1e1a99c_test_main_title",
+      "type": "title",
+      "voice": "male",
+      "start_time": 0,
+      "end_time": 6.0,
+      "duration": 6.0,
+      "audio_duration": 5.0,
+      "padding": 1.0,
+      "narration_preview": "Welcome to Test",
+      "visual_content": {
+        "title": "Test",
+        "subtitle": "Test",
+        "parsed_content": {
+          "success": false,
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "scene_id": "upload_1764316134239_b1e1a99c_test_main_list_0",
+      "type": "list",
+      "voice": "male",
+      "start_time": 6.0,
+      "end_time": 12.0,
+      "duration": 6.0,
+      "audio_duration": 5.0,
+      "padding": 1.0,
+      "narration_preview": "About overview",
+      "visual_content": {
+        "header": "Overview",
+        "description": "Content from Test",
+        "items": [
+          "Content from Test"
+        ],
+        "parsed_content": {
+          "success": false,
+          "metadata": {}
+        }
+      }
+    },
+    {
+      "scene_id": "upload_1764316134239_b1e1a99c_test_main_outro",
+      "type": "outro",
+      "voice": "male",
+      "start_time": 12.0,
+      "end_time": 18.0,
+      "duration": 6.0,
+      "audio_duration": 5.0,
+      "padding": 1.0,
+      "narration_preview": "Thanks for watching! Check out the documentation for more details.",
+      "visual_content": {
+        "main_text": "Learn More",
+        "sub_text": "See Full Documentation",
+        "parsed_content": {
+          "success": false,
+          "metadata": {}
+        }
+      }
+    }
+  ]
+}

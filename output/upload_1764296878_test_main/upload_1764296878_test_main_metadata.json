@@ -1,0 +1,51 @@
+{
+  "video_id": "upload_1764296878_test_main",
+  "title": "Complete Python Tutorial",
+  "description": "Generated from /mnt/c/Users/brand/Development/Project_Workspace/active-development/video_gen/uploads/upload_1764296878_test.md",
+  "language": "en",
+  "total_duration": 28.82,
+  "scene_count": 6,
+  "generated_at": "2025-11-27T18:29:13.141373",
+  "pipeline": {
+    "task_id": "upload_1764296878",
+    "input_type": "document"
+  },
+  "scenes": [
+    {
+      "scene_id": "upload_1764296878_test_main_title",
+      "type": "title",
+      "title": "Complete Python Tutorial",
+      "duration": 3.62
+    },
+    {
+      "scene_id": "upload_1764296878_test_main_list_0",
+      "type": "list",
+      "title": "upload_1764296878_test_main_list_0",
+      "duration": 9.42
+    },
+    {
+      "scene_id": "upload_1764296878_test_main_command_1",
+      "type": "command",
+      "title": "upload_1764296878_test_main_command_1",
+      "duration": 3.62
+    },
+    {
+      "scene_id": "upload_1764296878_test_main_command_2",
+      "type": "command",
+      "title": "upload_1764296878_test_main_command_2",
+      "duration": 4.220000000000001
+    },
+    {
+      "scene_id": "upload_1764296878_test_main_list_3",
+      "type": "list",
+      "title": "upload_1764296878_test_main_list_3",
+      "duration": 3.0
+    },
+    {
+      "scene_id": "upload_1764296878_test_main_outro",
+      "type": "outro",
+      "title": "upload_1764296878_test_main_outro",
+      "duration": 4.9399999999999995
+    }
+  ]
+}
