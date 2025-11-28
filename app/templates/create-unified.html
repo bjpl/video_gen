@@ -1943,14 +1943,46 @@ function unifiedCreator() {
                         video_count: videoCount
                     };
                 } else if (this.inputMethod === 'document' || this.inputType === 'file' || this.inputType === 'text') {
+                    // Handle file uploads separately from text/URL input
+                    if (this.inputType === 'file' && this.inputData.file) {
+                        // File upload - use multipart form endpoint
+                        endpoint = '/api/upload/document';
+
+                        // Build FormData for file upload
+                        const formData = new FormData();
+                        formData.append('file', this.inputData.file);
+                        formData.append('accent_color', this.config.color);
+                        formData.append('voice', this.config.primaryVoice);
+                        formData.append('video_count', videoCount);
+
+                        console.log('Calling endpoint:', endpoint);
+                        this.generationProgress = 20;
+                        this.generationStatus = 'Uploading document...';
+
+                        // Use secure form upload with CSRF
+                        const response = await this._secureFormPost(endpoint, formData);
+
+                        this.generationProgress = 40;
+                        this.generationStatus = 'Generating video...';
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            this.generatedJobId = result.task_id;
+                            await this.pollJobStatus(result.task_id);
+                        } else {
+                            const error = await response.json();
+                            throw new Error(error.detail || 'Upload failed');
+                        }
+                        return;  // Exit early - file upload handled
+                    }
+
+                    // Text or URL input - use JSON endpoint
                     endpoint = '/api/parse/document';
 
-                    // Determine content source: text input, file content, or URL
+                    // Determine content source: text input or URL
                     let content = '';
                     if (this.inputType === 'text') {
                         content = this.inputData.text;
-                    } else if (this.inputType === 'file') {
-                        content = this.inputData.fileContent;
                     } else if (this.inputType === 'url') {
                         content = window.securityUtils ? window.securityUtils.sanitizeUrl(this.inputData.url) : this.inputData.url;
                     }
@@ -1962,8 +1994,8 @@ function unifiedCreator() {
                         accent_color: this.config.color,
                         voice: this.config.primaryVoice,
                         video_count: videoCount,
-                        split_strategy: this.config.splitStrategy,  // ✨ NEW: Intelligent splitting
-                        enable_ai_splitting: this.config.enableAISplitting  // ✨ NEW: AI toggle
+                        split_strategy: this.config.splitStrategy,
+                        enable_ai_splitting: this.config.enableAISplitting
                     };
                 } else {
                     throw new Error('Unknown input method');
@@ -2037,6 +2069,32 @@ function unifiedCreator() {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(payload)
+            });
+        },
+
+        /**
+         * Secure POST request for FormData (file uploads) with CSRF token
+         */
+        async _secureFormPost(url, formData) {
+            // Use securityUtils if available
+            if (window.securityUtils) {
+                return window.securityUtils.secureFetch(url, {
+                    method: 'POST',
+                    body: formData  // No Content-Type header - browser sets multipart boundary
+                });
+            }
+
+            // Fallback: try to get CSRF token from meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const headers = {};  // Don't set Content-Type for FormData
+            if (csrfToken) {
+                headers['X-CSRF-Token'] = csrfToken;
+            }
+
+            return fetch(url, {
+                method: 'POST',
+                headers: headers,
+                body: formData
             });
         },
 
