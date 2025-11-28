@@ -72,15 +72,16 @@ USER videogen
 # Expose port (Railway provides $PORT, default 8000 for local)
 EXPOSE 8000
 
-# Set default port (Railway overrides with $PORT)
+# Set default port and PYTHONPATH (Railway overrides PORT)
 ENV PORT=8000
+ENV PYTHONPATH=/app:/app/scripts
 
 # Health check - using /api/health endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=5 \
     CMD curl -f http://localhost:${PORT}/api/health || exit 1
 
-# Default command - runs the web UI on dynamic port
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Default command - use startup script for better diagnostics
+CMD ["python", "start.py"]
 
 # Alternative commands (override with docker run):
 # For CLI mode: docker run video-gen python scripts/create_video.py --help
