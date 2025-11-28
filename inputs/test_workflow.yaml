@@ -1,0 +1,51 @@
+# Test Video for Workflow Investigation
+# =======================================
+# A simple test to demonstrate the complete workflow
+
+video:
+  id: "test_workflow_demo"
+  title: "Workflow Test"
+  description: "Testing the complete video generation pipeline"
+  accent_color: blue
+  voice: male
+  version: "v1.0"
+
+scenes:
+  - type: title
+    title: "Workflow Test"
+    subtitle: "Demonstrating the Pipeline"
+    key_message: "This is a test of the video generation system"
+    voice: male
+
+  - type: list
+    header: "Pipeline Stages"
+    description: "Six Key Stages"
+    topic: "The video generation process follows these stages"
+    items:
+      - title: "Input Processing"
+        description: "Accept various input formats"
+      - title: "Script Generation"
+        description: "Create narration text"
+      - title: "Audio Synthesis"
+        description: "Generate TTS audio"
+      - title: "Video Rendering"
+        description: "Create visual frames"
+    voice: female
+
+  - type: command
+    header: "Quick Start"
+    description: "Generate a Video"
+    topic: "Run this simple command to create a video"
+    commands:
+      - "python create_video.py --yaml inputs/test.yaml"
+      - "# Video generated in ~40 seconds"
+    key_points:
+      - One command execution
+      - Automatic pipeline processing
+    voice: male
+
+  - type: outro
+    main_text: "Test Complete"
+    sub_text: "Pipeline Working"
+    key_message: "The workflow has been successfully demonstrated"
+    voice: male

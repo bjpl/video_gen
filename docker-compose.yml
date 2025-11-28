@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # Main video generation service
+  video-gen:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: video-gen:latest
+    container_name: video-gen-app
+    ports:
+      - "8000:8000"
+    environment:
+      # Application settings
+      - ENVIRONMENT=production
+      - PORT=8000
+
+      # Optional: Anthropic API key for AI-enhanced narration
+      # Set in .env file or docker-compose.override.yml
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # Performance settings
+      - GPU_ENABLED=${GPU_ENABLED:-true}
+      - PARALLEL_PROCESSING=${PARALLEL_PROCESSING:-true}
+    volumes:
+      # Persist outputs
+      - ./outputs:/app/outputs
+
+      # Persist cache for faster regeneration
+      - ./cache:/app/cache
+
+      # Persist logs
+      - ./logs:/app/logs
+
+      # Optional: Mount custom inputs
+      - ./inputs:/app/inputs:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - video-gen-network
+    # Uncomment for GPU support (requires nvidia-docker)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Optional: Redis for job queue (future enhancement)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: video-gen-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - video-gen-network
+
+  # Optional: PostgreSQL for multi-user deployment
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: video-gen-db
+  #   environment:
+  #     - POSTGRES_USER=${DB_USER:-videogen}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+  #     - POSTGRES_DB=${DB_NAME:-videogen}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+  #   networks:
+  #     - video-gen-network
+
+  # Optional: Nginx reverse proxy
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: video-gen-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./ssl:/etc/nginx/ssl:ro
+  #   depends_on:
+  #     - video-gen
+  #   restart: unless-stopped
+  #   networks:
+  #     - video-gen-network
+
+networks:
+  video-gen-network:
+    driver: bridge
+
+volumes:
+  # redis-data:
+  # postgres-data:
+  outputs:
+  cache:
+  logs:

@@ -1,292 +1,232 @@
 """
-Pytest Configuration and Fixtures
-==================================
+Pytest configuration and shared fixtures for video_gen UI tests.
 
-Shared fixtures and configuration for all test suites.
+This file provides:
+- Test client setup for FastAPI
+- Temporary directories for file operations
+- Mock data generators
+- Async test utilities
 """
 
 import pytest
+import asyncio
+import tempfile
+import shutil
+from pathlib import Path
+from typing import Generator, AsyncGenerator
 import sys
 import os
-from pathlib import Path
-from io import BytesIO
 
-# Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+# Add app directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-# Import FastAPI app
-from app.main import app
 from fastapi.testclient import TestClient
+from app.main import app
+import json
 
-
-# ============================================================================
-# Test Client Fixtures
-# ============================================================================
 
 @pytest.fixture(scope="session")
-def app_instance():
-    """Get the FastAPI application instance."""
-    return app
+def event_loop():
+    """Create event loop for async tests."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture
-def client():
-    """Create a test client with CSRF disabled for testing."""
-    os.environ["CSRF_DISABLED"] = "true"
-    with TestClient(app) as c:
-        yield c
-    os.environ.pop("CSRF_DISABLED", None)
+def client() -> Generator:
+    """Create test client for FastAPI app."""
+    with TestClient(app) as test_client:
+        yield test_client
 
 
 @pytest.fixture
-def authenticated_client():
-    """Create a test client with authentication (if needed)."""
-    os.environ["CSRF_DISABLED"] = "true"
-    with TestClient(app) as c:
-        # Add any auth headers here if needed
-        yield c
-    os.environ.pop("CSRF_DISABLED", None)
+def authenticated_client(client: TestClient) -> TestClient:
+    """Create test client with CSRF token."""
+    # Get CSRF token
+    response = client.get("/api/csrf-token")
+    token = response.json().get("token", "test-token")
 
+    # Set token in headers
+    client.headers["X-CSRF-Token"] = token
+    return client
 
-# ============================================================================
-# HTML Parser Fixture
-# ============================================================================
 
 @pytest.fixture
-def html_parser():
-    """Helper to parse HTML responses."""
-    from bs4 import BeautifulSoup
+def temp_dir() -> Generator[Path, None, None]:
+    """Create temporary directory for test files."""
+    temp_path = Path(tempfile.mkdtemp(prefix="test_video_gen_"))
+    yield temp_path
+    # Cleanup
+    shutil.rmtree(temp_path, ignore_errors=True)
 
-    def parse(response):
-        return BeautifulSoup(response.content, 'html.parser')
-
-    return parse
-
-
-# ============================================================================
-# Sample Data Fixtures
-# ============================================================================
 
 @pytest.fixture
-def sample_markdown():
-    """Sample markdown content for testing."""
-    return b"""# Test Document
+def sample_markdown() -> str:
+    """Sample markdown document for testing."""
+    return """# Test Video
 
-## Introduction
+This is a test document for the video generation system.
 
-This is a test document for testing purposes.
+## Features
 
-- Point one
-- Point two
-- Point three
+- Bullet point 1
+- Bullet point 2
+- Bullet point 3
 
 ## Code Example
 
 ```python
-def hello():
+def hello_world():
     print("Hello, World!")
 ```
 
 ## Conclusion
 
-Thank you for reading.
+This concludes our test document.
 """
 
 
 @pytest.fixture
-def sample_markdown_file(sample_markdown):
-    """Create a file-like object with markdown content."""
+def sample_yaml_config() -> dict:
+    """Sample YAML configuration for video generation."""
     return {
-        "filename": "test_document.md",
-        "content": sample_markdown,
-        "content_type": "text/markdown"
-    }
-
-
-@pytest.fixture
-def sample_large_markdown():
-    """Generate large markdown content for performance testing."""
-    content = b"# Large Document\n\n"
-    for i in range(50):
-        content += f"## Section {i+1}\n\nContent for section {i+1}.\n\n".encode()
-        content += b"- Item 1\n- Item 2\n- Item 3\n\n"
-    return content
-
-
-# ============================================================================
-# Selenium Browser Fixtures
-# ============================================================================
-
-try:
-    from selenium import webdriver
-    from selenium.webdriver.chrome.options import Options as ChromeOptions
-    from selenium.webdriver.firefox.options import Options as FirefoxOptions
-    SELENIUM_AVAILABLE = True
-except ImportError:
-    SELENIUM_AVAILABLE = False
-
-
-@pytest.fixture
-def browser():
-    """Create a headless Chrome browser for E2E tests."""
-    if not SELENIUM_AVAILABLE:
-        pytest.skip("Selenium not installed")
-
-    options = ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--window-size=1920,1080')
-
-    try:
-        driver = webdriver.Chrome(options=options)
-        driver.implicitly_wait(10)
-        yield driver
-    except Exception as e:
-        pytest.skip(f"Chrome WebDriver not available: {e}")
-    finally:
-        if 'driver' in locals():
-            driver.quit()
-
-
-@pytest.fixture
-def firefox_browser():
-    """Create a headless Firefox browser for E2E tests."""
-    if not SELENIUM_AVAILABLE:
-        pytest.skip("Selenium not installed")
-
-    options = FirefoxOptions()
-    options.add_argument('--headless')
-
-    try:
-        driver = webdriver.Firefox(options=options)
-        driver.implicitly_wait(10)
-        yield driver
-    except Exception as e:
-        pytest.skip(f"Firefox WebDriver not available: {e}")
-    finally:
-        if 'driver' in locals():
-            driver.quit()
-
-
-@pytest.fixture
-def app_url():
-    """Base URL for the application."""
-    return os.environ.get("TEST_APP_URL", "http://localhost:8000")
-
-
-# ============================================================================
-# Test Data Fixtures
-# ============================================================================
-
-@pytest.fixture
-def valid_youtube_url():
-    """A valid YouTube URL for testing."""
-    return "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
-
-@pytest.fixture
-def invalid_youtube_url():
-    """An invalid YouTube URL for testing."""
-    return "https://vimeo.com/123456789"
-
-
-@pytest.fixture
-def sample_video_set():
-    """Sample video set configuration."""
-    return {
-        "set_id": "test_set",
-        "set_name": "Test Video Set",
-        "videos": [
+        "video": {
+            "id": "test_video",
+            "title": "Test Video",
+            "description": "Test video for automated testing",
+            "accent_color": "blue",
+            "voice": "male"
+        },
+        "scenes": [
             {
-                "video_id": "test_video_1",
-                "title": "Test Video",
-                "scenes": [
-                    {"type": "title", "title": "Welcome", "subtitle": "Test"},
-                    {"type": "list", "items": ["Point 1", "Point 2"]},
-                    {"type": "outro", "message": "Thank you"}
-                ],
+                "type": "title",
+                "title": "Test Title",
+                "subtitle": "Test Subtitle",
+                "voice": "male"
+            },
+            {
+                "type": "list",
+                "header": "Test List",
+                "items": ["Item 1", "Item 2", "Item 3"],
+                "voice": "female"
+            },
+            {
+                "type": "outro",
+                "main_text": "Test Complete",
+                "sub_text": "Thank you",
                 "voice": "male"
             }
-        ],
-        "accent_color": "blue"
+        ]
     }
 
 
-# ============================================================================
-# Pytest Configuration
-# ============================================================================
+@pytest.fixture
+def sample_video_request() -> dict:
+    """Sample video generation request."""
+    return {
+        "input_type": "manual",
+        "title": "Test Video",
+        "scenes": [
+            {
+                "type": "title",
+                "title": "Test Title",
+                "subtitle": "Test Subtitle"
+            },
+            {
+                "type": "list",
+                "header": "Test Items",
+                "items": ["First", "Second", "Third"]
+            }
+        ],
+        "voice": "male",
+        "accent_color": "blue",
+        "duration": 60
+    }
 
-def pytest_configure(config):
-    """Register custom markers."""
-    config.addinivalue_line("markers", "e2e: End-to-end tests")
-    config.addinivalue_line("markers", "integration: Integration tests")
-    config.addinivalue_line("markers", "performance: Performance tests")
-    config.addinivalue_line("markers", "accessibility: Accessibility tests")
-    config.addinivalue_line("markers", "browser: Browser-based tests")
-    config.addinivalue_line("markers", "chrome: Chrome-specific tests")
-    config.addinivalue_line("markers", "firefox: Firefox-specific tests")
-    config.addinivalue_line("markers", "mobile: Mobile browser tests")
-    config.addinivalue_line("markers", "error: Error handling tests")
-    config.addinivalue_line("markers", "security: Security tests")
-    config.addinivalue_line("markers", "slow: Slow running tests")
-
-
-def pytest_collection_modifyitems(config, items):
-    """Modify test collection based on markers."""
-    # Skip browser tests if Selenium not available
-    if not SELENIUM_AVAILABLE:
-        skip_selenium = pytest.mark.skip(reason="Selenium not installed")
-        for item in items:
-            if "browser" in item.keywords or "chrome" in item.keywords or "firefox" in item.keywords:
-                item.add_marker(skip_selenium)
-
-
-# ============================================================================
-# Performance Testing Utilities
-# ============================================================================
 
 @pytest.fixture
-def timing():
-    """Utility for timing code execution."""
-    import time
+def sample_document_file(temp_dir: Path) -> Path:
+    """Create a sample markdown file."""
+    file_path = temp_dir / "test_document.md"
+    file_path.write_text("""# Test Document
 
-    class Timer:
-        def __init__(self):
-            self.start_time = None
-            self.end_time = None
+## Introduction
+This is a test document.
 
-        def start(self):
-            self.start_time = time.time()
-            return self
+## Main Content
+- Point 1
+- Point 2
+- Point 3
 
-        def stop(self):
-            self.end_time = time.time()
-            return self
-
-        @property
-        def duration(self):
-            if self.start_time and self.end_time:
-                return self.end_time - self.start_time
-            return None
-
-        def assert_faster_than(self, seconds):
-            assert self.duration is not None, "Timer not started/stopped"
-            assert self.duration < seconds, f"Took {self.duration:.2f}s (limit: {seconds}s)"
-
-    return Timer()
+## Conclusion
+End of document.
+""")
+    return file_path
 
 
-# ============================================================================
-# Cleanup Fixtures
-# ============================================================================
+@pytest.fixture
+def malicious_payloads() -> dict:
+    """Common malicious payloads for security testing."""
+    return {
+        "xss": "<script>alert('XSS')</script>",
+        "sql_injection": "'; DROP TABLE users; --",
+        "path_traversal": "../../etc/passwd",
+        "command_injection": "; rm -rf /",
+        "xxe": '<?xml version="1.0"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]><foo>&xxe;</foo>',
+        "large_string": "A" * 1000000,  # 1MB string
+        "null_byte": "test.pdf\x00.exe",
+        "unicode": "test\u202e\u0000\ufff0"
+    }
 
-@pytest.fixture(autouse=True)
-def cleanup_env():
-    """Clean up environment variables after each test."""
+
+@pytest.fixture
+def mock_pipeline_response() -> dict:
+    """Mock response from video generation pipeline."""
+    return {
+        "task_id": "test_task_123",
+        "status": "processing",
+        "progress": 0.5,
+        "message": "Generating video...",
+        "stages": [
+            {"name": "input", "status": "completed"},
+            {"name": "parsing", "status": "completed"},
+            {"name": "script", "status": "processing"},
+            {"name": "audio", "status": "pending"},
+            {"name": "video", "status": "pending"},
+            {"name": "output", "status": "pending"}
+        ]
+    }
+
+
+@pytest.fixture
+async def async_client():
+    """Async test client for FastAPI."""
+    from httpx import AsyncClient
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
+
+
+# Markers for test organization
+pytest.mark.unit = pytest.mark.unit
+pytest.mark.integration = pytest.mark.integration
+pytest.mark.e2e = pytest.mark.e2e
+pytest.mark.security = pytest.mark.security
+pytest.mark.performance = pytest.mark.performance
+pytest.mark.slow = pytest.mark.slow
+
+
+# Test environment configuration
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_env():
+    """Setup test environment variables."""
+    os.environ["TESTING"] = "true"
+    os.environ["LOG_LEVEL"] = "DEBUG"
+    # Don't use real API keys in tests
+    if "ANTHROPIC_API_KEY" in os.environ:
+        del os.environ["ANTHROPIC_API_KEY"]
     yield
-    # Clean up any test environment variables
-    for key in list(os.environ.keys()):
-        if key.startswith("TEST_"):
-            del os.environ[key]
+    # Cleanup
+    if "TESTING" in os.environ:
+        del os.environ["TESTING"]

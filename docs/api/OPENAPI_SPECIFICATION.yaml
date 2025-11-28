@@ -1,0 +1,675 @@
+openapi: 3.0.0
+info:
+  title: Video Generation API
+  version: 2.0.0
+  description: |
+    Professional video generation system that automates creation of tutorial and documentation videos
+    from various content sources with neural text-to-speech narration and synchronized visual rendering.
+
+    ## Features
+    - Multiple input formats (YAML, markdown, YouTube transcripts)
+    - 12 scene types with customizable templates
+    - Neural TTS with 4 professional voices
+    - Multilingual support (28+ languages)
+    - AI-enhanced narration (optional Claude integration)
+    - GPU-accelerated rendering
+
+  contact:
+    name: Video Gen Support
+    url: https://github.com/bjpl/video_gen
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.video-gen.example.com
+    description: Production server (example)
+
+tags:
+  - name: Video Creation
+    description: Endpoints for creating and managing video projects
+  - name: Pipeline
+    description: Pipeline execution and monitoring
+  - name: Content
+    description: Content parsing and adaptation
+  - name: Health
+    description: System health and monitoring
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns system health status and version information
+      operationId: getHealth
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  version:
+                    type: string
+                    example: 2.0.0
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /:
+    get:
+      tags:
+        - Health
+      summary: Root endpoint
+      description: Returns application information
+      operationId: getRoot
+      responses:
+        '200':
+          description: Application info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: Video Generation System
+                  version:
+                    type: string
+                    example: 2.0.0
+
+  /create:
+    get:
+      tags:
+        - Video Creation
+      summary: Video creation form
+      description: Returns HTML form for creating videos
+      operationId: getCreateForm
+      responses:
+        '200':
+          description: HTML form
+          content:
+            text/html:
+              schema:
+                type: string
+
+    post:
+      tags:
+        - Video Creation
+      summary: Create video from configuration
+      description: |
+        Processes video configuration and initiates video generation pipeline.
+        Supports multiple input sources and configuration options.
+      operationId: createVideo
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VideoCreationRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VideoCreationRequest'
+      responses:
+        '200':
+          description: Video creation initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoCreationResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/video/create:
+    post:
+      tags:
+        - Video Creation
+      summary: Create video programmatically
+      description: |
+        REST API endpoint for creating videos programmatically with full configuration.
+        Accepts JSON payload with video definition and pipeline options.
+      operationId: createVideoProgrammatic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgrammaticVideoRequest'
+            examples:
+              simple:
+                summary: Simple video with 3 scenes
+                value:
+                  video:
+                    title: "Quick Start Guide"
+                    accent_color: "blue"
+                  scenes:
+                    - type: title
+                      title: "Welcome"
+                      subtitle: "Getting Started"
+                    - type: list
+                      header: "Key Features"
+                      items:
+                        - "Easy to use"
+                        - "Fast generation"
+                        - "Professional quality"
+                    - type: outro
+                      main_text: "Get Started Today"
+              advanced:
+                summary: Advanced video with AI narration
+                value:
+                  video:
+                    title: "Advanced Tutorial"
+                    accent_color: "purple"
+                    use_ai_narration: true
+                    target_language: "es"
+                  scenes:
+                    - type: title
+                      title: "Advanced Features"
+                      subtitle: "Professional Video Generation"
+                      voice: "male"
+                    - type: code_comparison
+                      title: "Before and After"
+                      before_code: "# Old approach\nprint('hello')"
+                      after_code: "# New approach\nlogger.info('hello')"
+                      before_label: "Before"
+                      after_label: "After"
+                    - type: problem
+                      title: "Challenge"
+                      problem_text: "How to optimize video generation?"
+                    - type: solution
+                      title: "Solution"
+                      solution_text: "Use GPU acceleration and batching"
+      responses:
+        '200':
+          description: Video creation job initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoJobResponse'
+        '400':
+          description: Invalid video configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/video/{job_id}/status:
+    get:
+      tags:
+        - Pipeline
+      summary: Get video generation status
+      description: Returns current status and progress of video generation job
+      operationId: getVideoStatus
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: Unique job identifier
+          schema:
+            type: string
+            example: "job_abc123"
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pipeline/execute:
+    post:
+      tags:
+        - Pipeline
+      summary: Execute pipeline directly
+      description: |
+        Execute the video generation pipeline with full control over stages and options.
+        Returns real-time progress updates via server-sent events.
+      operationId: executePipeline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PipelineExecutionRequest'
+      responses:
+        '200':
+          description: Pipeline execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineExecutionResponse'
+        '400':
+          description: Invalid pipeline configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/content/parse:
+    post:
+      tags:
+        - Content
+      summary: Parse content from various sources
+      description: |
+        Parse and structure content from markdown documents, YouTube URLs, or raw text.
+        Returns structured scene definitions ready for video generation.
+      operationId: parseContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentParseRequest'
+      responses:
+        '200':
+          description: Content parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsedContent'
+        '400':
+          description: Invalid content or source
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    VideoCreationRequest:
+      type: object
+      properties:
+        input_source:
+          type: string
+          enum: [yaml, document, youtube, wizard]
+          description: Source type for video content
+        yaml_content:
+          type: string
+          description: YAML configuration (for yaml source)
+        document_url:
+          type: string
+          description: URL or path to document (for document source)
+        youtube_url:
+          type: string
+          description: YouTube video URL (for youtube source)
+        voice:
+          type: string
+          enum: [male, male_warm, female, female_friendly]
+          default: male
+          description: Voice for narration
+        use_ai_narration:
+          type: boolean
+          default: false
+          description: Use AI-enhanced narration
+        target_language:
+          type: string
+          default: en
+          description: Target language code (ISO 639-1)
+        accent_color:
+          type: string
+          enum: [blue, purple, green, orange, red]
+          default: blue
+          description: Theme accent color
+      required:
+        - input_source
+
+    ProgrammaticVideoRequest:
+      type: object
+      properties:
+        video:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Video title
+            accent_color:
+              type: string
+              enum: [blue, purple, green, orange, red]
+              default: blue
+            use_ai_narration:
+              type: boolean
+              default: false
+            target_language:
+              type: string
+              default: en
+          required:
+            - title
+        scenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scene'
+          minItems: 1
+      required:
+        - video
+        - scenes
+
+    Scene:
+      type: object
+      discriminator:
+        propertyName: type
+      properties:
+        type:
+          type: string
+          enum:
+            - title
+            - command
+            - list
+            - code_comparison
+            - quote
+            - outro
+            - learning_objectives
+            - problem
+            - solution
+            - quiz
+            - checkpoint
+            - exercise
+        voice:
+          type: string
+          enum: [male, male_warm, female, female_friendly]
+      required:
+        - type
+      oneOf:
+        - $ref: '#/components/schemas/TitleScene'
+        - $ref: '#/components/schemas/CommandScene'
+        - $ref: '#/components/schemas/ListScene'
+        - $ref: '#/components/schemas/CodeComparisonScene'
+        - $ref: '#/components/schemas/QuoteScene'
+        - $ref: '#/components/schemas/OutroScene'
+
+    TitleScene:
+      allOf:
+        - $ref: '#/components/schemas/Scene'
+        - type: object
+          properties:
+            title:
+              type: string
+            subtitle:
+              type: string
+            key_message:
+              type: string
+          required:
+            - title
+
+    CommandScene:
+      allOf:
+        - $ref: '#/components/schemas/Scene'
+        - type: object
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+            commands:
+              type: array
+              items:
+                type: string
+          required:
+            - title
+            - commands
+
+    ListScene:
+      allOf:
+        - $ref: '#/components/schemas/Scene'
+        - type: object
+          properties:
+            header:
+              type: string
+            items:
+              type: array
+              items:
+                type: string
+              minItems: 1
+              maxItems: 5
+          required:
+            - header
+            - items
+
+    CodeComparisonScene:
+      allOf:
+        - $ref: '#/components/schemas/Scene'
+        - type: object
+          properties:
+            title:
+              type: string
+            before_code:
+              type: string
+            after_code:
+              type: string
+            before_label:
+              type: string
+              default: Before
+            after_label:
+              type: string
+              default: After
+          required:
+            - title
+            - before_code
+            - after_code
+
+    QuoteScene:
+      allOf:
+        - $ref: '#/components/schemas/Scene'
+        - type: object
+          properties:
+            quote_text:
+              type: string
+            author:
+              type: string
+          required:
+            - quote_text
+
+    OutroScene:
+      allOf:
+        - $ref: '#/components/schemas/Scene'
+        - type: object
+          properties:
+            main_text:
+              type: string
+            sub_text:
+              type: string
+          required:
+            - main_text
+
+    VideoCreationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        job_id:
+          type: string
+          description: Unique identifier for tracking job
+        estimated_duration:
+          type: number
+          description: Estimated generation time in seconds
+
+    VideoJobResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        created_at:
+          type: string
+          format: date-time
+        pipeline_stages:
+          type: array
+          items:
+            type: string
+
+    JobStatus:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        current_stage:
+          type: string
+        progress_percent:
+          type: number
+          minimum: 0
+          maximum: 100
+        stages:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+                enum: [pending, running, completed, failed]
+              duration_seconds:
+                type: number
+        output_files:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              path:
+                type: string
+              size_bytes:
+                type: integer
+        error:
+          type: string
+          description: Error message if status is failed
+
+    PipelineExecutionRequest:
+      type: object
+      properties:
+        input_file:
+          type: string
+          description: Path to input YAML file
+        config:
+          type: object
+          properties:
+            gpu_enabled:
+              type: boolean
+              default: true
+            parallel_scenes:
+              type: boolean
+              default: false
+            quality_preset:
+              type: string
+              enum: [draft, standard, high, ultra]
+              default: standard
+      required:
+        - input_file
+
+    PipelineExecutionResponse:
+      type: object
+      properties:
+        execution_id:
+          type: string
+        status:
+          type: string
+        message:
+          type: string
+
+    ContentParseRequest:
+      type: object
+      properties:
+        source_type:
+          type: string
+          enum: [markdown, youtube, url, text]
+        content:
+          type: string
+          description: Content to parse (URL, text, or identifier)
+        options:
+          type: object
+          properties:
+            max_scenes:
+              type: integer
+              default: 10
+            scene_types:
+              type: array
+              items:
+                type: string
+            duration_target:
+              type: integer
+              description: Target duration in seconds
+      required:
+        - source_type
+        - content
+
+    ParsedContent:
+      type: object
+      properties:
+        title:
+          type: string
+        scenes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scene'
+        metadata:
+          type: object
+          properties:
+            source_type:
+              type: string
+            parsed_at:
+              type: string
+              format: date-time
+            estimated_duration:
+              type: number
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - error
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (optional, for future multi-user deployment)
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication (optional, for future multi-user deployment)
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+  - {} # Allow unauthenticated access for single-user deployment
