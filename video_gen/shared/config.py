@@ -99,6 +99,31 @@ class Config:
         self.log_dir = self.output_dir / "logs"
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
+        # Production logging configuration
+        self.json_logging = os.getenv("JSON_LOGGING", "false").lower() == "true"
+        self.environment = os.getenv("ENVIRONMENT", "development")
+
+        # Retry configuration
+        self.retry_max_attempts = int(os.getenv("RETRY_MAX_ATTEMPTS", "3"))
+        self.retry_initial_delay = float(os.getenv("RETRY_INITIAL_DELAY", "1.0"))
+        self.retry_max_delay = float(os.getenv("RETRY_MAX_DELAY", "60.0"))
+
+        # Circuit breaker configuration
+        self.circuit_breaker_failure_threshold = int(
+            os.getenv("CIRCUIT_BREAKER_FAILURE_THRESHOLD", "5")
+        )
+        self.circuit_breaker_timeout = float(
+            os.getenv("CIRCUIT_BREAKER_TIMEOUT", "30.0")
+        )
+
+        # Timeout configuration
+        self.thumbnail_generation_timeout = float(
+            os.getenv("THUMBNAIL_GENERATION_TIMEOUT", "30.0")
+        )
+        self.video_processing_timeout = float(
+            os.getenv("VIDEO_PROCESSING_TIMEOUT", "300.0")
+        )
+
         # Performance settings (from old config.py)
         self.max_workers = int(os.getenv("VIDEO_GEN_MAX_WORKERS", "4"))
 

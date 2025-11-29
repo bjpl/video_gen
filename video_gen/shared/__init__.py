@@ -13,16 +13,52 @@ from .exceptions import (
     StateError,
     ConfigError,
 )
+from .logging_config import (
+    setup_logging,
+    get_logger,
+    JSONFormatter,
+    StructuredLogger,
+    PerfTimer,
+)
+from .retry import (
+    retry,
+    RetryConfig,
+    RetryStrategy,
+    CircuitBreaker,
+    CircuitBreakerError,
+    CircuitState,
+    anthropic_breaker,
+    ffmpeg_breaker,
+    edge_tts_breaker,
+)
 
 __all__ = [
+    # Models
     "VideoConfig",
     "SceneConfig",
     "InputConfig",
     "PipelineResult",
     "Config",
+    # Exceptions
     "VideoGenError",
     "StageError",
     "ValidationError",
     "StateError",
     "ConfigError",
+    # Logging
+    "setup_logging",
+    "get_logger",
+    "JSONFormatter",
+    "StructuredLogger",
+    "PerfTimer",
+    # Retry & Circuit Breaker
+    "retry",
+    "RetryConfig",
+    "RetryStrategy",
+    "CircuitBreaker",
+    "CircuitBreakerError",
+    "CircuitState",
+    "anthropic_breaker",
+    "ffmpeg_breaker",
+    "edge_tts_breaker",
 ]

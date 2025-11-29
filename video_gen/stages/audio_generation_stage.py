@@ -6,11 +6,13 @@ import edge_tts
 from pathlib import Path
 from typing import Dict, Any
 import subprocess
+import asyncio
 
 from ..pipeline.stage import Stage, StageResult
 from ..shared.models import VideoConfig
 from ..shared.config import config
 from ..shared.exceptions import AudioGenerationError
+from ..shared.retry import retry, edge_tts_breaker, RetryStrategy
 
 
 class AudioGenerationStage(Stage):
@@ -85,14 +87,10 @@ class AudioGenerationStage(Stage):
             audio_file = audio_dir / f"{scene.scene_id}.mp3"
 
             try:
-                # Generate TTS
-                communicate = edge_tts.Communicate(
-                    scene.narration,
-                    voice,
-                    rate="+0%",
-                    volume="+0%"
+                # Generate TTS with retry logic and circuit breaker
+                await self._generate_tts_with_retry(
+                    scene.narration, voice, audio_file
                 )
-                await communicate.save(str(audio_file))
 
                 # Measure duration
                 duration = await self._get_audio_duration(audio_file)
@@ -143,6 +141,25 @@ class AudioGenerationStage(Stage):
                 "voices_used": list(set(scene.voice for scene in video_config.scenes)),
             }
         )
+
+    @edge_tts_breaker
+    @retry(
+        max_attempts=3,
+        initial_delay=1.0,
+        strategy=RetryStrategy.EXPONENTIAL_JITTER,
+        retryable_exceptions=(ConnectionError, TimeoutError, OSError)
+    )
+    async def _generate_tts_with_retry(
+        self, text: str, voice: str, output_file: Path
+    ) -> None:
+        """Generate TTS audio with retry logic and circuit breaker protection."""
+        communicate = edge_tts.Communicate(
+            text,
+            voice,
+            rate="+0%",
+            volume="+0%"
+        )
+        await communicate.save(str(output_file))
 
     async def _get_audio_duration(self, audio_file: Path) -> float:
         """Get audio file duration using ffmpeg."""
