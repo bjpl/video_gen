@@ -70,8 +70,7 @@ desktop.ini
 .env.*.local
 
 # Project-specific output directories
-output/state/
-output/logs/
+output/
 .translation_cache/
 
 # Test outputs
