@@ -57,6 +57,9 @@ python-multipart>=0.0.6
 pydantic>=2.12.2
 pydantic-settings>=2.11.0
 
+# Rate limiting (DoS protection)
+slowapi>=0.1.9
+
 # Testing
 pytest>=8.4.2
 pytest-asyncio>=1.2.0

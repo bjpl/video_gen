@@ -62,6 +62,17 @@ from dotenv import load_dotenv
 load_dotenv()
 load_dotenv(Path(__file__).parent / ".env")  # Also load from app/.env
 
+# Import rate limiting middleware
+from app.middleware.rate_limiting import (
+    setup_rate_limiting,
+    limiter,
+    UPLOAD_LIMIT,
+    GENERATE_LIMIT,
+    PARSE_LIMIT,
+    TASKS_LIMIT,
+    HEALTH_LIMIT,
+)
+
 # Import multilingual support
 from language_config import MULTILINGUAL_VOICES, LANGUAGE_INFO, list_available_languages
 
@@ -109,6 +120,9 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+# Setup rate limiting BEFORE routes are defined
+setup_rate_limiting(app)
 
 # Setup templates and static files
 BASE_DIR = Path(__file__).parent
@@ -445,10 +459,13 @@ async def advanced(request: Request):
 # ============================================================================
 
 @app.post("/api/parse/document")
-async def parse_document(input: DocumentInput, background_tasks: BackgroundTasks):
+@limiter.limit(PARSE_LIMIT)
+async def parse_document(request: Request, input: DocumentInput, background_tasks: BackgroundTasks):
     """
     Parse document and generate video set.
     Now uses unified pipeline for consistency.
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         # Generate task ID FIRST
@@ -508,7 +525,9 @@ async def parse_document(input: DocumentInput, background_tasks: BackgroundTasks
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload/document")
+@limiter.limit(UPLOAD_LIMIT)
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     accent_color: str = Form("blue"),
     voice: str = Form("male"),
@@ -518,6 +537,8 @@ async def upload_document(
     """
     Upload a document file and generate video set.
     Accepts multipart/form-data with file upload.
+
+    Rate limit: Strict (configurable via RATE_LIMIT_UPLOAD env var)
     """
     try:
         # Validate file type
@@ -610,7 +631,8 @@ async def upload_document(
 # ============================================================================
 
 @app.post("/api/validate/document")
-async def validate_document_upload(file: UploadFile = File(...)):
+@limiter.limit(PARSE_LIMIT)
+async def validate_document_upload(request: Request, file: UploadFile = File(...)):
     """
     Validate a document file before processing.
 
@@ -622,6 +644,8 @@ async def validate_document_upload(file: UploadFile = File(...)):
     - Document structure preview
 
     Returns validation result with preview data for UI display.
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         # Read file content
@@ -691,7 +715,8 @@ async def validate_document_upload(file: UploadFile = File(...)):
 
 
 @app.post("/api/preview/document")
-async def preview_document(file: UploadFile = File(...)):
+@limiter.limit(PARSE_LIMIT)
+async def preview_document(request: Request, file: UploadFile = File(...)):
     """
     Generate a detailed preview of document structure.
 
@@ -703,6 +728,8 @@ async def preview_document(file: UploadFile = File(...)):
     - Content statistics
 
     This endpoint is designed for the "preview before generate" workflow.
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         # Read and decode content
@@ -841,10 +868,13 @@ def _generate_preview_recommendations(preview: Dict) -> List[str]:
 
 
 @app.post("/api/parse-only/document")
-async def parse_document_only(input: DocumentInput):
+@limiter.limit(PARSE_LIMIT)
+async def parse_document_only(request: Request, input: DocumentInput):
     """
     Parse document and return scenes for review WITHOUT generating video.
     This allows users to review/edit scenes before triggering generation.
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         # Import the document adapter directly
@@ -885,10 +915,13 @@ async def parse_document_only(input: DocumentInput):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/parse-only/youtube")
-async def parse_youtube_only(input: YouTubeInput):
+@limiter.limit(PARSE_LIMIT)
+async def parse_youtube_only(request: Request, input: YouTubeInput):
     """
     Parse YouTube video and return scenes for review WITHOUT generating video.
     This allows users to review/edit scenes before triggering generation.
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         # Import the YouTube adapter directly
@@ -927,10 +960,13 @@ async def parse_youtube_only(input: YouTubeInput):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/parse/youtube")
-async def parse_youtube(input: YouTubeInput, background_tasks: BackgroundTasks):
+@limiter.limit(PARSE_LIMIT)
+async def parse_youtube(request: Request, input: YouTubeInput, background_tasks: BackgroundTasks):
     """
     Parse YouTube video and generate script.
     Now uses unified pipeline.
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         # Generate task ID FIRST
@@ -975,7 +1011,8 @@ async def parse_youtube(input: YouTubeInput, background_tasks: BackgroundTasks):
 # ============================================================================
 
 @app.post("/api/youtube/validate")
-async def validate_youtube_url_endpoint(request: YouTubeURLValidation):
+@limiter.limit(PARSE_LIMIT)
+async def validate_youtube_url_endpoint(http_request: Request, request: YouTubeURLValidation):
     """
     Validate a YouTube URL and return detailed validation result.
 
@@ -990,6 +1027,8 @@ async def validate_youtube_url_endpoint(request: YouTubeURLValidation):
         - video_id: Extracted video ID (if valid)
         - normalized_url: Standardized URL format
         - error: Error message (if invalid)
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         from video_gen.utils.youtube_validator import validate_youtube_url
@@ -1009,7 +1048,8 @@ async def validate_youtube_url_endpoint(request: YouTubeURLValidation):
 
 
 @app.post("/api/youtube/preview")
-async def youtube_preview_endpoint(request: YouTubePreviewRequest):
+@limiter.limit(PARSE_LIMIT)
+async def youtube_preview_endpoint(http_request: Request, request: YouTubePreviewRequest):
     """
     Get preview information for a YouTube video.
 
@@ -1024,6 +1064,8 @@ async def youtube_preview_endpoint(request: YouTubePreviewRequest):
 
     Returns:
         JSON with video preview data for UI display
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         from video_gen.utils.youtube_validator import (
@@ -1090,7 +1132,8 @@ async def youtube_preview_endpoint(request: YouTubePreviewRequest):
 
 
 @app.post("/api/youtube/transcript-preview")
-async def youtube_transcript_preview(request: YouTubePreviewRequest):
+@limiter.limit(PARSE_LIMIT)
+async def youtube_transcript_preview(http_request: Request, request: YouTubePreviewRequest):
     """
     Get a preview of the video transcript.
 
@@ -1102,6 +1145,8 @@ async def youtube_transcript_preview(request: YouTubePreviewRequest):
 
     Returns:
         JSON with transcript preview and availability info
+
+    Rate limit: Moderate (configurable via RATE_LIMIT_PARSE env var)
     """
     try:
         from video_gen.utils.youtube_validator import (
@@ -1296,10 +1341,13 @@ async def _get_transcript_preview(
 
 
 @app.post("/api/generate")
-async def generate_videos(video_set: VideoSet, background_tasks: BackgroundTasks):
+@limiter.limit(GENERATE_LIMIT)
+async def generate_videos(request: Request, video_set: VideoSet, background_tasks: BackgroundTasks):
     """
     Generate videos from video set.
     Now uses unified pipeline.
+
+    Rate limit: Very strict (configurable via RATE_LIMIT_GENERATE env var)
     """
     try:
         # Generate task ID FIRST
@@ -1338,11 +1386,14 @@ async def generate_videos(video_set: VideoSet, background_tasks: BackgroundTasks
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/tasks/{task_id}")
-async def get_task_status(task_id: str):
+@limiter.limit(TASKS_LIMIT)
+async def get_task_status(request: Request, task_id: str):
     """
     Get task status - now from unified pipeline.
 
     Returns task state in backward-compatible format for existing templates.
+
+    Rate limit: High (polling endpoint, configurable via RATE_LIMIT_TASKS env var)
     """
     try:
         pipeline = get_pipeline()
@@ -1578,10 +1629,13 @@ async def get_language_voices(lang_code: str):
     }
 
 @app.post("/api/generate/multilingual")
-async def generate_multilingual(request: MultilingualRequest, background_tasks: BackgroundTasks):
+@limiter.limit(GENERATE_LIMIT)
+async def generate_multilingual(http_request: Request, request: MultilingualRequest, background_tasks: BackgroundTasks):
     """
     Generate multilingual videos.
     Now uses unified pipeline with multilingual config.
+
+    Rate limit: Very strict (configurable via RATE_LIMIT_GENERATE env var)
     """
     try:
         # Generate task ID first
@@ -2120,7 +2174,8 @@ async def stream_job_events(job_id: str):
 
 
 @app.get("/api/health")
-async def health_check():
+@limiter.limit(HEALTH_LIMIT)
+async def health_check(request: Request):
     """
     Health check endpoint.
 
@@ -2128,6 +2183,8 @@ async def health_check():
     - API is running
     - Pipeline is initialized
     - Required dependencies available
+
+    Rate limit: Very high (health checks should not be restricted)
     """
     try:
         pipeline = get_pipeline()
