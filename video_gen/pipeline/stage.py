@@ -14,6 +14,11 @@ from typing import Any, Dict, Optional
 from .events import EventEmitter, Event, EventType
 from ..shared.exceptions import StageError
 
+# Forward reference for type hints
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .state_manager import StateManager
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,12 +57,21 @@ class Stage(ABC):
     - Error handling
     - Event emission
     - Logging
+    - State persistence for SSE progress updates
     """
 
     def __init__(self, name: str, event_emitter: Optional[EventEmitter] = None):
         self.name = name
         self.event_emitter = event_emitter
         self.logger = logging.getLogger(f"{__name__}.{name}")
+        # State management for progress persistence (set by orchestrator)
+        self._state_manager: Optional['StateManager'] = None
+        self._task_id: Optional[str] = None
+
+    def set_state_manager(self, state_manager: 'StateManager', task_id: str):
+        """Set state manager for progress persistence."""
+        self._state_manager = state_manager
+        self._task_id = task_id
 
     @abstractmethod
     async def execute(self, context: Dict[str, Any]) -> StageResult:
@@ -158,13 +172,29 @@ class Stage(ABC):
 
     async def emit_progress(self, task_id: str, progress: float, message: str = None):
         """
-        Emit progress update event.
+        Emit progress update event and persist to state manager.
+
+        This ensures progress is visible in SSE stream (which polls state files).
 
         Args:
             task_id: Current task ID
             progress: Progress value (0.0 to 1.0)
             message: Optional progress message
         """
+        # Persist progress to state manager for SSE polling
+        if self._state_manager:
+            try:
+                state = self._state_manager.load(task_id)
+                state.update_stage_progress(self.name, progress)
+                # Update message in metadata if provided
+                if message and self.name in state.stages:
+                    state.stages[self.name].metadata["message"] = message
+                self._state_manager.save(state)
+                self.logger.debug(f"Progress persisted: {self.name}={progress:.1%} ({message})")
+            except Exception as e:
+                self.logger.warning(f"Failed to persist progress: {e}")
+
+        # Also emit event (for any listeners)
         if self.event_emitter:
             await self.event_emitter.emit(Event(
                 type=EventType.STAGE_PROGRESS,

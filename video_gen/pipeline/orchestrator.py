@@ -499,6 +499,9 @@ class PipelineOrchestrator:
             task_state.start_stage(stage.name)
             self.state_manager.save(task_state)
 
+            # Set state manager for progress persistence (enables SSE updates)
+            stage.set_state_manager(self.state_manager, task_id)
+
             # Execute stage
             result = await stage.run(context, task_id)
             results.append(result)
@@ -548,9 +551,11 @@ class PipelineOrchestrator:
         stage_names = [s.name for s in stages]
         logger.info(f"Parallel execution of stages: {stage_names}")
 
-        # Mark all stages as started
+        # Mark all stages as started and set state manager
         for stage in stages:
             task_state.start_stage(stage.name)
+            # Set state manager for progress persistence (enables SSE updates)
+            stage.set_state_manager(self.state_manager, task_id)
         self.state_manager.save(task_state)
 
         # Execute all stages in parallel

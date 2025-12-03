@@ -1409,11 +1409,17 @@ async def get_task_status(request: Request, task_id: str):
 
         # Convert pipeline state to API response format
         # Maintain backward compatibility with existing frontend
+        # Get detailed message from current stage if available
+        stage_message = None
+        if task_state.current_stage and task_state.current_stage in task_state.stages:
+            stage_data = task_state.stages[task_state.current_stage]
+            stage_message = stage_data.metadata.get("message")
+
         return {
             "task_id": task_state.task_id,
             "status": _map_status(task_state.status.value),
-            "progress": int(task_state.overall_progress),
-            "message": task_state.current_stage or "Processing...",
+            "progress": int(task_state.overall_progress * 100),  # Fix: Convert 0.0-1.0 to 0-100
+            "message": stage_message or task_state.current_stage or "Processing...",
             "type": _infer_type_from_input(task_state.input_config),
             "errors": task_state.errors if task_state.errors else None,
             "result": task_state.result if task_state.status.value == "completed" else None
@@ -1451,7 +1457,18 @@ async def stream_task_progress(task_id: str):
                 if not task_state:
                     break
 
-                current_progress = int(task_state.overall_progress)
+                # Fix: Convert 0.0-1.0 float to 0-100 percentage
+                current_progress = int(task_state.overall_progress * 100)
+
+                # Get detailed message from current stage if available
+                stage_message = None
+                if task_state.current_stage and task_state.current_stage in task_state.stages:
+                    stage_data = task_state.stages[task_state.current_stage]
+                    stage_message = stage_data.metadata.get("message")
+                    # Include stage progress for more granular updates
+                    stage_progress = int(stage_data.progress * 100)
+                else:
+                    stage_progress = 0
 
                 # Send update if progress changed
                 if current_progress != last_progress:
@@ -1461,7 +1478,8 @@ async def stream_task_progress(task_id: str):
                         "task_id": task_id,
                         "status": _map_status(task_state.status.value),
                         "progress": current_progress,
-                        "message": task_state.current_stage or "Processing..."
+                        "stage_progress": stage_progress,
+                        "message": stage_message or task_state.current_stage or "Processing..."
                     }
 
                     yield f"data: {json.dumps(event_data)}\n\n"
