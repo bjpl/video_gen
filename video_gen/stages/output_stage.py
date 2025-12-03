@@ -56,6 +56,9 @@ class OutputStage(Stage):
     async def _handle_complete_video(self, context: Dict[str, Any]) -> StageResult:
         """Handle output when video is already complete (new workflow)."""
 
+        # Emit progress immediately to show stage started
+        await self.emit_progress(context["task_id"], 0.05, "Starting output handling")
+
         # Validate context
         self.validate_context(context, ["video_config", "final_video_path", "video_dir"])
 
@@ -65,27 +68,27 @@ class OutputStage(Stage):
 
         self.logger.info(f"Organizing final video output: {final_video_path}")
 
-        # Create final output directory
-        output_dir = config.output_dir / video_config.video_id
-        output_dir.mkdir(parents=True, exist_ok=True)
+        # Emit progress after validation
+        await self.emit_progress(context["task_id"], 0.1, "Preparing output")
+
+        # Use the existing video_dir as the output directory to avoid redundant file copying
+        # The video is already organized in video_dir by video_generation_stage
+        output_dir = video_dir  # Use existing video_dir instead of creating a separate output_dir
+
+        # The video is already at the final path - no need to copy
+        output_video_path = final_video_path
+
+        self.logger.info(f"Using video from: {output_video_path}")
 
         # Emit progress
-        await self.emit_progress(context["task_id"], 0.3, "Organizing output files")
-
-        # Copy final video to output directory if needed (use asyncio.to_thread for non-blocking)
-        output_video_path = output_dir / f"{video_config.video_id}_final.mp4"
-        if final_video_path != output_video_path:
-            await asyncio.to_thread(shutil.copy, final_video_path, output_video_path)
-
-        # Emit progress
-        await self.emit_progress(context["task_id"], 0.5, "Generating metadata")
+        await self.emit_progress(context["task_id"], 0.2, "Generating metadata")
 
         # Generate metadata
         metadata_path = output_dir / f"{video_config.video_id}_metadata.json"
         await self._generate_metadata(video_config, metadata_path, context)
 
         # Emit progress
-        await self.emit_progress(context["task_id"], 0.7, "Creating thumbnail")
+        await self.emit_progress(context["task_id"], 0.5, "Creating thumbnail")
 
         # Generate thumbnail with timeout
         thumbnail_path = output_dir / f"{video_config.video_id}_thumbnail.jpg"
@@ -97,18 +100,36 @@ class OutputStage(Stage):
         except asyncio.TimeoutError:
             self.logger.warning("Thumbnail generation timed out, skipping")
 
-        # Copy additional files (non-blocking)
+        # Emit progress
+        await self.emit_progress(context["task_id"], 0.8, "Finalizing output")
+
+        # Copy timing report if available (non-blocking with timeout)
         if "timing_report" in context:
-            await asyncio.to_thread(
-                shutil.copy,
-                context["timing_report"],
-                output_dir / f"{video_config.video_id}_timing.json"
-            )
+            try:
+                await asyncio.wait_for(
+                    asyncio.to_thread(
+                        shutil.copy,
+                        context["timing_report"],
+                        output_dir / f"{video_config.video_id}_timing.json"
+                    ),
+                    timeout=30.0
+                )
+            except asyncio.TimeoutError:
+                self.logger.warning("Timing report copy timed out, skipping")
+            except Exception as e:
+                self.logger.warning(f"Timing report copy failed: {e}")
 
         self.logger.info(f"Output complete: {output_video_path}")
 
         # Emit progress
         await self.emit_progress(context["task_id"], 1.0, "Output complete")
+
+        # Get video size safely
+        try:
+            video_size = output_video_path.stat().st_size
+        except Exception as e:
+            self.logger.warning(f"Could not get video size: {e}")
+            video_size = 0
 
         return StageResult(
             success=True,
@@ -120,7 +141,7 @@ class OutputStage(Stage):
                 "thumbnail_path": thumbnail_path,
             },
             metadata={
-                "video_size": output_video_path.stat().st_size,
+                "video_size": video_size,
                 "scene_count": len(video_config.scenes),
                 "duration": video_config.total_duration,
                 "workflow": "template-based",
@@ -130,6 +151,9 @@ class OutputStage(Stage):
     async def _handle_scene_videos(self, context: Dict[str, Any]) -> StageResult:
         """Handle output when scene videos need to be combined (legacy workflow)."""
 
+        # Emit progress immediately to show stage started
+        await self.emit_progress(context["task_id"], 0.05, "Starting output handling")
+
         # Validate context
         self.validate_context(context, ["video_config", "scene_videos", "video_dir"])
 
@@ -138,6 +162,9 @@ class OutputStage(Stage):
         video_dir: Path = context["video_dir"]
 
         self.logger.info(f"Combining {len(scene_videos)} scene videos")
+
+        # Emit progress after validation
+        await self.emit_progress(context["task_id"], 0.1, "Creating output directory")
 
         # Create final output directory
         output_dir = config.output_dir / video_config.video_id
@@ -170,18 +197,31 @@ class OutputStage(Stage):
         except asyncio.TimeoutError:
             self.logger.warning("Thumbnail generation timed out, skipping")
 
-        # Copy additional files (non-blocking)
+        # Copy additional files (non-blocking) with timeout
         if "timing_report" in context:
-            await asyncio.to_thread(
-                shutil.copy,
-                context["timing_report"],
-                output_dir / f"{video_config.video_id}_timing.json"
-            )
+            try:
+                await asyncio.wait_for(
+                    asyncio.to_thread(
+                        shutil.copy,
+                        context["timing_report"],
+                        output_dir / f"{video_config.video_id}_timing.json"
+                    ),
+                    timeout=30.0
+                )
+            except asyncio.TimeoutError:
+                self.logger.warning("Timing report copy timed out, skipping")
 
         self.logger.info(f"Output complete: {final_video_path}")
 
         # Emit progress
         await self.emit_progress(context["task_id"], 1.0, "Output complete")
+
+        # Get video size safely
+        try:
+            video_size = final_video_path.stat().st_size
+        except Exception as e:
+            self.logger.warning(f"Could not get video size: {e}")
+            video_size = 0
 
         return StageResult(
             success=True,
@@ -193,7 +233,7 @@ class OutputStage(Stage):
                 "thumbnail_path": thumbnail_path,
             },
             metadata={
-                "video_size": final_video_path.stat().st_size,
+                "video_size": video_size,
                 "scene_count": len(scene_videos),
                 "duration": video_config.total_duration,
                 "workflow": "legacy-combined",

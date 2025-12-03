@@ -79,6 +79,16 @@ coverage.json
 htmlcov/
 .pytest_cache/
 
+
+# Removed Windows wrapper files per user request
+hive-mind-prompt-*.txt
+outputs/**/*.json
+outputs/**/*.jpg
+outputs/**/*.mp4
+outputs/*_metadata.json
+outputs/*_thumbnail.jpg
+outputs/*_timing.json
+
 # Claude Flow generated files
 .claude/settings.local.json
 .mcp.json
@@ -105,9 +115,3 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
-outputs/**/*.json
-outputs/**/*.jpg
-outputs/**/*.mp4
-outputs/*_metadata.json
-outputs/*_thumbnail.jpg
-outputs/*_timing.json
