@@ -1436,18 +1436,27 @@ async def stream_task_progress(task_id: str):
     """
     Stream real-time progress via Server-Sent Events.
     Now uses pipeline event system for real-time updates.
+
+    Enhanced to show granular stage-level progress, not just overall progress.
     """
     async def event_generator():
         pipeline = get_pipeline()
 
         # Check if task exists
-        task_state = pipeline.state_manager.load(task_id)
+        try:
+            task_state = pipeline.state_manager.load(task_id)
+        except Exception as e:
+            yield f"data: {json.dumps({'error': 'Task not found', 'details': str(e)})}\n\n"
+            return
+
         if not task_state:
             # Send error and close
             yield f"data: {json.dumps({'error': 'Task not found'})}\n\n"
             return
 
         last_progress = -1
+        last_stage_progress = -1
+        last_stage = None
 
         # Poll for updates (simplified - could use actual event subscription)
         while True:
@@ -1457,41 +1466,67 @@ async def stream_task_progress(task_id: str):
                 if not task_state:
                     break
 
-                # Fix: Convert 0.0-1.0 float to 0-100 percentage
-                current_progress = int(task_state.overall_progress * 100)
-
-                # Get detailed message from current stage if available
+                # Get current stage info for granular progress
+                current_stage = task_state.current_stage
+                stage_progress_float = 0.0
                 stage_message = None
-                if task_state.current_stage and task_state.current_stage in task_state.stages:
-                    stage_data = task_state.stages[task_state.current_stage]
-                    stage_message = stage_data.metadata.get("message")
-                    # Include stage progress for more granular updates
-                    stage_progress = int(stage_data.progress * 100)
-                else:
-                    stage_progress = 0
 
-                # Send update if progress changed
-                if current_progress != last_progress:
+                if current_stage and current_stage in task_state.stages:
+                    stage_data = task_state.stages[current_stage]
+                    stage_progress_float = stage_data.progress
+                    stage_message = stage_data.metadata.get("message")
+
+                # Calculate overall progress with stage granularity
+                # This gives smoother progress updates instead of jumps between stages
+                current_progress = int(task_state.overall_progress * 100)
+                stage_progress = int(stage_progress_float * 100)
+
+                # Send update if progress OR stage changed (more responsive)
+                progress_changed = current_progress != last_progress
+                stage_changed = current_stage != last_stage
+                stage_progress_changed = stage_progress != last_stage_progress
+
+                if progress_changed or stage_changed or stage_progress_changed:
                     last_progress = current_progress
+                    last_stage = current_stage
+                    last_stage_progress = stage_progress
 
                     event_data = {
                         "task_id": task_id,
                         "status": _map_status(task_state.status.value),
                         "progress": current_progress,
+                        "stage": current_stage,
+                        "stage_display": STAGE_DISPLAY_NAMES.get(current_stage, current_stage or "Initializing"),
                         "stage_progress": stage_progress,
-                        "message": stage_message or task_state.current_stage or "Processing..."
+                        "message": stage_message or STAGE_DISPLAY_NAMES.get(current_stage, current_stage) or "Processing...",
+                        "errors": task_state.errors if task_state.errors else None
                     }
 
                     yield f"data: {json.dumps(event_data)}\n\n"
 
                 # Stop if completed or failed
                 if task_state.status.value in ["completed", "failed", "cancelled"]:
+                    # Send final event with complete info
+                    final_data = {
+                        "task_id": task_id,
+                        "status": _map_status(task_state.status.value),
+                        "progress": 100 if task_state.status.value == "completed" else current_progress,
+                        "stage": current_stage,
+                        "stage_display": STAGE_DISPLAY_NAMES.get(current_stage, current_stage or "Complete"),
+                        "stage_progress": 100 if task_state.status.value == "completed" else stage_progress,
+                        "message": "Complete" if task_state.status.value == "completed" else (stage_message or "Failed"),
+                        "final": True,
+                        "errors": task_state.errors if task_state.errors else None,
+                        "result": task_state.result if task_state.status.value == "completed" else None
+                    }
+                    yield f"data: {json.dumps(final_data)}\n\n"
                     break
 
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)  # Faster polling for more responsive updates
 
             except Exception as e:
                 logger.error(f"Error streaming progress: {e}")
+                yield f"data: {json.dumps({'error': str(e), 'task_id': task_id})}\n\n"
                 break
 
     return StreamingResponse(
@@ -1863,9 +1898,10 @@ def _format_job_for_monitor(task_state) -> Dict[str, Any]:
         total_seconds = (completed_at - started_at).total_seconds()
         total_duration = _format_duration(total_seconds)
 
-    # Build stage progress info
+    # Build stage progress info with enhanced error details
     stages_info = []
     current_stage_name = task_state.current_stage
+    failed_stage_error = None  # Track error from failed stage
 
     for stage_name in ORDERED_STAGES:
         stage_state = task_state.stages.get(stage_name)
@@ -1879,6 +1915,12 @@ def _format_job_for_monitor(task_state) -> Dict[str, Any]:
                 status = "active"
             elif stage_status_value == "failed":
                 status = "failed"
+                # Capture the error from this failed stage
+                if stage_state.error:
+                    failed_stage_error = {
+                        "stage": STAGE_DISPLAY_NAMES.get(stage_name, stage_name),
+                        "error": stage_state.error
+                    }
             else:
                 status = "pending"
 
@@ -1892,16 +1934,22 @@ def _format_job_for_monitor(task_state) -> Dict[str, Any]:
                 if isinstance(stage_end, str):
                     stage_end = datetime.fromisoformat(stage_end)
                 duration = f"{(stage_end - stage_start).total_seconds():.1f}s"
+
+            # Include stage progress for active stages
+            stage_progress = int(stage_state.progress * 100) if stage_state.progress else 0
         else:
             # Stage not yet registered
             status = "pending"
             duration = None
+            stage_progress = 0
 
         stages_info.append({
             "name": STAGE_DISPLAY_NAMES.get(stage_name, stage_name),
             "internal_name": stage_name,
             "status": status,
-            "duration": duration
+            "duration": duration,
+            "progress": stage_progress,
+            "error": stage_state.error if stage_state and stage_state.error else None
         })
 
     # Get current stage display name
@@ -1911,6 +1959,18 @@ def _format_job_for_monitor(task_state) -> Dict[str, Any]:
 
     # Calculate progress as percentage (0-100)
     progress = int(task_state.overall_progress * 100)
+
+    # Build comprehensive error info for failed jobs
+    error_details = None
+    if task_state.errors or failed_stage_error:
+        error_details = {
+            "errors": task_state.errors if task_state.errors else [],
+            "failed_stage": failed_stage_error,
+            "error_count": len(task_state.errors) if task_state.errors else 0,
+            "summary": task_state.errors[0] if task_state.errors else (
+                f"Failed at {failed_stage_error['stage']}: {failed_stage_error['error'][:100]}" if failed_stage_error else "Unknown error"
+            )
+        }
 
     return {
         "id": task_state.task_id,
@@ -1922,6 +1982,8 @@ def _format_job_for_monitor(task_state) -> Dict[str, Any]:
         "stages": stages_info,
         "status": task_state.status.value if hasattr(task_state.status, 'value') else task_state.status,
         "errors": task_state.errors if task_state.errors else [],
+        "error_details": error_details,
+        "warnings": task_state.warnings if task_state.warnings else [],
         "created_at": task_state.created_at.isoformat() if task_state.created_at else None,
     }
 

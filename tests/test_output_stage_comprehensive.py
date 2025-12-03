@@ -118,9 +118,11 @@ class TestOutputStageCompleteVideo:
         assert "final_video_path" in result.artifacts
         assert "output_dir" in result.artifacts
         assert "metadata_path" in result.artifacts
-        assert "thumbnail_path" in result.artifacts
+        # thumbnail_path is only included when thumbnail is actually created
+        # with mocked _generate_thumbnail, no thumbnail is created
         assert result.metadata["workflow"] == "template-based"
         assert result.metadata["scene_count"] == 3
+        assert "has_thumbnail" in result.metadata  # Metadata tracks whether thumbnail exists
 
     @pytest.mark.asyncio
     async def test_complete_video_without_timing_report(self, output_stage, sample_video_config, tmp_path):

@@ -57,6 +57,7 @@ class OutputStage(Stage):
         """Handle output when video is already complete (new workflow)."""
 
         # Emit progress immediately to show stage started
+        self.logger.info(f"[output_handling] Starting output handling for task {context.get('task_id')}")
         await self.emit_progress(context["task_id"], 0.05, "Starting output handling")
 
         # Validate context
@@ -92,59 +93,117 @@ class OutputStage(Stage):
 
         # Generate thumbnail with timeout
         thumbnail_path = output_dir / f"{video_config.video_id}_thumbnail.jpg"
+        # Thumbnail generation - catch ALL exceptions (optional operation)
+        thumbnail_created = False
         try:
             await asyncio.wait_for(
                 self._generate_thumbnail(output_video_path, thumbnail_path),
                 timeout=30.0  # 30 second timeout for thumbnail
             )
+            # Verify thumbnail was actually created
+            if thumbnail_path.exists() and thumbnail_path.stat().st_size > 0:
+                thumbnail_created = True
         except asyncio.TimeoutError:
             self.logger.warning("Thumbnail generation timed out, skipping")
+        except Exception as e:
+            self.logger.warning(f"Thumbnail generation failed: {e}")
 
         # Emit progress
-        await self.emit_progress(context["task_id"], 0.8, "Finalizing output")
+        await self.emit_progress(context["task_id"], 0.7, "Finalizing output")
 
-        # Copy timing report if available (non-blocking with timeout)
+        # Copy timing report if available (validate source exists first)
         if "timing_report" in context:
+            timing_source = Path(context["timing_report"]) if isinstance(context["timing_report"], str) else context["timing_report"]
+            if timing_source.exists():
+                try:
+                    await asyncio.wait_for(
+                        asyncio.to_thread(
+                            shutil.copy,
+                            str(timing_source),
+                            output_dir / f"{video_config.video_id}_timing.json"
+                        ),
+                        timeout=30.0
+                    )
+                except asyncio.TimeoutError:
+                    self.logger.warning("Timing report copy timed out, skipping")
+                except Exception as e:
+                    self.logger.warning(f"Timing report copy failed: {e}")
+            else:
+                self.logger.debug(f"Timing report not found: {timing_source}")
+
+        # CRITICAL: Validate video BEFORE claiming completion
+        await self.emit_progress(context["task_id"], 0.85, "Validating output")
+
+        # Get video size with NFS retry logic for Railway
+        video_size = 0
+        max_retries = 3
+        for attempt in range(max_retries):
             try:
-                await asyncio.wait_for(
-                    asyncio.to_thread(
-                        shutil.copy,
-                        context["timing_report"],
-                        output_dir / f"{video_config.video_id}_timing.json"
-                    ),
-                    timeout=30.0
-                )
-            except asyncio.TimeoutError:
-                self.logger.warning("Timing report copy timed out, skipping")
-            except Exception as e:
-                self.logger.warning(f"Timing report copy failed: {e}")
+                if not output_video_path.exists():
+                    if attempt < max_retries - 1:
+                        self.logger.warning(f"Video file not found (attempt {attempt+1}), waiting for NFS sync...")
+                        await asyncio.sleep(1.0)
+                        continue
+                    else:
+                        raise StageError(
+                            "Video file does not exist after generation",
+                            stage=self.name,
+                            details={"expected_path": str(output_video_path)}
+                        )
 
-        self.logger.info(f"Output complete: {output_video_path}")
+                video_size = output_video_path.stat().st_size
 
-        # Emit progress
+                if video_size == 0:
+                    if attempt < max_retries - 1:
+                        self.logger.warning(f"Video file empty (attempt {attempt+1}), waiting for NFS sync...")
+                        await asyncio.sleep(1.0)
+                        continue
+                    else:
+                        raise StageError(
+                            "Generated video file is empty",
+                            stage=self.name,
+                            details={"video_path": str(output_video_path)}
+                        )
+                # Successfully got valid video size
+                break
+
+            except StageError:
+                raise  # Re-raise our own errors
+            except (OSError, IOError) as e:
+                if attempt < max_retries - 1:
+                    self.logger.warning(f"File stat failed (attempt {attempt+1}): {e}, retrying...")
+                    await asyncio.sleep(1.0)
+                else:
+                    raise StageError(
+                        f"Cannot access video file: {e}",
+                        stage=self.name,
+                        details={"video_path": str(output_video_path), "error": str(e)}
+                    )
+
+        self.logger.info(f"Output complete: {output_video_path} ({video_size} bytes)")
+
+        # Only emit 100% after successful validation
         await self.emit_progress(context["task_id"], 1.0, "Output complete")
 
-        # Get video size safely
-        try:
-            video_size = output_video_path.stat().st_size
-        except Exception as e:
-            self.logger.warning(f"Could not get video size: {e}")
-            video_size = 0
+        # Build artifacts - only include thumbnail if it was created
+        artifacts = {
+            "final_video_path": output_video_path,
+            "output_dir": output_dir,
+            "metadata_path": metadata_path,
+        }
+        if thumbnail_created:
+            artifacts["thumbnail_path"] = thumbnail_path
 
         return StageResult(
             success=True,
             stage_name=self.name,
-            artifacts={
-                "final_video_path": output_video_path,
-                "output_dir": output_dir,
-                "metadata_path": metadata_path,
-                "thumbnail_path": thumbnail_path,
-            },
+            artifacts=artifacts,
             metadata={
                 "video_size": video_size,
                 "scene_count": len(video_config.scenes),
                 "duration": video_config.total_duration,
                 "workflow": "template-based",
+                "has_thumbnail": thumbnail_created,
             }
         )
 
@@ -377,17 +436,44 @@ class OutputStage(Stage):
         from moviepy import VideoFileClip
         import matplotlib.pyplot as plt
 
+        # Validate input first
+        if not video_path.exists():
+            self.logger.warning(f"Video file not found for thumbnail: {video_path}")
+            return
+
+        if video_path.stat().st_size == 0:
+            self.logger.warning(f"Video file empty for thumbnail: {video_path}")
+            return
+
         clip = None
         try:
-            clip = VideoFileClip(str(video_path))
-            # Extract frame from middle of video
-            frame_time = clip.duration / 2
+            # Load video without audio for faster loading
+            clip = VideoFileClip(str(video_path), audio=False)
+
+            # Validate duration
+            if not clip.duration or clip.duration <= 0:
+                self.logger.warning(f"Invalid video duration: {clip.duration}")
+                return
+
+            # Extract frame from middle of video (ensure valid time)
+            frame_time = min(clip.duration / 2, clip.duration - 0.1)
             frame = clip.get_frame(frame_time)
 
+            if frame is None:
+                self.logger.warning("Failed to extract frame from video")
+                return
+
+            # Ensure output directory exists
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
             # Save as image (matplotlib already configured with Agg backend at module level)
-            plt.imsave(str(output_path), frame)
+            plt.imsave(str(output_path), frame, format='jpg')
             plt.close('all')  # Clean up any matplotlib resources
 
+        except ImportError as e:
+            self.logger.warning(f"Missing dependency for thumbnail generation: {e}")
+        except (OSError, IOError) as e:
+            self.logger.warning(f"File system error generating thumbnail: {e}")
         except Exception as e:
             self.logger.warning(f"Failed to generate thumbnail: {e}")
             # Thumbnail generation is optional, don't fail the stage
@@ -397,5 +483,11 @@ class OutputStage(Stage):
             if clip is not None:
                 try:
                     clip.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    self.logger.debug(f"Clip cleanup error (non-fatal): {e}")
+
+            # Always clean up matplotlib
+            try:
+                plt.close('all')
+            except Exception as e:
+                self.logger.debug(f"Matplotlib cleanup error (non-fatal): {e}")
