@@ -80,12 +80,19 @@ class Config:
             "cyan": (34, 211, 238),
         }
 
-        # Font paths (Windows)
-        self.fonts = {
-            "title": "C:/Windows/Fonts/arialbd.ttf",
-            "subtitle": "C:/Windows/Fonts/arial.ttf",
-            "code": "C:/Windows/Fonts/consola.ttf",
-        }
+        # Font paths (cross-platform)
+        from video_gen.shared.fonts import resolve_all_fonts
+        try:
+            self.fonts = resolve_all_fonts()
+            logger.info(f"Fonts resolved: {self.fonts}")
+        except Exception as e:
+            logger.warning(f"Font resolution failed: {e}. Using fallback paths.")
+            # Fallback to basic paths
+            self.fonts = {
+                "title": "arial.ttf",
+                "subtitle": "arial.ttf",
+                "code": "monospace.ttf",
+            }
 
         # AI API keys
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")

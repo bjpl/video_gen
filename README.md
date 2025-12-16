@@ -89,6 +89,12 @@ cd video_gen
 # Install dependencies
 pip install -r requirements.txt
 
+# Download bundled fonts (for cross-platform support)
+python scripts/download_fonts.py
+
+# Verify fonts are available
+python scripts/check_fonts.py
+
 # Optional: Configure AI narration
 export ANTHROPIC_API_KEY="sk-ant-api03-..."  # Linux/Mac
 # OR

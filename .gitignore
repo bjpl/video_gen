@@ -30,6 +30,9 @@ wheels/
 .installed.cfg
 *.egg
 
+# Fonts (keep bundled fonts, they are freely licensed)
+# video_gen/assets/fonts/*.ttf are committed for cross-platform support
+
 # Video generation outputs
 audio/
 videos/
@@ -88,6 +91,10 @@ outputs/**/*.mp4
 outputs/*_metadata.json
 outputs/*_thumbnail.jpg
 outputs/*_timing.json
+
+
+# Removed Windows wrapper files per user request
+hive-mind-prompt-*.txt
 
 # Claude Flow generated files
 .claude/settings.local.json
