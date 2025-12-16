@@ -5,9 +5,12 @@ Now powered by the unified pipeline for consistency and reliability.
 HTMX + Alpine.js compatible REST API
 
 Security Features:
+- Production security headers (X-Frame-Options, X-Content-Type-Options, etc.)
+- HTTPS redirect in production with HSTS enforcement
+- Content Security Policy (CSP)
 - CSRF protection for all state-changing endpoints
 - Input validation and sanitization
-- Rate limiting headers
+- Rate limiting with configurable thresholds
 - Secure error responses
 """
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, UploadFile, File, Form, Depends
@@ -62,6 +65,10 @@ from dotenv import load_dotenv
 load_dotenv()
 load_dotenv(Path(__file__).parent / ".env")  # Also load from app/.env
 
+# Initialize Sentry error tracking
+from app.utils.sentry_config import init_sentry
+init_sentry()
+
 # Import rate limiting middleware
 from app.middleware.rate_limiting import (
     setup_rate_limiting,
@@ -71,6 +78,13 @@ from app.middleware.rate_limiting import (
     PARSE_LIMIT,
     TASKS_LIMIT,
     HEALTH_LIMIT,
+)
+
+# Import security headers middleware
+from app.middleware.security_headers import (
+    setup_security_headers,
+    get_security_report,
+    validate_security_configuration,
 )
 
 # Import multilingual support
@@ -101,6 +115,13 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Initializing video generation system...")
     try:
+        # Step 1: Validate environment configuration
+        from app.utils.env_validator import validate_environment
+        logger.info("🔍 Validating environment configuration...")
+        env_result = validate_environment()
+        logger.info("✅ Environment validation passed")
+
+        # Step 2: Initialize pipeline
         pipeline = get_pipeline()
         logger.info(f"✅ Pipeline initialized with {len(pipeline.stages)} stages")
         logger.info("✅ Video generation system ready!")
@@ -121,6 +142,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Setup security headers middleware FIRST (applied to all requests)
+setup_security_headers(app)
+
 # Setup rate limiting BEFORE routes are defined
 setup_rate_limiting(app)
 
@@ -129,6 +153,69 @@ BASE_DIR = Path(__file__).parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.auto_reload = True  # Force template reloading in production
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+
+# ============================================================================
+# Custom Exception Handlers with Sentry Integration
+# ============================================================================
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handle HTTP exceptions with Sentry integration.
+
+    Captures 5xx errors in Sentry while allowing 4xx errors to pass through
+    without creating noise in error tracking.
+    """
+    # Capture 5xx errors in Sentry
+    if exc.status_code >= 500:
+        from app.utils.sentry_config import capture_api_error
+        capture_api_error(
+            error=exc,
+            endpoint=request.url.path,
+            method=request.method,
+            status_code=exc.status_code
+        )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "error": exc.detail,
+            "status_code": exc.status_code,
+            "path": request.url.path
+        }
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """
+    Handle uncaught exceptions with Sentry integration.
+
+    Captures all unhandled exceptions for monitoring and debugging.
+    """
+    from app.utils.sentry_config import capture_api_error
+
+    # Capture in Sentry with full context
+    capture_api_error(
+        error=exc,
+        endpoint=request.url.path,
+        method=request.method,
+        status_code=500
+    )
+
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+
+    # Return generic error to client (don't expose internal details)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "message": "An unexpected error occurred. The issue has been logged.",
+            "status_code": 500,
+            "path": request.url.path
+        }
+    )
 
 
 # ============================================================================
@@ -1759,6 +1846,20 @@ async def execute_pipeline_task(pipeline: Any, input_config: InputConfig, task_i
 
     except Exception as e:
         logger.error(f"Pipeline execution failed for task {task_id}: {e}", exc_info=True)
+
+        # Capture pipeline error in Sentry
+        from app.utils.sentry_config import capture_pipeline_error
+        capture_pipeline_error(
+            error=e,
+            task_id=task_id or "unknown",
+            stage=None,  # Pipeline will track current stage internally
+            context={
+                "input_type": input_config.input_type,
+                "languages": input_config.languages,
+                "source": str(input_config.source)[:200]  # Truncate for privacy
+            }
+        )
+
         # Pipeline automatically persists failure state
         # No need for manual error handling
 
@@ -2289,6 +2390,42 @@ async def health_check(request: Request):
         logger.error(f"Health check failed: {e}", exc_info=True)
         return {
             "status": "unhealthy",
+            "error": str(e)
+        }
+
+
+@app.get("/api/security/status")
+@limiter.limit(HEALTH_LIMIT)
+async def security_status(request: Request):
+    """
+    Security configuration status endpoint.
+
+    Returns:
+    - Current security headers configuration
+    - HTTPS redirect status
+    - CSP configuration
+    - Security warnings (if any)
+
+    Rate limit: Very high (status checks should not be restricted)
+    """
+    try:
+        # Get security report
+        report = get_security_report()
+
+        # Get validation warnings
+        warnings = validate_security_configuration()
+
+        return {
+            "status": "configured",
+            "security": report,
+            "warnings": warnings,
+            "secure_connection": request.url.scheme == "https",
+            "client_ip": request.client.host if request.client else "unknown"
+        }
+    except Exception as e:
+        logger.error(f"Security status check failed: {e}", exc_info=True)
+        return {
+            "status": "error",
             "error": str(e)
         }
 

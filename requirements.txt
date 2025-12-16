@@ -60,7 +60,14 @@ pydantic-settings>=2.11.0
 # Rate limiting (DoS protection)
 slowapi>=0.1.9
 
+# Error tracking and monitoring
+sentry-sdk[fastapi]>=2.0.0
+
 # Testing
 pytest>=8.4.2
 pytest-asyncio>=1.2.0
 httpx==0.25.2  # Pinned for Starlette TestClient compatibility
+
+# Cloud Storage (Optional)
+# AWS S3 and S3-compatible storage (Cloudflare R2, etc.)
+boto3>=1.34.0
