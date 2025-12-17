@@ -36,7 +36,7 @@
                 <div class="flex-1">
                     <div class="font-semibold" :class="type === 'success' ? 'text-green-900' : type === 'error' ? 'text-red-900' : 'text-blue-900'" x-text="message"></div>
                 </div>
-                <button @click="show = false" class="text-gray-400 hover:text-gray-600">×</button>
+                <button @click="show = false" class="text-gray-400 hover:text-gray-600" aria-label="Close notification">×</button>
             </div>
         </div>
     </div>
@@ -736,17 +736,17 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
                                 <div class="flex gap-3">
-                                    <button type="button" @click="single.color = 'blue'" :class="single.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="relative w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" title="Blue: Professional, trustworthy (best for corporate, finance, healthcare)">
+                                    <button type="button" @click="single.color = 'blue'" :class="single.color === 'blue' ? 'ring-2 ring-offset-2 ring-blue-500' : ''" class="relative w-12 h-12 rounded-lg bg-blue-500 hover:scale-110 transition-transform" aria-label="Blue color" title="Blue: Professional, trustworthy (best for corporate, finance, healthcare)">
                                         <span x-show="isRecommended?.('color', 'blue')"
                                               class="recommended-badge absolute -top-2 -right-2 text-xs bg-yellow-400 text-yellow-900 rounded-full w-5 h-5 flex items-center justify-center">
                                             ⭐
                                         </span>
                                     </button>
-                                    <button type="button" @click="single.color = 'purple'" :class="single.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform" title="Purple: Premium, sophisticated (best for high-end products, creative)"></button>
-                                    <button type="button" @click="single.color = 'orange'" :class="single.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform" title="Orange: Energetic, creative (best for creative, marketing, youth)"></button>
-                                    <button type="button" @click="single.color = 'green'" :class="single.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform" title="Green: Success, growth (best for environmental, health, finance)"></button>
-                                    <button type="button" @click="single.color = 'pink'" :class="single.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform" title="Pink: Playful, modern (best for youth, creative, lifestyle)"></button>
-                                    <button type="button" @click="single.color = 'cyan'" :class="single.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform" title="Cyan: Tech, innovation (best for technology, science, modern)"></button>
+                                    <button type="button" @click="single.color = 'purple'" :class="single.color === 'purple' ? 'ring-2 ring-offset-2 ring-purple-500' : ''" class="w-12 h-12 rounded-lg bg-purple-500 hover:scale-110 transition-transform" aria-label="Purple color" title="Purple: Premium, sophisticated (best for high-end products, creative)"></button>
+                                    <button type="button" @click="single.color = 'orange'" :class="single.color === 'orange' ? 'ring-2 ring-offset-2 ring-orange-500' : ''" class="w-12 h-12 rounded-lg bg-orange-500 hover:scale-110 transition-transform" aria-label="Orange color" title="Orange: Energetic, creative (best for creative, marketing, youth)"></button>
+                                    <button type="button" @click="single.color = 'green'" :class="single.color === 'green' ? 'ring-2 ring-offset-2 ring-green-500' : ''" class="w-12 h-12 rounded-lg bg-green-500 hover:scale-110 transition-transform" aria-label="Green color" title="Green: Success, growth (best for environmental, health, finance)"></button>
+                                    <button type="button" @click="single.color = 'pink'" :class="single.color === 'pink' ? 'ring-2 ring-offset-2 ring-pink-500' : ''" class="w-12 h-12 rounded-lg bg-pink-500 hover:scale-110 transition-transform" aria-label="Pink color" title="Pink: Playful, modern (best for youth, creative, lifestyle)"></button>
+                                    <button type="button" @click="single.color = 'cyan'" :class="single.color === 'cyan' ? 'ring-2 ring-offset-2 ring-cyan-500' : ''" class="w-12 h-12 rounded-lg bg-cyan-500 hover:scale-110 transition-transform" aria-label="Cyan color" title="Cyan: Tech, innovation (best for technology, science, modern)"></button>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-2 italic">💡 Hover over colors for psychology guide</p>
                             </div>

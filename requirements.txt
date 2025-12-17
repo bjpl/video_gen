@@ -67,6 +67,8 @@ sentry-sdk[fastapi]>=2.0.0
 pytest>=8.4.2
 pytest-asyncio>=1.2.0
 httpx==0.25.2  # Pinned for Starlette TestClient compatibility
+beautifulsoup4>=4.12.0  # HTML parsing for accessibility tests
+psutil>=5.9.0  # Process monitoring for memory tests
 
 # Cloud Storage (Optional)
 # AWS S3 and S3-compatible storage (Cloudflare R2, etc.)
