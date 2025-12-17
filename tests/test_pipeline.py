@@ -44,9 +44,19 @@ def temp_state_dir(tmp_path):
 
 @pytest.fixture
 def orchestrator(temp_state_dir):
-    """Create orchestrator with temp state manager."""
+    """Create orchestrator with temp state manager and custom phases for testing."""
+    from video_gen.pipeline import ExecutionPhase
+
     state_manager = StateManager(temp_state_dir)
-    return PipelineOrchestrator(state_manager=state_manager)
+    # Custom execution phases that include test stage names
+    test_phases = [
+        ExecutionPhase("test_phase", ["stage1", "stage2", "stage3"], parallel=False),
+    ]
+    return PipelineOrchestrator(
+        state_manager=state_manager,
+        execution_phases=test_phases,
+        enable_parallelism=False  # Sequential for predictable test behavior
+    )
 
 
 @pytest.fixture
