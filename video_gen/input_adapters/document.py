@@ -11,6 +11,7 @@ import asyncio
 import logging
 
 from .base import InputAdapter, InputAdapterResult
+from .content_splitter import ContentSection
 from ..shared.models import VideoSet, SceneConfig
 from ..script_generator.ai_enhancer import AIScriptEnhancer
 
@@ -381,14 +382,14 @@ class DocumentAdapter(InputAdapter):
 
         def save_current_list():
             """Helper to save accumulated list items."""
-            nonlocal current_list, current_section
+            nonlocal current_list
             if current_list and current_section:
                 current_section.setdefault('lists', []).append(current_list)
                 current_list = []
 
         def save_current_section():
             """Helper to save current section."""
-            nonlocal current_section, current_text, current_list
+            nonlocal current_text
             if current_section:
                 current_section['text'] = '\n'.join(current_text).strip()
                 save_current_list()
@@ -652,7 +653,7 @@ class DocumentAdapter(InputAdapter):
 
     async def _create_video_set_from_sections(
         self,
-        sections: List['ContentSection'],
+        sections: List[ContentSection],
         source: Any,
         split_metadata: Dict[str, Any],
         **kwargs

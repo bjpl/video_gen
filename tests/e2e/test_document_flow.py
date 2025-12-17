@@ -231,8 +231,9 @@ class TestDocumentFlowAPI:
         assert "general" in scene_types or "educational" in scene_types
 
     @pytest.mark.e2e
+    @pytest.mark.slow
     def test_step6_start_generation(self, client, temp_markdown_file):
-        """Step 6: Start document generation"""
+        """Step 6: Start document generation (slow - actually runs pipeline)"""
         response = client.post(
             "/api/parse/document",
             json={
