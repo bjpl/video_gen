@@ -135,8 +135,11 @@ def sample_docx_bytes():
 class TestDocumentAdapterInit:
     """Test DocumentAdapter initialization."""
 
-    def test_init_default_parameters(self):
-        """Test initialization with default parameters."""
+    def test_init_default_parameters(self, mock_ai_enhancer):
+        """Test initialization with default parameters.
+
+        Uses mock_ai_enhancer to prevent API key errors from affecting use_ai default.
+        """
         adapter = DocumentAdapter()
 
         assert adapter.name == "document"
