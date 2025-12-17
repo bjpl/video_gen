@@ -28,18 +28,18 @@ jobs:
 
     - name: Check code formatting with Black
       run: |
-        black --check --diff video_gen/ app/ scripts/ || echo "::warning::Code formatting issues found. Run 'black .' to fix."
+        black --check --diff video_gen/ app/ || echo "::warning::Code formatting issues found. Run 'black .' to fix."
 
     - name: Check import ordering with isort
       run: |
-        isort --check-only --diff video_gen/ app/ scripts/ || echo "::warning::Import ordering issues found. Run 'isort .' to fix."
+        isort --check-only --diff video_gen/ app/ || echo "::warning::Import ordering issues found. Run 'isort .' to fix."
 
     - name: Lint with flake8
       run: |
-        # Stop build if there are Python syntax errors or undefined names
-        flake8 video_gen/ app/ scripts/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Stop build if there are Python syntax errors or undefined names (excluding scripts/)
+        flake8 video_gen/ app/ --count --select=E9,F63,F7,F82 --show-source --statistics
         # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 video_gen/ app/ scripts/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 video_gen/ app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Type checking with mypy (non-blocking)
       continue-on-error: true

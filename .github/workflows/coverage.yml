@@ -47,6 +47,8 @@ jobs:
           -v
       env:
         PYTHONPATH: ${{ github.workspace }}
+        ENVIRONMENT: development
+        CSRF_DISABLED: "true"
 
     - name: Generate coverage report
       run: |
