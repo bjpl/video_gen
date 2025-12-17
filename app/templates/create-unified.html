@@ -375,11 +375,13 @@
                                         {code: 'it', name: 'Italian', flag: '🇮🇹'}
                                     ]" :key="lang.code">
                                         <button @click="toggleLanguageSelection(lang.code)" type="button"
+                                                aria-label="Toggle language selection"
+                                                :aria-pressed="config.targetLanguages.includes(lang.code)"
                                                 class="p-3 rounded-xl border-2 transition-all flex items-center gap-2.5 text-left"
                                                 :class="config.targetLanguages.includes(lang.code) ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-200' : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'">
-                                            <span class="text-xl" x-text="lang.flag"></span>
+                                            <span class="text-xl" x-text="lang.flag" aria-hidden="true"></span>
                                             <span class="text-sm font-medium" :class="config.targetLanguages.includes(lang.code) ? 'text-blue-900' : 'text-gray-700'" x-text="lang.name"></span>
-                                            <div x-show="config.targetLanguages.includes(lang.code)" class="ml-auto w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <div x-show="config.targetLanguages.includes(lang.code)" class="ml-auto w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
                                                 <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
                                             </div>
                                         </button>
@@ -410,7 +412,9 @@
                             <div x-show="languageTab === 'all'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
                                 <!-- Search Box -->
                                 <div class="mb-4">
+                                    <label for="language-search-input" class="sr-only">Search languages</label>
                                     <input type="search"
+                                           id="language-search-input"
                                            x-model="languageSearch"
                                            placeholder="Search languages..."
                                            class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -450,12 +454,14 @@
                                         {code: 'cy', name: 'Welsh', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿'}
                                     ].filter(l => !languageSearch || l.name.toLowerCase().includes(languageSearch.toLowerCase()))" :key="lang.code">
                                         <button @click="toggleLanguageSelection(lang.code)" type="button"
+                                                aria-label="Toggle language selection"
+                                                :aria-pressed="config.targetLanguages.includes(lang.code)"
                                                 class="p-3 rounded-lg border-2 transition-all text-left"
                                                 :class="config.targetLanguages.includes(lang.code) ? 'bg-blue-50 border-blue-400 ring-1 ring-blue-200' : 'bg-white border-gray-200 hover:border-gray-300'">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-lg" x-text="lang.flag"></span>
+                                                <span class="text-lg" x-text="lang.flag" aria-hidden="true"></span>
                                                 <span class="text-sm font-medium truncate" x-text="lang.name"></span>
-                                                <div x-show="config.targetLanguages.includes(lang.code)" class="ml-auto w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <div x-show="config.targetLanguages.includes(lang.code)" class="ml-auto w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0" aria-hidden="true">
                                                     <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
                                                 </div>
                                             </div>
@@ -481,10 +487,11 @@
                                                 <span class="font-medium text-gray-900" x-text="getLanguageName(code)"></span>
                                             </div>
                                             <button @click="toggleLanguageSelection(code)" type="button"
+                                                    aria-label="Remove language"
                                                     class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                                                     :disabled="config.targetLanguages.length <= 1"
                                                     :class="config.targetLanguages.length <= 1 ? 'opacity-30 cursor-not-allowed' : ''">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                 </svg>
                                             </button>
@@ -744,6 +751,7 @@
                                                             <!-- Preview Button -->
                                                             <button @click.stop.prevent="playPreview(langCode, voice.id)"
                                                                     type="button"
+                                                                    aria-label="Preview voice sample"
                                                                     class="mt-2 w-full px-3 py-2.5 text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow"
                                                                     :class="{
                                                                         'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 group-hover:scale-[1.02]': getPreviewButtonState(langCode, voice.id) === 'idle',
@@ -846,9 +854,10 @@
                                                             </div>
                                                             <button @click="rotationExpanded[langCode] = !rotationExpanded[langCode]"
                                                                     type="button"
+                                                                    aria-label="Toggle voice rotation details"
                                                                     class="text-white/80 hover:text-white text-xs flex items-center gap-1 transition-colors">
                                                                 <span x-text="rotationExpanded[langCode] ? 'Hide Details' : 'Learn More'"></span>
-                                                                <svg class="w-4 h-4 transition-transform duration-200" :class="rotationExpanded[langCode] ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg class="w-4 h-4 transition-transform duration-200" :class="rotationExpanded[langCode] ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                                                 </svg>
                                                             </button>
@@ -1012,9 +1021,11 @@
                                             {id: 'cyan', name: 'Technical', class: 'bg-cyan-500'}
                                         ]" :key="theme.id">
                                             <button @click="config.color = theme.id" type="button"
+                                                    aria-label="Select color theme"
+                                                    :aria-pressed="config.color === theme.id"
                                                     class="p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2"
                                                     :class="config.color === theme.id ? 'border-gray-900 ring-2 ring-gray-200 bg-gray-50' : 'border-gray-200 hover:border-gray-300'">
-                                                <div class="w-10 h-10 rounded-lg shadow-inner" :class="theme.class"></div>
+                                                <div class="w-10 h-10 rounded-lg shadow-inner" :class="theme.class" aria-hidden="true"></div>
                                                 <span class="text-xs font-medium" :class="config.color === theme.id ? 'text-gray-900' : 'text-gray-600'" x-text="theme.name"></span>
                                             </button>
                                         </template>

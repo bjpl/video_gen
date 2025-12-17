@@ -8,14 +8,24 @@ This file provides:
 - Async test utilities
 """
 
+import os
+import sys
+
+# CRITICAL: Set test environment variables BEFORE any app imports
+# This prevents rate limiting and other production features in tests
+os.environ["TESTING"] = "true"
+os.environ["LOG_LEVEL"] = "DEBUG"
+os.environ["RATE_LIMIT_ENABLED"] = "false"  # Disable rate limiting in tests
+# Don't use real API keys in tests
+if "ANTHROPIC_API_KEY" in os.environ:
+    del os.environ["ANTHROPIC_API_KEY"]
+
 import pytest
 import asyncio
 import tempfile
 import shutil
 from pathlib import Path
 from typing import Generator, AsyncGenerator
-import sys
-import os
 
 # Add app directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'app'))
@@ -220,16 +230,174 @@ pytest.mark.slow = pytest.mark.slow
 # Test environment configuration
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_env():
-    """Setup test environment variables."""
-    os.environ["TESTING"] = "true"
-    os.environ["LOG_LEVEL"] = "DEBUG"
-    os.environ["RATE_LIMIT_ENABLED"] = "false"  # Disable rate limiting in tests
-    # Don't use real API keys in tests
-    if "ANTHROPIC_API_KEY" in os.environ:
-        del os.environ["ANTHROPIC_API_KEY"]
+    """
+    Test environment variables setup.
+
+    Note: Environment variables are already set at module import time
+    to ensure they're available before the FastAPI app initializes.
+    This fixture is kept for cleanup purposes.
+    """
     yield
     # Cleanup
     if "TESTING" in os.environ:
         del os.environ["TESTING"]
     if "RATE_LIMIT_ENABLED" in os.environ:
         del os.environ["RATE_LIMIT_ENABLED"]
+
+
+# ============================================================================
+# MOCKING FIXTURES FOR EXTERNAL APIS
+# ============================================================================
+
+@pytest.fixture
+def mock_edge_tts(monkeypatch):
+    """Mock edge_tts.Communicate to avoid network calls."""
+    from unittest.mock import AsyncMock, MagicMock
+    import wave
+    import struct
+
+    async def mock_save(audio_path: str):
+        """Create a dummy audio file."""
+        # Create a simple WAV file
+        path = Path(audio_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Create a 1-second silent audio file
+        sample_rate = 22050
+        duration = 1  # 1 second
+        num_samples = sample_rate * duration
+
+        with wave.open(str(path), 'w') as wav_file:
+            wav_file.setnchannels(1)  # Mono
+            wav_file.setsampwidth(2)  # 2 bytes per sample
+            wav_file.setframerate(sample_rate)
+
+            # Write silent audio (all zeros)
+            for _ in range(num_samples):
+                wav_file.writeframes(struct.pack('h', 0))
+
+    # Mock Communicate class
+    mock_communicate = MagicMock()
+    mock_communicate.save = AsyncMock(side_effect=mock_save)
+
+    def mock_communicate_init(text, voice, rate="+0%", volume="+0%"):
+        return mock_communicate
+
+    # Patch edge_tts.Communicate
+    import edge_tts
+    monkeypatch.setattr(edge_tts, "Communicate", mock_communicate_init)
+
+    return mock_communicate
+
+
+@pytest.fixture
+def auto_mock_edge_tts_for_e2e(monkeypatch):
+    """Mock edge_tts for end-to-end tests to prevent network calls."""
+    from unittest.mock import AsyncMock, MagicMock
+    import wave
+    import struct
+
+    async def mock_save(audio_path: str):
+        """Create a dummy audio file."""
+        path = Path(audio_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Create a simple WAV file (MP3 would need external library)
+        # We'll create WAV and rename to MP3 for simplicity
+        sample_rate = 22050
+        duration = 1
+        num_samples = sample_rate * duration
+
+        with wave.open(str(path).replace('.mp3', '.wav'), 'w') as wav_file:
+            wav_file.setnchannels(1)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(sample_rate)
+            for _ in range(num_samples):
+                wav_file.writeframes(struct.pack('h', 0))
+
+        # Rename to requested format
+        wav_path = Path(str(path).replace('.mp3', '.wav'))
+        if wav_path.exists() and str(path).endswith('.mp3'):
+            wav_path.rename(path)
+
+    mock_communicate = MagicMock()
+    mock_communicate.save = AsyncMock(side_effect=mock_save)
+
+    def mock_communicate_init(text, voice, rate="+0%", volume="+0%"):
+        return mock_communicate
+
+    try:
+        import edge_tts
+        monkeypatch.setattr(edge_tts, "Communicate", mock_communicate_init)
+    except ImportError:
+        pass  # edge_tts not installed, skip mocking
+
+    return mock_communicate
+
+
+@pytest.fixture
+def mock_anthropic_api(monkeypatch):
+    """Mock Anthropic API to avoid network calls and API costs."""
+    from unittest.mock import MagicMock, Mock
+
+    # Mock response
+    mock_response = MagicMock()
+    mock_response.content = [
+        MagicMock(text="This is a mocked AI-enhanced narration response.")
+    ]
+
+    # Mock client
+    mock_client = MagicMock()
+    mock_client.messages.create.return_value = mock_response
+
+    # Mock Anthropic class
+    def mock_anthropic_init(*args, **kwargs):
+        return mock_client
+
+    try:
+        import anthropic
+        monkeypatch.setattr(anthropic, "Anthropic", mock_anthropic_init)
+    except ImportError:
+        pass  # anthropic not installed, skip mocking
+
+
+@pytest.fixture
+def mock_ffmpeg_audio_duration(monkeypatch):
+    """Mock ffmpeg to return audio duration without running actual ffmpeg."""
+    from unittest.mock import MagicMock
+    import subprocess
+
+    def mock_subprocess_run(cmd, *args, **kwargs):
+        """Mock subprocess.run for ffmpeg duration checks."""
+        result = MagicMock()
+        result.returncode = 0
+        result.stderr = "Duration: 00:00:05.00, start: 0.000000, bitrate: 128 kb/s"
+        result.stdout = ""
+        return result
+
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_run)
+
+
+@pytest.fixture(autouse=True)
+def auto_mock_ffmpeg(monkeypatch):
+    """Automatically mock ffmpeg for all tests."""
+    from unittest.mock import MagicMock
+    import subprocess
+
+    original_run = subprocess.run
+
+    def mock_subprocess_run(cmd, *args, **kwargs):
+        """Mock subprocess.run for ffmpeg, pass through others."""
+        if isinstance(cmd, list) and len(cmd) > 0:
+            # Check if this is an ffmpeg call
+            if 'ffmpeg' in str(cmd[0]).lower():
+                result = MagicMock()
+                result.returncode = 0
+                result.stderr = "Duration: 00:00:05.00, start: 0.000000, bitrate: 128 kb/s"
+                result.stdout = ""
+                return result
+
+        # Pass through non-ffmpeg calls
+        return original_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", mock_subprocess_run)

@@ -2,6 +2,7 @@
 
 import pytest
 from pathlib import Path
+from unittest.mock import patch, AsyncMock, MagicMock
 from video_gen.input_adapters.content_splitter import (
     ContentSplitter,
     SplitStrategy,
@@ -221,23 +222,12 @@ Fifth paragraph concludes."""
         assert result.confidence == 0.8
 
 
-@pytest.mark.skipif(
-    not Path('.env').exists() or 'ANTHROPIC_API_KEY' not in Path('.env').read_text(),
-    reason="Requires ANTHROPIC_API_KEY in .env file"
-)
 class TestAISplitting:
-    """Test AI-powered splitting (requires API key)."""
+    """Test AI-powered splitting with mocked API."""
 
     @pytest.mark.asyncio
-    @pytest.mark.slow
     async def test_ai_splitting_with_narration(self):
-        """Test AI splitting generates narration for sections."""
-        from video_gen.shared.config import config
-
-        api_key = config.get_api_key("anthropic")
-        if not api_key:
-            pytest.skip("Anthropic API key not configured")
-
+        """Test AI splitting generates narration for sections (with mocked API)."""
         content = """Machine learning is transforming technology.
 It enables computers to learn from data without explicit programming.
 Neural networks are the foundation of modern AI systems.
@@ -245,26 +235,64 @@ They process information in layers, similar to the human brain.
 Training these models requires large datasets and computational power.
 Applications range from image recognition to natural language processing."""
 
-        splitter = ContentSplitter(ai_api_key=api_key, use_ai=True)
+        # Mock the AI API response
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="""
+{
+  "sections": [
+    {
+      "title": "Introduction to Machine Learning",
+      "content": "Machine learning is transforming technology. It enables computers to learn from data without explicit programming. Neural networks are the foundation of modern AI systems.",
+      "narration": "Welcome to our exploration of machine learning! This revolutionary technology is transforming how computers understand and process information, enabling them to learn from data without explicit programming.",
+      "narration_hook": "Imagine computers that can learn just like humans do...",
+      "key_takeaway": "Machine learning enables computers to learn from data automatically"
+    },
+    {
+      "title": "Neural Networks and Training",
+      "content": "They process information in layers, similar to the human brain. Training these models requires large datasets and computational power. Applications range from image recognition to natural language processing.",
+      "narration": "Neural networks process information in layers, mimicking the human brain. Training requires massive datasets and computational power, but the results are transformative across numerous applications.",
+      "narration_hook": "From recognizing faces to understanding language...",
+      "key_takeaway": "Neural networks power modern AI with brain-inspired processing"
+    }
+  ],
+  "metadata": {
+    "strategy": "ai_intelligent",
+    "ai_model": "claude-sonnet-4.5",
+    "narration_generated": true,
+    "input_tokens": 150,
+    "output_tokens": 250
+  }
+}
+""")]
+        mock_response.usage = MagicMock(input_tokens=150, output_tokens=250)
 
-        result = await splitter.split(
-            content=content,
-            num_sections=2,
-            strategy=SplitStrategy.AI_INTELLIGENT
-        )
+        # Create splitter with mocked AI client
+        splitter = ContentSplitter(ai_api_key="test-key", use_ai=True)
 
-        # Verify AI splitting worked
-        assert result.strategy_used == SplitStrategy.AI_INTELLIGENT
-        assert len(result.sections) == 2
-        assert result.metadata.get('narration_generated') is True
+        # Mock the Anthropic client
+        with patch('anthropic.AsyncAnthropic') as mock_anthropic:
+            mock_client = AsyncMock()
+            mock_client.messages.create = AsyncMock(return_value=mock_response)
+            mock_anthropic.return_value = mock_client
 
-        # Verify narration was generated for each section
-        for section in result.sections:
-            assert section.narration is not None
-            assert len(section.narration) > 0
-            assert isinstance(section.narration, str)
+            result = await splitter.split(
+                content=content,
+                num_sections=2,
+                strategy=SplitStrategy.AI_INTELLIGENT
+            )
 
-        # Verify AI metadata
-        assert 'ai_model' in result.metadata
-        assert 'input_tokens' in result.metadata
-        assert 'output_tokens' in result.metadata
+            # Verify AI splitting worked
+            assert result.strategy_used == SplitStrategy.AI_INTELLIGENT
+            assert len(result.sections) == 2
+            assert result.metadata.get('narration_generated') is True
+
+            # Verify narration was generated for each section
+            for section in result.sections:
+                assert section.narration is not None
+                assert len(section.narration) > 0
+                assert isinstance(section.narration, str)
+
+            # Verify AI metadata
+            assert 'ai_model' in result.metadata
+            assert 'input_tokens' in result.metadata
+            assert 'output_tokens' in result.metadata

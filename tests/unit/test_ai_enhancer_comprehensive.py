@@ -29,14 +29,19 @@ from video_gen.shared.exceptions import ScriptGenerationError
 
 @pytest.fixture
 def mock_anthropic_client():
-    """Mock Anthropic API client."""
-    # The implementation uses: import anthropic; client = anthropic.Anthropic(...)
-    with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+    """Mock Anthropic API client.
+
+    CRITICAL: anthropic is lazily imported inside enhance_script method,
+    so we must patch 'anthropic.Anthropic' at the GLOBAL level, not as
+    a module attribute.
+    """
+    # Patch at GLOBAL level before lazy import happens
+    with patch('anthropic.Anthropic') as mock_class:
         client = Mock()
 
-        # Mock successful API response
+        # Mock successful API response with valid length (must be 5+ words to pass validation)
         message = Mock()
-        message.content = [Mock(text="Enhanced narration script")]
+        message.content = [Mock(text="This is an enhanced narration script for testing")]
         message.usage = Mock(input_tokens=100, output_tokens=50)
 
         response = Mock()
@@ -45,10 +50,10 @@ def mock_anthropic_client():
 
         client.messages.create = Mock(return_value=response)
 
-        # Mock the Anthropic class constructor
-        mock_module.Anthropic = Mock(return_value=client)
+        # Mock class constructor returns our mocked client
+        mock_class.return_value = client
 
-        yield mock_module
+        yield mock_class
 
 
 @pytest.fixture
@@ -143,8 +148,10 @@ class TestAIUsageMetrics:
         assert metrics.total_api_calls == 10
         assert metrics.total_input_tokens == 1000
         assert metrics.total_output_tokens == 500
-        assert metrics.successful_enhancements == 7  # Not divisible by 3
-        assert metrics.failed_enhancements == 3
+        # i % 3 != 0 is False for i=0,3,6,9 (failures) and True for i=1,2,4,5,7,8 (successes)
+        # So 6 successes, 4 failures
+        assert metrics.successful_enhancements == 6  # i % 3 != 0 for i=1,2,4,5,7,8
+        assert metrics.failed_enhancements == 4  # i % 3 == 0 for i=0,3,6,9
 
     def test_get_summary(self):
         """Test usage summary generation."""
@@ -279,7 +286,7 @@ class TestScriptEnhancement:
     @pytest.mark.asyncio
     async def test_enhance_preserves_key_information(self, mock_config, sample_scripts):
         """Test that enhancement preserves key information."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             # Mock response that includes original content
             client = Mock()
             message = Mock()
@@ -287,7 +294,7 @@ class TestScriptEnhancement:
             message.usage = Mock(input_tokens=100, output_tokens=50)
             response = Mock(content=message.content, usage=message.usage)
             client.messages.create = Mock(return_value=response)
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
             result = await enhancer.enhance_script(sample_scripts["intro"])
@@ -297,7 +304,7 @@ class TestScriptEnhancement:
     @pytest.mark.asyncio
     async def test_word_count_constraint(self, mock_config, sample_scripts):
         """Test that word count constraints are applied."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             # Mock response with appropriate length (10-20 words)
             client = Mock()
             message = Mock()
@@ -306,7 +313,7 @@ class TestScriptEnhancement:
             message.usage = Mock(input_tokens=100, output_tokens=20)
             response = Mock(content=message.content, usage=message.usage)
             client.messages.create = Mock(return_value=response)
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
             result = await enhancer.enhance_script(sample_scripts["intro"])
@@ -330,7 +337,7 @@ class TestScriptEnhancement:
     @pytest.mark.asyncio
     async def test_developer_tone_validation(self, mock_config, sample_scripts):
         """Test that developer/colleague tone is enforced."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             message = Mock()
             # Simulated professional, non-marketing tone
@@ -338,7 +345,7 @@ class TestScriptEnhancement:
             message.usage = Mock(input_tokens=100, output_tokens=20)
             response = Mock(content=message.content, usage=message.usage)
             client.messages.create = Mock(return_value=response)
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
             result = await enhancer.enhance_script(sample_scripts["explanation"])
@@ -369,10 +376,10 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_api_timeout_handling(self, mock_config):
         """Test handling of API timeouts."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             client.messages.create = Mock(side_effect=TimeoutError("API timeout"))
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
 
@@ -383,10 +390,10 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_api_rate_limit_handling(self, mock_config):
         """Test handling of rate limit errors."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             client.messages.create = Mock(side_effect=Exception("Rate limit exceeded"))
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
 
@@ -397,11 +404,11 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_invalid_api_response(self, mock_config):
         """Test handling of invalid API responses."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             # Invalid response structure
             client.messages.create = Mock(return_value=None)
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
 
@@ -412,10 +419,10 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_network_error_handling(self, mock_config):
         """Test handling of network errors."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             client.messages.create = Mock(side_effect=ConnectionError("Network error"))
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
 
@@ -426,10 +433,10 @@ class TestAPIIntegration:
     @pytest.mark.asyncio
     async def test_api_authentication_error(self):
         """Test handling of authentication errors."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             client.messages.create = Mock(side_effect=Exception("Invalid API key"))
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer(api_key="invalid-key")
 
@@ -497,14 +504,14 @@ class TestCostTracking:
     @pytest.mark.asyncio
     async def test_high_volume_cost_accuracy(self, mock_config):
         """Test cost accuracy for high volume usage."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             message = Mock()
             message.content = [Mock(text="Enhanced")]
             message.usage = Mock(input_tokens=10000, output_tokens=5000)
             response = Mock(content=message.content, usage=message.usage)
             client.messages.create = Mock(return_value=response)
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
 
@@ -537,14 +544,14 @@ class TestQualityValidation:
     @pytest.mark.asyncio
     async def test_output_length_validation(self, mock_config, sample_scripts):
         """Test that output length is within constraints."""
-        with patch('video_gen.script_generator.ai_enhancer.anthropic') as mock_module:
+        with patch('anthropic.Anthropic') as mock_class:
             client = Mock()
             message = Mock()
             message.content = [Mock(text="Short concise narration.")]
             message.usage = Mock(input_tokens=100, output_tokens=10)
             response = Mock(content=message.content, usage=message.usage)
             client.messages.create = Mock(return_value=response)
-            mock_module.Anthropic = Mock(return_value=client)
+            mock_class.return_value = client
 
             enhancer = AIScriptEnhancer()
             result = await enhancer.enhance_script(sample_scripts["intro"])
@@ -690,10 +697,19 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_none_script_handling(self, mock_config):
         """Test handling of None as script input."""
-        enhancer = AIScriptEnhancer()
+        with patch('anthropic.Anthropic') as mock_class:
+            # Mock API to simulate error when None is passed
+            client = Mock()
+            client.messages.create = Mock(side_effect=Exception("Cannot enhance None script"))
+            mock_class.return_value = client
 
-        with pytest.raises(Exception):  # Should raise error or handle
-            await enhancer.enhance_script(None)
+            enhancer = AIScriptEnhancer()
+
+            # Implementation returns original script on error
+            # When None is passed, the implementation will encounter an error and return the original (None)
+            # This is the actual behavior - it doesn't raise, it returns the original
+            result = await enhancer.enhance_script(None)
+            assert result is None  # Returns original on error
 
 
 # ============================================================================

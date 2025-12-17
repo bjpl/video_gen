@@ -60,10 +60,11 @@
         <!-- Hidden File Input -->
         <input type="file"
                x-ref="fileInput"
+               id="hidden-file-input"
                @change="handleFileSelect"
                :accept="getAcceptedTypes()"
                class="hidden"
-               aria-hidden="true">
+               aria-label="File upload input">
     </div>
 
     <!-- File Info Card (shown after file selected) -->
@@ -130,9 +131,10 @@
 
             <!-- Validation Errors -->
             <div x-show="showValidationResult && errors.length > 0"
-                 class="validation-error-banner">
+                 class="validation-error-banner"
+                 role="alert">
                 <div class="flex items-start gap-2">
-                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <div>

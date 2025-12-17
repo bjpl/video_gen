@@ -42,14 +42,43 @@ def mock_ai_enhancer():
 
 @pytest.fixture
 def mock_content_splitter():
-    """Mock content splitter."""
-    with patch('video_gen.input_adapters.document.ContentSplitter') as mock:
+    """Mock content splitter.
+
+    CRITICAL: ContentSplitter is lazily imported inside DocumentAdapter.__init__,
+    so we must patch at SOURCE module where class is defined.
+    """
+    with patch('video_gen.input_adapters.content_splitter.ContentSplitter') as mock:
         splitter = Mock()
         split_result = Mock()
-        split_result.sections = [
-            {"title": "Section 1", "content": "Content 1"},
-            {"title": "Section 2", "content": "Content 2"}
-        ]
+
+        # Mock ContentSection objects with all required attributes
+        section1 = Mock()
+        section1.title = "Section 1"
+        section1.content = "Content 1"
+        section1.narration_hook = "Hook for section 1"
+        section1.key_takeaway = "Takeaway 1"
+        section1.start_index = 0
+        section1.end_index = 100
+        section1.word_count = 50
+        section1.metadata = {}
+        section1.narration = "AI-generated narration for section 1"  # Add narration attribute
+
+        section2 = Mock()
+        section2.title = "Section 2"
+        section2.content = "Content 2"
+        section2.narration_hook = "Hook for section 2"
+        section2.key_takeaway = "Takeaway 2"
+        section2.start_index = 100
+        section2.end_index = 200
+        section2.word_count = 50
+        section2.metadata = {}
+        section2.narration = "AI-generated narration for section 2"  # Add narration attribute
+
+        # CRITICAL FIX: Mock sections list needs __len__ for iteration in _create_video_set_from_sections
+        # The implementation uses: for idx, section in enumerate(sections)
+        # And: len(sections) at line 703
+        sections_list = [section1, section2]
+        split_result.sections = sections_list  # Use actual list, not Mock
         split_result.strategy_used = Mock(value="ai")
         split_result.confidence = 0.95
         split_result.metadata = {"quality": "high"}
@@ -220,9 +249,10 @@ class TestFileFormatReading:
     async def test_read_nonexistent_file(self):
         """Test handling of nonexistent file."""
         adapter = DocumentAdapter(test_mode=True, use_ai=False)
-        content = await adapter._read_document_content("/nonexistent/file.txt")
 
-        assert content is None
+        # Implementation raises FileNotFoundError at line 281, not returning None
+        with pytest.raises(FileNotFoundError, match="File not found"):
+            content = await adapter._read_document_content("/nonexistent/file.txt")
 
     @pytest.mark.asyncio
     async def test_read_empty_file(self, tmp_path):
@@ -395,7 +425,7 @@ class TestContentSplitting:
         md_file = tmp_path / "test.md"
         md_file.write_text(sample_markdown)
 
-        with patch('video_gen.input_adapters.document.ContentSplitter') as mock_splitter:
+        with patch('video_gen.input_adapters.content_splitter.ContentSplitter') as mock_splitter:
             adapter = DocumentAdapter(test_mode=True, use_ai=False)
             # Test header strategy
             # (Implementation depends on actual split logic)
@@ -659,9 +689,19 @@ class TestVideoSetGeneration:
 
         assert result.success is True
         if result.video_set:
-            assert result.video_set.accent_color == "blue"
+            # CRITICAL FIX: VideoSet doesn't have accent_color directly
+            # It's stored in metadata per implementation at line 648
+            assert result.video_set.metadata.get("accent_color") == "blue"
+            # And in config.defaults backward compat at line 222
+            assert result.video_set.config.defaults.get("accent_color") == "blue"
+
+            # Each VideoConfig has accent_color directly (line 633)
             for video in result.video_set.videos:
-                assert video.voice == "male" or hasattr(video, 'voice')
+                assert video.accent_color == "blue"
+                # Voice is per-scene, not per-video in VideoConfig
+                # Check that scenes have correct voice
+                for scene in video.scenes:
+                    assert scene.voice == "male"
 
     @pytest.mark.asyncio
     async def test_scene_generation_from_structure(self, tmp_path):

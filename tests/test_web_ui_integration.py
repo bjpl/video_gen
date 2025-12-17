@@ -157,9 +157,11 @@ def test_parse_youtube_endpoint(client):
     response = client.post(
         "/api/parse/youtube",
         json={
-            "url": "https://youtube.com/watch?v=test123",
+            "url": "https://youtube.com/watch?v=dQw4w9WgXcQ",  # Use valid video ID format
             "duration": 60,
-            "accent_color": "purple"
+            "accent_color": "purple",
+            "voice": "male",
+            "scene_duration": 12
         }
     )
     assert response.status_code == 200

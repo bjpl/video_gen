@@ -334,22 +334,20 @@ class TestErrorHandling:
         """Create YouTubeURLValidator instance."""
         return YouTubeURLValidator()
 
-    def test_handle_network_error(self, validator):
+    @pytest.mark.asyncio
+    async def test_handle_network_error(self, validator):
         """Test handling of network errors during fetch."""
         with patch.object(validator, '_fetch_video_metadata', side_effect=Exception("Network error")):
             with pytest.raises(YouTubeValidationError) as exc_info:
-                asyncio.get_event_loop().run_until_complete(
-                    validator.fetch_video_info("dQw4w9WgXcQ")
-                )
+                await validator.fetch_video_info("dQw4w9WgXcQ")
             assert "fetch" in str(exc_info.value).lower() or "error" in str(exc_info.value).lower()
 
-    def test_handle_rate_limit(self, validator):
+    @pytest.mark.asyncio
+    async def test_handle_rate_limit(self, validator):
         """Test handling of rate limit errors."""
         with patch.object(validator, '_fetch_video_metadata', side_effect=Exception("Rate limited")):
             with pytest.raises(YouTubeValidationError):
-                asyncio.get_event_loop().run_until_complete(
-                    validator.fetch_video_info("dQw4w9WgXcQ")
-                )
+                await validator.fetch_video_info("dQw4w9WgXcQ")
 
     @pytest.mark.skip(reason="Requires integration test setup - covered by endpoint tests")
     @pytest.mark.parametrize("malformed_input", [

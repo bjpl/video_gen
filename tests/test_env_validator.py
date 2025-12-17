@@ -123,6 +123,9 @@ class TestEnvironmentValidator:
     def test_anthropic_api_key_warning(self):
         """Test warning when ANTHROPIC_API_KEY not set."""
         os.environ["ENVIRONMENT"] = "development"
+        # Ensure ANTHROPIC_API_KEY is not set to trigger warning
+        if "ANTHROPIC_API_KEY" in os.environ:
+            del os.environ["ANTHROPIC_API_KEY"]
 
         validator = EnvironmentValidator()
         result = validator.validate_all()

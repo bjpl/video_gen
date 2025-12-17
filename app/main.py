@@ -1099,7 +1099,7 @@ async def parse_youtube(request: Request, input: YouTubeInput, background_tasks:
 
 @app.post("/api/youtube/validate")
 @limiter.limit(PARSE_LIMIT)
-async def validate_youtube_url_endpoint(http_request: Request, request: YouTubeURLValidation):
+async def validate_youtube_url_endpoint(request: Request, body: YouTubeURLValidation):
     """
     Validate a YouTube URL and return detailed validation result.
 
@@ -1120,7 +1120,7 @@ async def validate_youtube_url_endpoint(http_request: Request, request: YouTubeU
     try:
         from video_gen.utils.youtube_validator import validate_youtube_url
 
-        result = validate_youtube_url(request.url)
+        result = validate_youtube_url(body.url)
         return result.to_dict()
 
     except Exception as e:
@@ -1136,7 +1136,7 @@ async def validate_youtube_url_endpoint(http_request: Request, request: YouTubeU
 
 @app.post("/api/youtube/preview")
 @limiter.limit(PARSE_LIMIT)
-async def youtube_preview_endpoint(http_request: Request, request: YouTubePreviewRequest):
+async def youtube_preview_endpoint(request: Request, body: YouTubePreviewRequest):
     """
     Get preview information for a YouTube video.
 
@@ -1147,7 +1147,7 @@ async def youtube_preview_endpoint(http_request: Request, request: YouTubePrevie
     - Estimated scene count and generation time
 
     Args:
-        request: YouTubePreviewRequest with URL and options
+        body: YouTubePreviewRequest with URL and options
 
     Returns:
         JSON with video preview data for UI display
@@ -1161,7 +1161,7 @@ async def youtube_preview_endpoint(http_request: Request, request: YouTubePrevie
         )
 
         # First validate the URL
-        validation = validate_youtube_url(request.url)
+        validation = validate_youtube_url(body.url)
         if not validation.is_valid:
             raise HTTPException(
                 status_code=400,
@@ -1190,10 +1190,10 @@ async def youtube_preview_endpoint(http_request: Request, request: YouTubePrevie
         preview_data = video_info.get_preview_data()
 
         # Optionally include transcript preview
-        if request.include_transcript_preview and video_info.has_transcript:
+        if body.include_transcript_preview and video_info.has_transcript:
             transcript_preview = await _get_transcript_preview(
                 video_id,
-                request.transcript_language,
+                body.transcript_language,
                 max_segments=5
             )
             preview_data["transcript_preview"] = transcript_preview
@@ -1220,7 +1220,7 @@ async def youtube_preview_endpoint(http_request: Request, request: YouTubePrevie
 
 @app.post("/api/youtube/transcript-preview")
 @limiter.limit(PARSE_LIMIT)
-async def youtube_transcript_preview(http_request: Request, request: YouTubePreviewRequest):
+async def youtube_transcript_preview(request: Request, body: YouTubePreviewRequest):
     """
     Get a preview of the video transcript.
 
@@ -1228,7 +1228,7 @@ async def youtube_transcript_preview(http_request: Request, request: YouTubePrev
     to give users a preview before full processing.
 
     Args:
-        request: YouTubePreviewRequest with URL and language
+        body: YouTubePreviewRequest with URL and language
 
     Returns:
         JSON with transcript preview and availability info
@@ -1242,7 +1242,7 @@ async def youtube_transcript_preview(http_request: Request, request: YouTubePrev
         )
 
         # Validate URL
-        validation = validate_youtube_url(request.url)
+        validation = validate_youtube_url(body.url)
         if not validation.is_valid:
             raise HTTPException(
                 status_code=400,
@@ -1268,7 +1268,7 @@ async def youtube_transcript_preview(http_request: Request, request: YouTubePrev
         # Get transcript preview
         transcript_preview = await _get_transcript_preview(
             video_id,
-            request.transcript_language,
+            body.transcript_language,
             max_segments=10
         )
 
@@ -1770,7 +1770,7 @@ async def get_language_voices(lang_code: str):
 
 @app.post("/api/generate/multilingual")
 @limiter.limit(GENERATE_LIMIT)
-async def generate_multilingual(http_request: Request, request: MultilingualRequest, background_tasks: BackgroundTasks):
+async def generate_multilingual(request: Request, body: MultilingualRequest, background_tasks: BackgroundTasks):
     """
     Generate multilingual videos.
     Now uses unified pipeline with multilingual config.
@@ -1785,17 +1785,17 @@ async def generate_multilingual(http_request: Request, request: MultilingualRequ
         # IMPORTANT: Pass dict, not JSON string! Programmatic adapter expects dict
         input_config = InputConfig(
             input_type="programmatic",
-            source=request.video_set.model_dump(),  # Pass dict directly, not JSON string (Pydantic v2)
-            accent_color=request.video_set.accent_color or "blue",
+            source=body.video_set.model_dump(),  # Pass dict directly, not JSON string (Pydantic v2)
+            accent_color=body.video_set.accent_color or "blue",
             voice="male",
-            languages=request.target_languages
+            languages=body.target_languages
         )
 
         # Store additional multilingual metadata in input config
         # The pipeline will use this for translation
         input_config_dict = input_config.to_dict()
-        input_config_dict["source_language"] = request.source_language
-        input_config_dict["translation_method"] = request.translation_method
+        input_config_dict["source_language"] = body.source_language
+        input_config_dict["translation_method"] = body.translation_method
 
         pipeline = get_pipeline()
 
@@ -1807,14 +1807,14 @@ async def generate_multilingual(http_request: Request, request: MultilingualRequ
             task_id  # Pass task_id so pipeline uses this ID
         )
 
-        logger.info(f"Multilingual generation started: {task_id} for {len(request.target_languages)} languages")
+        logger.info(f"Multilingual generation started: {task_id} for {len(body.target_languages)} languages")
 
         return {
             "task_id": task_id,
             "status": "started",
-            "message": f"Multilingual generation started for {len(request.target_languages)} languages",
-            "languages": request.target_languages,
-            "source_language": request.source_language
+            "message": f"Multilingual generation started for {len(body.target_languages)} languages",
+            "languages": body.target_languages,
+            "source_language": body.source_language
         }
 
     except Exception as e:

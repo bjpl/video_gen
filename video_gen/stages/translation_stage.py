@@ -150,21 +150,26 @@ class TranslationStage(Stage):
     ) -> VideoConfig:
         """Translate entire video configuration to target language."""
 
-        # Create new config for target language
+        # Translate metadata first
+        translated_title = await self._translate_text(video_config.title, source_lang, target_lang)
+        translated_description = await self._translate_text(video_config.description, source_lang, target_lang)
+
+        # Translate all scenes before creating VideoConfig
+        translated_scenes = []
+        for scene in video_config.scenes:
+            translated_scene = await self._translate_scene(scene, source_lang, target_lang)
+            translated_scenes.append(translated_scene)
+
+        # Create new config for target language with all translated content
         translated_config = VideoConfig(
             video_id=f"{video_config.video_id}_{target_lang}",
-            title=await self._translate_text(video_config.title, source_lang, target_lang),
-            description=await self._translate_text(video_config.description, source_lang, target_lang),
-            scenes=[],
+            title=translated_title,
+            description=translated_description,
+            scenes=translated_scenes,
             accent_color=video_config.accent_color,
             version=video_config.version,
             voices=video_config.voices,
         )
-
-        # Translate each scene
-        for scene in video_config.scenes:
-            translated_scene = await self._translate_scene(scene, source_lang, target_lang)
-            translated_config.scenes.append(translated_scene)
 
         return translated_config
 

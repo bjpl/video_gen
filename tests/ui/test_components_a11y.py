@@ -378,11 +378,12 @@ class TestScreenReaderCompatibility:
             has_aria_live = bool(error.get('aria-live'))
             has_role = bool(error.get('role'))
 
-            # Check if it's in an aria-live region
+            # Check if it's in an aria-live region or role=alert container
             parent_live = error.find_parent(attrs={'aria-live': True})
+            parent_alert = error.find_parent(attrs={'role': 'alert'})
 
             # At least one method of announcement should exist
-            assert (has_aria_live or has_role or parent_live), (
+            assert (has_aria_live or has_role or parent_live or parent_alert), (
                 f"Form error not accessible to screen readers: {error.get('class')}"
             )
 

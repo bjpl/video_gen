@@ -2,15 +2,27 @@
 End-to-End Integration Tests
 ============================
 Complete pipeline tests from input to final video.
+
+NOTE: These tests require network access to edge_tts API.
+To run them, use: pytest tests/test_end_to_end.py --run-network-tests
+Or set environment variable: NETWORK_TESTS=1
 """
 
 import pytest
 import asyncio
+import os
 from pathlib import Path
 from datetime import datetime
 
 from video_gen.pipeline import create_complete_pipeline, TaskStatus
 from video_gen.shared.models import InputConfig
+
+
+# Skip all tests in this module unless NETWORK_TESTS is set
+pytestmark = pytest.mark.skipif(
+    not os.getenv("NETWORK_TESTS"),
+    reason="End-to-end tests require network access. Set NETWORK_TESTS=1 or use --run-network-tests to run them."
+)
 
 
 @pytest.mark.asyncio

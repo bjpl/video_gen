@@ -73,8 +73,9 @@ class TestDocumentEndpoints:
 
         assert response.status_code == 400
         error = response.json()
-        assert "detail" in error
-        assert "format" in error["detail"].lower() or "type" in error["detail"].lower()
+        # API may return either "detail" or "error" field
+        error_msg = error.get("detail", error.get("error", ""))
+        assert "format" in error_msg.lower() or "type" in error_msg.lower()
 
     def test_document_upload_size_limit(self, authenticated_client):
         """Test file size limit enforcement."""

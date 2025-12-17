@@ -91,9 +91,9 @@
         </div>
 
         <!-- Error State -->
-        <div x-show="error && !isLoading" class="preview-panel__error">
+        <div x-show="error && !isLoading" class="preview-panel__error" role="alert">
             <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <div class="flex-1">
@@ -199,6 +199,7 @@
                         <li class="preview-sections__item">
                             <button @click="toggleSection(index)"
                                     type="button"
+                                    aria-label="Toggle section content"
                                     class="preview-sections__toggle"
                                     :aria-expanded="isSectionExpanded(index)"
                                     :aria-controls="'section-content-' + index">
@@ -261,7 +262,8 @@
             <!-- Thumbnail -->
             <div class="preview-thumbnail" x-show="thumbnailUrl">
                 <img :src="thumbnailUrl"
-                     :alt="title + ' thumbnail'"
+                     alt="Video thumbnail"
+                     :x-data-title="title"
                      @load="onThumbnailLoad"
                      @error="onThumbnailError"
                      class="preview-thumbnail__img"

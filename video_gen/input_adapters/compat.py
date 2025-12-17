@@ -291,6 +291,7 @@ class DocumentAdapter(CompatAdapter):
 
     Args:
         test_mode: If True, bypass security checks for testing purposes
+        use_ai: If True, use AI enhancement for narration (default: True)
 
     Example:
         >>> adapter = DocumentAdapter()
@@ -298,9 +299,9 @@ class DocumentAdapter(CompatAdapter):
         >>> print(video_set.videos[0].title)
     """
 
-    def __init__(self, test_mode: bool = False):
+    def __init__(self, test_mode: bool = False, use_ai: bool = True):
         from .document import DocumentAdapter as AsyncDocumentAdapter
-        super().__init__(AsyncDocumentAdapter(test_mode=test_mode))
+        super().__init__(AsyncDocumentAdapter(test_mode=test_mode, use_ai=use_ai))
 
 
 class YouTubeAdapter(CompatAdapter):
@@ -374,14 +375,16 @@ class YAMLAdapter(CompatAdapter):
 
     Args:
         test_mode: If True, bypass security checks for testing purposes
+        use_ai: Ignored (YAML adapter doesn't use AI - included for API compatibility)
 
     Example:
         >>> adapter = YAMLAdapter()
         >>> video_set = adapter.parse('inputs/my_video.yaml')
     """
 
-    def __init__(self, test_mode: bool = False):
+    def __init__(self, test_mode: bool = False, use_ai: bool = True):
         from .yaml_file import YAMLFileAdapter as AsyncYAMLAdapter
+        # YAML adapter doesn't support use_ai (it's for structured data)
         super().__init__(AsyncYAMLAdapter(test_mode=test_mode))
 
 

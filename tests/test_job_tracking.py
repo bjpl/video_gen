@@ -83,6 +83,60 @@ def sample_task_state():
     return state
 
 
+@pytest.fixture
+def sample_video_set():
+    """Sample video set for testing video generation API."""
+    return {
+        "set_id": "test_set_001",
+        "set_name": "Test Video Set",
+        "videos": [
+            {
+                "video_id": "test_video_001",
+                "title": "Test Video",
+                "scenes": [
+                    {
+                        "type": "title",
+                        "title": "Test Title",
+                        "subtitle": "Test Subtitle"
+                    }
+                ],
+                "voice": "male"
+            }
+        ],
+        "accent_color": "blue",
+        "languages": ["en"]
+    }
+
+
+class TimingHelper:
+    """Helper class for timing operations."""
+
+    def __init__(self):
+        self.start_time = None
+        self.end_time = None
+
+    def start(self):
+        """Start timing."""
+        self.start_time = time.time()
+
+    def stop(self):
+        """Stop timing."""
+        self.end_time = time.time()
+
+    def assert_faster_than(self, seconds: float):
+        """Assert operation completed faster than given seconds."""
+        if self.start_time is None or self.end_time is None:
+            raise ValueError("Must call start() and stop() before asserting")
+        duration = self.end_time - self.start_time
+        assert duration < seconds, f"Operation took {duration:.2f}s, expected < {seconds}s"
+
+
+@pytest.fixture
+def timing():
+    """Create timing helper for performance tests."""
+    return TimingHelper()
+
+
 class MockStage(Stage):
     """Mock stage for testing pipeline orchestration."""
 
@@ -105,6 +159,32 @@ class MockStage(Stage):
             artifacts={f"{self.name}_output": f"result_from_{self.name}"},
             metadata={"executed_at": datetime.now().isoformat()}
         )
+
+
+def create_orchestrator_with_phases(state_manager, stage_names, event_emitter=None):
+    """Create orchestrator with custom execution phases for test stage names.
+
+    Args:
+        state_manager: StateManager instance
+        stage_names: List of stage names to include in phases
+        event_emitter: Optional EventEmitter instance
+
+    Returns:
+        PipelineOrchestrator configured with custom phases
+    """
+    from video_gen.pipeline.orchestrator import ExecutionPhase
+
+    # Create a single phase with all the stage names
+    test_phases = [
+        ExecutionPhase("test_phase", stage_names, parallel=False)
+    ]
+
+    return PipelineOrchestrator(
+        state_manager=state_manager,
+        event_emitter=event_emitter,
+        execution_phases=test_phases,
+        enable_parallelism=False
+    )
 
 
 # ============================================================================
@@ -634,7 +714,10 @@ class TestPipelineOrchestrator:
     async def test_context_passed_between_stages(self, temp_state_dir, sample_input_config):
         """Test context is passed between stages."""
         state_manager = StateManager(state_dir=temp_state_dir)
-        orchestrator = PipelineOrchestrator(state_manager=state_manager)
+        # Use custom phases that include our test stage names
+        orchestrator = create_orchestrator_with_phases(
+            state_manager, ["stage1", "stage2"]
+        )
 
         # Create stages that pass data
         stage1 = MockStage("stage1")
@@ -828,7 +911,10 @@ class TestErrorHandling:
     ):
         """Test multiple errors are accumulated."""
         state_manager = StateManager(state_dir=temp_state_dir)
-        orchestrator = PipelineOrchestrator(state_manager=state_manager)
+        # Use custom phases that include our test stage names
+        orchestrator = create_orchestrator_with_phases(
+            state_manager, ["stage1"]
+        )
 
         orchestrator.register_stage(MockStage("stage1", should_fail=True))
 
@@ -891,11 +977,6 @@ class TestMockGenerationScenarios:
         events_log = []
         event_emitter.on_all(lambda e: events_log.append(e))
 
-        orchestrator = PipelineOrchestrator(
-            state_manager=state_manager,
-            event_emitter=event_emitter
-        )
-
         # Register all 6 stages
         stages = [
             "input_adaptation",
@@ -905,6 +986,11 @@ class TestMockGenerationScenarios:
             "video_generation",
             "output_handling"
         ]
+
+        # Use custom phases for predictable sequential execution
+        orchestrator = create_orchestrator_with_phases(
+            state_manager, stages, event_emitter
+        )
 
         for stage_name in stages:
             orchestrator.register_stage(MockStage(stage_name, duration=0.01))
@@ -930,7 +1016,10 @@ class TestMockGenerationScenarios:
         )
 
         state_manager = StateManager(state_dir=temp_state_dir)
-        orchestrator = PipelineOrchestrator(state_manager=state_manager)
+        orchestrator = create_orchestrator_with_phases(
+            state_manager,
+            ["input_adaptation", "content_parsing"]
+        )
 
         orchestrator.register_stage(MockStage("input_adaptation"))
         orchestrator.register_stage(MockStage("content_parsing"))
@@ -954,7 +1043,10 @@ class TestMockGenerationScenarios:
         )
 
         state_manager = StateManager(state_dir=temp_state_dir)
-        orchestrator = PipelineOrchestrator(state_manager=state_manager)
+        orchestrator = create_orchestrator_with_phases(
+            state_manager,
+            ["input_adaptation", "content_parsing"]
+        )
 
         orchestrator.register_stage(MockStage("input_adaptation"))
         orchestrator.register_stage(MockStage("content_parsing"))
@@ -969,7 +1061,10 @@ class TestMockGenerationScenarios:
         state_manager = StateManager(state_dir=temp_state_dir)
 
         # First attempt - fails at stage2
-        orchestrator1 = PipelineOrchestrator(state_manager=state_manager)
+        orchestrator1 = create_orchestrator_with_phases(
+            state_manager,
+            ["stage1", "stage2"]
+        )
         orchestrator1.register_stage(MockStage("stage1"))
         orchestrator1.register_stage(MockStage("stage2", should_fail=True))
 
@@ -979,7 +1074,10 @@ class TestMockGenerationScenarios:
         assert state.status == TaskStatus.FAILED
 
         # Second attempt - succeeds
-        orchestrator2 = PipelineOrchestrator(state_manager=state_manager)
+        orchestrator2 = create_orchestrator_with_phases(
+            state_manager,
+            ["stage1", "stage2"]
+        )
         orchestrator2.register_stage(MockStage("stage1"))
         orchestrator2.register_stage(MockStage("stage2"))  # Now succeeds
 

@@ -13,6 +13,10 @@ Tests for the enhanced state management system including:
 """
 
 import pytest
+
+# Skip all tests if playwright is not installed
+pytest.importorskip("playwright", reason="playwright required for frontend tests")
+
 from playwright.sync_api import Page, expect
 
 

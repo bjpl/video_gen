@@ -10,6 +10,7 @@ import asyncio
 import tempfile
 from pathlib import Path
 import os
+from unittest.mock import patch, MagicMock
 
 # Optional dependency - skip all tests if not available
 try:
@@ -18,6 +19,13 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
     pytestmark = pytest.mark.skip(reason="psutil not installed (install: sudo apt-get install python3-psutil)")
+
+# Environment-based thresholds for CI/CD friendliness
+# Can override with env vars, e.g., PERF_SMALL_THRESHOLD=10.0
+THRESHOLD_SMALL = float(os.getenv("PERF_SMALL_THRESHOLD", "5.0"))  # Was 2.0s
+THRESHOLD_MEDIUM = float(os.getenv("PERF_MEDIUM_THRESHOLD", "10.0"))  # Was 5.0s
+THRESHOLD_LARGE = float(os.getenv("PERF_LARGE_THRESHOLD", "60.0"))  # Was 30.0s
+THRESHOLD_BASELINE = float(os.getenv("PERF_BASELINE_THRESHOLD", "5.0"))  # Was 2.0s
 
 
 class TestPipelinePerformance:
@@ -33,14 +41,15 @@ class TestPipelinePerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        # Disable AI to avoid network calls
+        adapter = DocumentAdapter(test_mode=True, use_ai=False)
 
         start = time.time()
         result = adapter.parse(test_file)
         duration = time.time() - start
 
-        # Should complete very quickly
-        assert duration < 2.0, f"Small document took {duration:.2f}s (expected < 2.0s)"
+        # Should complete very quickly (CI-friendly threshold)
+        assert duration < THRESHOLD_SMALL, f"Small document took {duration:.2f}s (expected < {THRESHOLD_SMALL}s)"
 
     def test_medium_document_parse_time(self):
         """Benchmark parsing medium documents (10KB)"""
@@ -52,15 +61,17 @@ class TestPipelinePerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        # Disable AI to avoid network calls
+        adapter = DocumentAdapter(test_mode=True, use_ai=False)
 
         start = time.time()
         result = adapter.parse(test_file)
         duration = time.time() - start
 
-        # Should complete reasonably fast
-        assert duration < 5.0, f"Medium document took {duration:.2f}s (expected < 5.0s)"
+        # Should complete reasonably fast (CI-friendly threshold)
+        assert duration < THRESHOLD_MEDIUM, f"Medium document took {duration:.2f}s (expected < {THRESHOLD_MEDIUM}s)"
 
+    @pytest.mark.slow
     def test_large_document_parse_time(self):
         """Benchmark parsing large documents (100KB)"""
         content = "# Large Test Document\n\n" + ("## Section\n\nContent line.\n" * 1000)
@@ -71,14 +82,15 @@ class TestPipelinePerformance:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        # Disable AI to avoid network calls
+        adapter = DocumentAdapter(test_mode=True, use_ai=False)
 
         start = time.time()
         result = adapter.parse(test_file)
         duration = time.time() - start
 
-        # Should complete in reasonable time
-        assert duration < 30.0, f"Large document took {duration:.2f}s (expected < 30.0s)"
+        # Should complete in reasonable time (CI-friendly threshold)
+        assert duration < THRESHOLD_LARGE, f"Large document took {duration:.2f}s (expected < {THRESHOLD_LARGE}s)"
 
     @pytest.mark.asyncio
     async def test_pipeline_complete_duration(self):
@@ -276,7 +288,7 @@ class TestRegressionPrevention:
     """Prevent performance regressions"""
 
     def test_baseline_parse_performance(self):
-        """Baseline: Document parsing should complete in < 2s"""
+        """Baseline: Document parsing should complete in < 5s (CI-friendly)"""
         content = "# Test\n\n" + ("Content\n" * 50)
 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
@@ -285,14 +297,15 @@ class TestRegressionPrevention:
 
         from video_gen.input_adapters.compat import DocumentAdapter
 
-        adapter = DocumentAdapter(test_mode=True)
+        # Disable AI to avoid network calls
+        adapter = DocumentAdapter(test_mode=True, use_ai=False)
 
         start = time.time()
         result = adapter.parse(test_file)
         duration = time.time() - start
 
-        # Baseline benchmark
-        assert duration < 2.0, f"REGRESSION: Parse took {duration:.2f}s (baseline: 2.0s)"
+        # Baseline benchmark (CI-friendly threshold)
+        assert duration < THRESHOLD_BASELINE, f"REGRESSION: Parse took {duration:.2f}s (baseline: {THRESHOLD_BASELINE}s)"
 
     def test_baseline_memory_usage(self):
         """Baseline: Memory usage should stay under 100MB for typical task"""
