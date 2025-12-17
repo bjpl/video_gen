@@ -145,7 +145,7 @@ class PipelineOrchestrator:
 
         # Create or load task state
         if resume and self.state_manager.exists(task_id):
-            task_state = self.state_manager.load(task_id)
+            task_state = await self.state_manager.load_async(task_id)
             logger.info(f"Resuming task from stage: {task_state.current_stage}")
         else:
             task_state = TaskState(
@@ -162,7 +162,7 @@ class PipelineOrchestrator:
             task_state.add_stage(stage.name)
 
         # Save initial state
-        self.state_manager.save(task_state)
+        await self.state_manager.save_async(task_state)
 
         # Emit start event
         await self.event_emitter.emit(Event(
@@ -229,7 +229,7 @@ class PipelineOrchestrator:
             )
 
             task_state.result = result.to_dict()
-            self.state_manager.save(task_state)
+            await self.state_manager.save_async(task_state)
 
             # Emit completion event
             await self.event_emitter.emit(Event(
@@ -258,7 +258,7 @@ class PipelineOrchestrator:
 
             task_state.status = TaskStatus.FAILED
             task_state.errors.append(error_msg)
-            self.state_manager.save(task_state)
+            await self.state_manager.save_async(task_state)
 
             # Emit failure event
             await self.event_emitter.emit(Event(
@@ -342,7 +342,7 @@ class PipelineOrchestrator:
             TaskState or None if not found
         """
         if self.state_manager.exists(task_id):
-            return self.state_manager.load(task_id)
+            return self.state_manager.load_sync(task_id)
         return None
 
     def cancel(self, task_id: str) -> bool:
@@ -358,13 +358,13 @@ class PipelineOrchestrator:
         if not self.state_manager.exists(task_id):
             return False
 
-        task_state = self.state_manager.load(task_id)
+        task_state = self.state_manager.load_sync(task_id)
 
         if task_state.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]:
             return False
 
         task_state.status = TaskStatus.CANCELLED
-        self.state_manager.save(task_state)
+        self.state_manager.save_sync(task_state)
 
         logger.info(f"Task cancelled: {task_id}")
         return True
@@ -462,7 +462,7 @@ class PipelineOrchestrator:
 
             # Update progress
             task_state.overall_progress = stages_executed / total_stages
-            self.state_manager.save(task_state)
+            await self.state_manager.save_async(task_state)
 
         return {
             "results": all_results,
@@ -497,7 +497,7 @@ class PipelineOrchestrator:
 
             # Update state
             task_state.start_stage(stage.name)
-            self.state_manager.save(task_state)
+            await self.state_manager.save_async(task_state)
 
             # Set state manager for progress persistence (enables SSE updates)
             stage.set_state_manager(self.state_manager, task_id)
@@ -509,7 +509,7 @@ class PipelineOrchestrator:
             if not result.success:
                 all_success = False
                 task_state.fail_stage(stage.name, result.error)
-                self.state_manager.save(task_state)
+                await self.state_manager.save_async(task_state)
                 logger.error(f"Stage {stage.name} failed: {result.error}")
 
                 if self._should_abort_on_failure(stage.name):
@@ -523,7 +523,7 @@ class PipelineOrchestrator:
                 for k, v in result.artifacts.items()
             })
             task_state.warnings.extend(result.warnings)
-            self.state_manager.save(task_state)
+            await self.state_manager.save_async(task_state)
 
             logger.info(f"Stage {stage.name} completed ({result.duration:.2f}s)")
 
@@ -556,7 +556,7 @@ class PipelineOrchestrator:
             task_state.start_stage(stage.name)
             # Set state manager for progress persistence (enables SSE updates)
             stage.set_state_manager(self.state_manager, task_id)
-        self.state_manager.save(task_state)
+        await self.state_manager.save_async(task_state)
 
         # Execute all stages in parallel
         # Create context copies to prevent race conditions during parallel writes
@@ -584,23 +584,35 @@ class PipelineOrchestrator:
         results: List[StageResult] = list(parallel_results)
         all_success = True
 
-        # Process results and update state/context
+        # Process results and update state/context atomically
+        # Use atomic operations to prevent race conditions when updating state
         for stage, result in zip(stages, results):
             if not result.success:
                 all_success = False
-                task_state.fail_stage(stage.name, result.error)
+                await self.state_manager.fail_stage_atomic(
+                    task_id=task_id,
+                    stage_name=stage.name,
+                    error=result.error
+                )
                 logger.error(f"Parallel stage {stage.name} failed: {result.error}")
             else:
                 # Merge artifacts into shared context
                 context.update(result.artifacts)
-                task_state.complete_stage(stage.name, {
-                    k: str(v) if isinstance(v, Path) else str(v)
-                    for k, v in result.artifacts.items()
-                })
-                task_state.warnings.extend(result.warnings)
+                await self.state_manager.complete_stage_atomic(
+                    task_id=task_id,
+                    stage_name=stage.name,
+                    artifacts={
+                        k: str(v) if isinstance(v, Path) else str(v)
+                        for k, v in result.artifacts.items()
+                    }
+                )
+                # Add warnings atomically
+                if result.warnings:
+                    def add_warnings(state: TaskState) -> TaskState:
+                        state.warnings.extend(result.warnings)
+                        return state
+                    await self.state_manager.update_atomic(task_id, add_warnings)
                 logger.info(f"Parallel stage {stage.name} completed ({result.duration:.2f}s)")
-
-        self.state_manager.save(task_state)
 
         # Log parallel execution summary
         parallel_duration = max(r.duration for r in results) if results else 0

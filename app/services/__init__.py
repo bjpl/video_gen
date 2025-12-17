@@ -1,6 +1,8 @@
 """
-Service layer for business logic.
-"""
-from .pipeline import execute_pipeline_task
+Business logic services for the video generation system.
 
-__all__ = ["execute_pipeline_task"]
+This package will contain:
+- Pipeline execution services
+- Task management
+- Background job processing
+"""

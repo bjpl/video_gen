@@ -1,0 +1,331 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  RAILWAY_SERVICE_NAME: video-gen-production
+  HEALTH_CHECK_URL: https://video-gen-production.up.railway.app/api/health
+  HEALTH_CHECK_TIMEOUT: 300
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+
+      - name: Run pytest
+        run: |
+          pytest tests/ -v --tb=short --maxfail=5 \
+            --cov=video_gen --cov=app \
+            --cov-report=term-missing \
+            --cov-fail-under=70
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            .coverage
+            htmlcov/
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Railway
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: ${{ env.HEALTH_CHECK_URL }}
+
+    outputs:
+      deployment_id: ${{ steps.deploy.outputs.deployment_id }}
+      previous_deployment: ${{ steps.pre-deploy.outputs.previous_deployment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Verify Railway CLI
+        run: railway --version
+
+      - name: Get current deployment info
+        id: pre-deploy
+        run: |
+          # Get current deployment ID for potential rollback
+          CURRENT_DEPLOYMENT=$(railway status --json 2>/dev/null | jq -r '.deploymentId // "none"')
+          echo "previous_deployment=$CURRENT_DEPLOYMENT" >> $GITHUB_OUTPUT
+          echo "Previous deployment: $CURRENT_DEPLOYMENT"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Deploy to Railway
+        id: deploy
+        run: |
+          echo "Starting Railway deployment..."
+
+          # Trigger deployment and capture output
+          DEPLOY_OUTPUT=$(railway up --detach --json 2>&1)
+          echo "$DEPLOY_OUTPUT"
+
+          # Extract deployment ID
+          DEPLOYMENT_ID=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploymentId // empty')
+
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "Failed to extract deployment ID"
+            exit 1
+          fi
+
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "Deployment ID: $DEPLOYMENT_ID"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for deployment to complete..."
+          TIMEOUT=${{ env.HEALTH_CHECK_TIMEOUT }}
+          ELAPSED=0
+          INTERVAL=10
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATUS=$(railway status --json 2>/dev/null | jq -r '.status // "unknown"')
+            echo "Deployment status: $STATUS (${ELAPSED}s elapsed)"
+
+            case "$STATUS" in
+              "SUCCESS"|"ACTIVE")
+                echo "Deployment completed successfully"
+                exit 0
+                ;;
+              "FAILED"|"CRASHED")
+                echo "Deployment failed with status: $STATUS"
+                exit 1
+                ;;
+              "BUILDING"|"DEPLOYING"|"INITIALIZING")
+                echo "Deployment in progress..."
+                ;;
+              *)
+                echo "Unknown status: $STATUS"
+                ;;
+            esac
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          echo "Deployment timeout after ${TIMEOUT}s"
+          exit 1
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Health check
+        id: health-check
+        run: |
+          echo "Performing health check on ${{ env.HEALTH_CHECK_URL }}"
+          TIMEOUT=${{ env.HEALTH_CHECK_TIMEOUT }}
+          ELAPSED=0
+          INTERVAL=10
+
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 10 \
+              ${{ env.HEALTH_CHECK_URL }} || echo "000")
+
+            echo "Health check returned: $HTTP_CODE (${ELAPSED}s elapsed)"
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Health check passed"
+
+              # Get detailed health info
+              HEALTH_DATA=$(curl -s ${{ env.HEALTH_CHECK_URL }})
+              echo "Health response: $HEALTH_DATA"
+
+              exit 0
+            elif [ "$HTTP_CODE" = "000" ]; then
+              echo "Connection failed, service may still be starting..."
+            else
+              echo "Unexpected status code: $HTTP_CODE"
+            fi
+
+            sleep $INTERVAL
+            ELAPSED=$((ELAPSED + INTERVAL))
+          done
+
+          echo "Health check timeout after ${TIMEOUT}s"
+          exit 1
+
+      - name: Tag successful deployment
+        if: success()
+        run: |
+          DEPLOY_ID="${{ steps.deploy.outputs.deployment_id }}"
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          TAG_NAME="deploy-${SHORT_SHA}-$(date +%Y%m%d-%H%M%S)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$TAG_NAME" -m "Railway deployment: $DEPLOY_ID"
+          git push origin "$TAG_NAME"
+
+          echo "Created tag: $TAG_NAME"
+
+  rollback:
+    name: Rollback on Failure
+    needs: deploy
+    if: failure()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
+
+      - name: Rollback deployment
+        run: |
+          PREV_DEPLOYMENT="${{ needs.deploy.outputs.previous_deployment }}"
+
+          if [ "$PREV_DEPLOYMENT" = "none" ] || [ -z "$PREV_DEPLOYMENT" ]; then
+            echo "No previous deployment found, cannot rollback"
+            exit 0
+          fi
+
+          echo "Rolling back to deployment: $PREV_DEPLOYMENT"
+          railway rollback "$PREV_DEPLOYMENT"
+
+          echo "Rollback initiated"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Verify rollback
+        run: |
+          echo "Waiting for rollback to complete..."
+          sleep 30
+
+          STATUS=$(railway status --json 2>/dev/null | jq -r '.status // "unknown"')
+          echo "Service status after rollback: $STATUS"
+
+          # Health check after rollback
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --max-time 10 \
+            ${{ env.HEALTH_CHECK_URL }} || echo "000")
+
+          echo "Health check after rollback: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Rollback successful, service is healthy"
+          else
+            echo "Warning: Service health check failed after rollback"
+          fi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  notify:
+    name: Send Notification
+    needs: [test, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Determine deployment status
+        id: status
+        run: |
+          TEST_STATUS="${{ needs.test.result }}"
+          DEPLOY_STATUS="${{ needs.deploy.result }}"
+
+          if [ "$TEST_STATUS" = "success" ] && [ "$DEPLOY_STATUS" = "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=Deployment succeeded" >> $GITHUB_OUTPUT
+            echo "color=success" >> $GITHUB_OUTPUT
+          elif [ "$TEST_STATUS" = "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Tests failed" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          elif [ "$DEPLOY_STATUS" = "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=Deployment failed (rollback initiated)" >> $GITHUB_OUTPUT
+            echo "color=danger" >> $GITHUB_OUTPUT
+          else
+            echo "status=cancelled" >> $GITHUB_OUTPUT
+            echo "message=Deployment cancelled" >> $GITHUB_OUTPUT
+            echo "color=warning" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create deployment summary
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ## Deployment Summary
+
+          **Status:** ${{ steps.status.outputs.status == 'success' && '✅ Success' || steps.status.outputs.status == 'failure' && '❌ Failed' || '⚠️ Cancelled' }}
+
+          **Details:**
+          - **Commit:** \`${GITHUB_SHA:0:7}\`
+          - **Branch:** \`${GITHUB_REF_NAME}\`
+          - **Actor:** @${GITHUB_ACTOR}
+          - **Tests:** ${{ needs.test.result == 'success' && '✅ Passed' || '❌ Failed' }}
+          - **Deployment:** ${{ needs.deploy.result == 'success' && '✅ Succeeded' || needs.deploy.result == 'failure' && '❌ Failed' || '⏭️ Skipped' }}
+
+          **Links:**
+          - [Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          - [Health Check](${{ env.HEALTH_CHECK_URL }})
+          - [Railway Dashboard](https://railway.app/dashboard)
+
+          **Message:** ${{ steps.status.outputs.message }}
+          EOF
+
+      - name: Comment on commit
+        if: github.event_name == 'push' && steps.status.outputs.status == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const message = `## Railway Deployment Succeeded ✅
+
+            Deployment completed successfully!
+
+            - **Commit:** \`${context.sha.substring(0, 7)}\`
+            - **Deployment ID:** \`${{ needs.deploy.outputs.deployment_id }}\`
+            - **Health Check:** [View](${{ env.HEALTH_CHECK_URL }})
+            - **Workflow:** [View Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `;
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: message
+            });

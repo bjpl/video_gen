@@ -19,6 +19,16 @@ from .file_validation import (
     format_progress_message,
 )
 
+from .logging_config import (
+    setup_logging,
+    RequestLoggingMiddleware,
+    get_request_id,
+    log_with_context,
+    create_child_logger,
+    JSONFormatter,
+    ColoredFormatter,
+)
+
 __all__ = [
     'validate_file_extension',
     'validate_file_size',
@@ -34,4 +44,11 @@ __all__ = [
     'convert_to_markdown',
     'get_upload_progress_stages',
     'format_progress_message',
+    'setup_logging',
+    'RequestLoggingMiddleware',
+    'get_request_id',
+    'log_with_context',
+    'create_child_logger',
+    'JSONFormatter',
+    'ColoredFormatter',
 ]

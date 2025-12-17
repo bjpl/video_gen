@@ -172,24 +172,25 @@ class Stage(ABC):
 
     async def emit_progress(self, task_id: str, progress: float, message: str = None):
         """
-        Emit progress update event and persist to state manager.
+        Emit progress update event and persist to state manager atomically.
 
         This ensures progress is visible in SSE stream (which polls state files).
+        Uses atomic updates to prevent race conditions in parallel execution.
 
         Args:
             task_id: Current task ID
             progress: Progress value (0.0 to 1.0)
             message: Optional progress message
         """
-        # Persist progress to state manager for SSE polling
+        # Persist progress to state manager for SSE polling using atomic operation
         if self._state_manager:
             try:
-                state = self._state_manager.load(task_id)
-                state.update_stage_progress(self.name, progress)
-                # Update message in metadata if provided
-                if message and self.name in state.stages:
-                    state.stages[self.name].metadata["message"] = message
-                self._state_manager.save(state)
+                await self._state_manager.update_stage_progress_atomic(
+                    task_id=task_id,
+                    stage_name=self.name,
+                    progress=progress,
+                    message=message
+                )
                 self.logger.debug(f"Progress persisted: {self.name}={progress:.1%} ({message})")
             except Exception as e:
                 self.logger.warning(f"Failed to persist progress: {e}")

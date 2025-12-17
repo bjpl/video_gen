@@ -596,8 +596,8 @@ class TestStateManagerIntegration:
 
         await orchestrator.execute(sample_input_config)
 
-        # State should have been saved multiple times
-        assert mock_state_manager.save.call_count >= 3
+        # State should have been saved multiple times (now uses save_async)
+        assert mock_state_manager.save_async.call_count >= 3
 
 
 if __name__ == "__main__":

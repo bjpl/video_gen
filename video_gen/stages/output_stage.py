@@ -3,16 +3,18 @@ Output Stage - Combines scenes and exports final video.
 """
 
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import json
 import shutil
 import asyncio
 from datetime import datetime
+import os
 
 from ..pipeline.stage import Stage, StageResult
 from ..shared.models import VideoConfig
 from ..shared.config import config
 from ..shared.exceptions import StageError
+from ..shared.storage import create_storage
 
 # Set matplotlib backend BEFORE importing pyplot to avoid GUI issues on headless servers
 import matplotlib
@@ -30,8 +32,10 @@ class OutputStage(Stage):
     - Organizes final outputs
     """
 
-    def __init__(self, event_emitter=None):
+    def __init__(self, event_emitter=None, storage_backend=None):
         super().__init__("output_handling", event_emitter)
+        # Initialize storage backend (defaults to env var or 'local')
+        self.storage = storage_backend or create_storage()
 
     async def execute(self, context: Dict[str, Any]) -> StageResult:
         """Execute output handling."""
@@ -182,7 +186,17 @@ class OutputStage(Stage):
 
         self.logger.info(f"Output complete: {output_video_path} ({video_size} bytes)")
 
-        # Only emit 100% after successful validation
+        # Upload to cloud storage if not using local backend
+        await self.emit_progress(context["task_id"], 0.9, "Uploading to storage")
+
+        storage_urls = await self._upload_to_storage(
+            video_path=output_video_path,
+            metadata_path=metadata_path,
+            thumbnail_path=thumbnail_path if thumbnail_created else None,
+            video_id=video_config.video_id
+        )
+
+        # Only emit 100% after successful validation and upload
         await self.emit_progress(context["task_id"], 1.0, "Output complete")
 
         # Build artifacts - only include thumbnail if it was created
@@ -190,6 +204,7 @@ class OutputStage(Stage):
             "final_video_path": output_video_path,
             "output_dir": output_dir,
             "metadata_path": metadata_path,
+            "storage_urls": storage_urls,  # Add storage URLs
         }
         if thumbnail_created:
             artifacts["thumbnail_path"] = thumbnail_path
@@ -204,6 +219,8 @@ class OutputStage(Stage):
                 "duration": video_config.total_duration,
                 "workflow": "template-based",
                 "has_thumbnail": thumbnail_created,
+                "storage_backend": os.getenv("STORAGE_BACKEND", "local"),
+                "video_url": storage_urls.get("video_url"),
             }
         )
 
@@ -272,6 +289,16 @@ class OutputStage(Stage):
 
         self.logger.info(f"Output complete: {final_video_path}")
 
+        # Upload to cloud storage if not using local backend
+        await self.emit_progress(context["task_id"], 0.9, "Uploading to storage")
+
+        storage_urls = await self._upload_to_storage(
+            video_path=final_video_path,
+            metadata_path=metadata_path,
+            thumbnail_path=thumbnail_path,
+            video_id=video_config.video_id
+        )
+
         # Emit progress
         await self.emit_progress(context["task_id"], 1.0, "Output complete")
 
@@ -290,12 +317,15 @@ class OutputStage(Stage):
                 "output_dir": output_dir,
                 "metadata_path": metadata_path,
                 "thumbnail_path": thumbnail_path,
+                "storage_urls": storage_urls,  # Add storage URLs
             },
             metadata={
                 "video_size": video_size,
                 "scene_count": len(scene_videos),
                 "duration": video_config.total_duration,
                 "workflow": "legacy-combined",
+                "storage_backend": os.getenv("STORAGE_BACKEND", "local"),
+                "video_url": storage_urls.get("video_url"),
             }
         )
 
@@ -491,3 +521,70 @@ class OutputStage(Stage):
                 plt.close('all')
             except Exception as e:
                 self.logger.debug(f"Matplotlib cleanup error (non-fatal): {e}")
+
+    async def _upload_to_storage(
+        self,
+        video_path: Path,
+        metadata_path: Path,
+        thumbnail_path: Optional[Path],
+        video_id: str
+    ) -> Dict[str, str]:
+        """
+        Upload generated files to configured storage backend.
+
+        Args:
+            video_path: Path to final video file
+            metadata_path: Path to metadata JSON
+            thumbnail_path: Path to thumbnail image (optional)
+            video_id: Video ID for remote key generation
+
+        Returns:
+            Dictionary with storage URLs:
+            - video_url: Public URL to video
+            - metadata_url: Public URL to metadata
+            - thumbnail_url: Public URL to thumbnail (if provided)
+        """
+        urls = {}
+
+        try:
+            # Upload video
+            video_key = f"{video_id}/{video_id}_final.mp4"
+            urls["video_url"] = await self.storage.upload_file(
+                local_path=video_path,
+                remote_key=video_key,
+                content_type="video/mp4",
+                metadata={
+                    "video_id": video_id,
+                    "generated_at": datetime.now().isoformat(),
+                }
+            )
+
+            # Upload metadata
+            metadata_key = f"{video_id}/{video_id}_metadata.json"
+            urls["metadata_url"] = await self.storage.upload_file(
+                local_path=metadata_path,
+                remote_key=metadata_key,
+                content_type="application/json"
+            )
+
+            # Upload thumbnail if available
+            if thumbnail_path and thumbnail_path.exists():
+                thumbnail_key = f"{video_id}/{video_id}_thumbnail.jpg"
+                urls["thumbnail_url"] = await self.storage.upload_file(
+                    local_path=thumbnail_path,
+                    remote_key=thumbnail_key,
+                    content_type="image/jpeg"
+                )
+
+            self.logger.info(f"Uploaded files to storage: {urls}")
+            return urls
+
+        except Exception as e:
+            # Log error but don't fail the stage - files are still local
+            self.logger.warning(f"Failed to upload to storage: {e}")
+            return {
+                "video_url": str(video_path),
+                "metadata_url": str(metadata_path),
+                "thumbnail_url": str(thumbnail_path) if thumbnail_path else None,
+                "upload_error": str(e)
+            }

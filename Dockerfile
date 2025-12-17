@@ -40,9 +40,10 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt /tmp/
+# Use requirements.lock for reproducible builds
+COPY requirements.lock /tmp/
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r /tmp/requirements.txt
+    pip install -r /tmp/requirements.lock
 
 # Stage 3: Runtime stage
 FROM python:3.12-slim

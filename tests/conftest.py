@@ -223,6 +223,7 @@ def setup_test_env():
     """Setup test environment variables."""
     os.environ["TESTING"] = "true"
     os.environ["LOG_LEVEL"] = "DEBUG"
+    os.environ["RATE_LIMIT_ENABLED"] = "false"  # Disable rate limiting in tests
     # Don't use real API keys in tests
     if "ANTHROPIC_API_KEY" in os.environ:
         del os.environ["ANTHROPIC_API_KEY"]
@@ -230,3 +231,5 @@ def setup_test_env():
     # Cleanup
     if "TESTING" in os.environ:
         del os.environ["TESTING"]
+    if "RATE_LIMIT_ENABLED" in os.environ:
+        del os.environ["RATE_LIMIT_ENABLED"]
