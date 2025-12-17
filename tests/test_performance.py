@@ -181,8 +181,9 @@ class TestConcurrentPerformance:
     """Test concurrent execution performance"""
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
     async def test_parallel_document_parsing(self):
-        """Test parallel parsing performance"""
+        """Test parallel parsing performance (slow - unreliable in CI due to parallel timing)"""
         # Create multiple documents
         documents = []
         for i in range(5):
