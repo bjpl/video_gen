@@ -154,8 +154,9 @@ class TestOutputStageCompleteVideo:
         assert result.success
 
     @pytest.mark.asyncio
+    @pytest.mark.slow
     async def test_thumbnail_generation_timeout(self, output_stage, sample_video_config, tmp_path):
-        """Test handling of thumbnail generation timeout."""
+        """Test handling of thumbnail generation timeout (slow - involves actual file operations)."""
         video_dir = tmp_path / "video"
         video_dir.mkdir()
 
