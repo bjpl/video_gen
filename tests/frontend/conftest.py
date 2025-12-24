@@ -7,6 +7,71 @@ Supports both Playwright and Selenium, with fallback if neither is available.
 
 import pytest
 import os
+import socket
+import urllib.request
+import urllib.error
+
+
+def _is_server_running(host: str = "localhost", port: int = 8000, timeout: float = 2.0) -> bool:
+    """Check if the server is running by attempting a connection."""
+    try:
+        # Try a simple socket connection first
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="session")
+def server_available():
+    """Check if the test server is available.
+
+    Returns True if the server is running, False otherwise.
+    This is a session-scoped fixture so the check only happens once.
+    """
+    base_url = os.environ.get("TEST_BASE_URL", "http://localhost:8000")
+
+    # Parse host and port from base_url
+    if "://" in base_url:
+        url_part = base_url.split("://")[1]
+    else:
+        url_part = base_url
+
+    if ":" in url_part:
+        host, port_str = url_part.split(":")
+        port = int(port_str.split("/")[0])  # Handle paths like :8000/api
+    else:
+        host = url_part.split("/")[0]
+        port = 80
+
+    return _is_server_running(host, port)
+
+
+@pytest.fixture(autouse=True)
+def skip_without_server(request, server_available):
+    """Auto-skip tests marked with 'server', 'browser', or 'e2e' when server is not available.
+
+    This fixture runs automatically for all tests in the frontend directory.
+    It checks if the test has specific markers that require a running server,
+    and skips the test if the server is not available.
+    """
+    # Check if test has markers that require a server
+    server_markers = {"server", "browser", "e2e", "selenium", "api"}
+    test_markers = {marker.name for marker in request.node.iter_markers()}
+
+    # If the test has any server-requiring markers and server is not available, skip
+    if test_markers & server_markers and not server_available:
+        pytest.skip("Test requires running server (start with: python -m app.main)")
+
+    # Also skip if this test uses page/browser fixtures but server isn't running
+    fixture_names = getattr(request, 'fixturenames', [])
+    browser_fixtures = {"page", "authenticated_page", "browser"}
+    if browser_fixtures & set(fixture_names) and not server_available:
+        pytest.skip("Browser test requires running server (start with: python -m app.main)")
+
 
 # Try to import Playwright
 try:

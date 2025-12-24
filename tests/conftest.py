@@ -16,6 +16,15 @@ import sys
 os.environ["TESTING"] = "true"
 os.environ["LOG_LEVEL"] = "DEBUG"
 os.environ["RATE_LIMIT_ENABLED"] = "false"  # Disable rate limiting in tests
+
+# CRITICAL: Apply nest_asyncio to fix event loop pollution in test suite
+# This allows nested asyncio.run() calls which occur when:
+# - Main tests use emit_sync() or state_manager's sync methods
+# - Later unit tests use @pytest.mark.asyncio with pytest-asyncio's auto mode
+# Without this patch, running the full suite fails with:
+# "RuntimeError: This event loop is already running"
+import nest_asyncio
+nest_asyncio.apply()
 # Don't use real API keys in tests
 if "ANTHROPIC_API_KEY" in os.environ:
     del os.environ["ANTHROPIC_API_KEY"]
@@ -223,6 +232,56 @@ pytest.mark.e2e = pytest.mark.e2e
 pytest.mark.security = pytest.mark.security
 pytest.mark.performance = pytest.mark.performance
 pytest.mark.slow = pytest.mark.slow
+
+
+# ============================================================================
+# SERVER AVAILABILITY CHECK FOR BROWSER TESTS
+# ============================================================================
+
+def _is_server_running(host: str = "localhost", port: int = 8000) -> bool:
+    """Check if the server is running by attempting a socket connection."""
+    import socket
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2.0)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="session")
+def _global_server_available():
+    """Session-scoped check if the test server is available."""
+    base_url = os.environ.get("TEST_BASE_URL", "http://localhost:8000")
+    if "://" in base_url:
+        url_part = base_url.split("://")[1]
+    else:
+        url_part = base_url
+    if ":" in url_part:
+        host, port_str = url_part.split(":")
+        port = int(port_str.split("/")[0])
+    else:
+        host = url_part.split("/")[0]
+        port = 80
+    return _is_server_running(host, port)
+
+
+@pytest.fixture(autouse=True)
+def _skip_browser_tests_without_server(request, _global_server_available):
+    """Auto-skip tests with browser/server markers when server is unavailable.
+
+    This fixture runs for ALL tests and checks if the test has markers
+    indicating it needs a running server (selenium, browser, e2e, server).
+    If so and the server is not running, the test is skipped.
+    """
+    # Markers that indicate a test needs a running server
+    server_markers = {"selenium", "browser", "e2e", "server"}
+    test_markers = {marker.name for marker in request.node.iter_markers()}
+
+    if test_markers & server_markers and not _global_server_available:
+        pytest.skip("Test requires running server (start with: python -m app.main)")
 
 
 # Test environment configuration

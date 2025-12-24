@@ -164,7 +164,11 @@ class TestPathTraversalSecurity:
         # Should return failure result with security error
         assert result.success is False
         assert result.error is not None
-        assert "Access to system directories denied" in result.error or "denied" in result.error.lower()
+        # Cross-platform: check for any security-related error message
+        error_lower = result.error.lower()
+        assert any(phrase in error_lower for phrase in [
+            "denied", "path traversal", "not under any allowed", "blocked", "security"
+        ]), f"Expected security error, got: {result.error}"
 
     @pytest.mark.asyncio
     async def test_root_directory_access_blocked(self):
@@ -183,7 +187,11 @@ class TestPathTraversalSecurity:
         # Should return failure result
         assert result.success is False
         assert result.error is not None
-        assert "denied" in result.error.lower() or "Access to system directories denied" in result.error
+        # Cross-platform: check for any security-related error message  
+        error_lower = result.error.lower()
+        assert any(phrase in error_lower for phrase in [
+            "denied", "path traversal", "not under any allowed", "blocked", "security"
+        ]), f"Expected security error, got: {result.error}"
 
     @pytest.mark.asyncio
     async def test_parent_directory_traversal_blocked(self):
