@@ -36,12 +36,10 @@ from app.main import app
 import json
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+# NOTE: Session-scoped event_loop fixture REMOVED (2024-12-24)
+# Reason: Conflicts with pytest-asyncio's asyncio_mode=auto in pytest.ini
+# The plugin automatically provides function-scoped event loops for async tests
+# See: docs/planning/GOAP_PORTFOLIO_READINESS_PLAN.md for full analysis
 
 
 @pytest.fixture

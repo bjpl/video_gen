@@ -421,7 +421,8 @@ class TestDocumentAdapterErrorHandling:
         assert not result.success
         assert result.error is not None
 
-    def test_validate_source(self, adapter):
+    @pytest.mark.asyncio
+    async def test_validate_source(self, adapter):
         """Test source validation"""
         # Valid file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
@@ -429,12 +430,12 @@ class TestDocumentAdapterErrorHandling:
 
         try:
             # File exists with valid extension
-            assert asyncio.run(adapter.validate_source(temp_file))
+            assert await adapter.validate_source(temp_file)
 
             # Invalid extension
             invalid_file = temp_file.replace('.md', '.invalid')
             Path(temp_file).rename(invalid_file)
-            assert not asyncio.run(adapter.validate_source(invalid_file))
+            assert not await adapter.validate_source(invalid_file)
             Path(invalid_file).rename(temp_file)
 
         finally:
