@@ -1,58 +1,96 @@
-# GOAP Plan Summary - Portfolio Readiness
+# GOAP Plan Summary - Technical Debt Remediation
 ## Quick Reference Guide
 
-**Date:** 2025-12-23
-**Status:** PLANNING COMPLETE
-**Critical Path:** 9 actions (4.5-12.5 hours estimated)
+**Date:** 2025-12-28 (Updated)
+**Previous Session:** 2025-12-23 (Portfolio Readiness)
+**Status:** ANALYSIS COMPLETE - READY FOR EXECUTION
+**Critical Path:** 6 priority actions (24-32 hours estimated)
 
 ---
 
 ## Problem Statement
 
-**Critical Issue:** Session-scoped `event_loop` fixture in `tests/conftest.py` (lines 39-44) conflicts with `asyncio_mode=auto` in `pytest.ini`, causing RuntimeError in async tests.
+**Previous Issue (RESOLVED):** Session-scoped `event_loop` fixture conflict - Fixed with nest_asyncio.apply()
 
-**Impact:** Test infrastructure unstable, deployment blocked, portfolio presentation delayed.
+**Current Technical Debt Analysis (2025-12-28):**
+- Overall Quality Score: 7.5/10
+- Tests Passing: 1800+ (79% coverage)
+- Critical Issues: 3 categories requiring attention
+- Total Remediation Estimate: 24-32 hours
 
----
-
-## Solution Summary
-
-**Recommended Fix:** Remove the session-scoped event_loop fixture from tests/conftest.py
-
-**Rationale:**
-- pytest-asyncio 0.23.4 with `asyncio_mode=auto` automatically provides function-scoped event loops
-- Manual session-scoped fixture is redundant and conflicts with auto mode
-- Aligns with modern pytest-asyncio best practices
+**Impact:** Code maintainability, potential silent failures from bare excepts, large file complexity.
 
 ---
 
-## Critical Path (9 Actions)
+## Technical Debt Summary
+
+### CRITICAL (Address First - 16 hours)
+
+| Issue | Files | Est. Time |
+|-------|-------|-----------|
+| Bare except handlers (13 instances) | parser.py, document.py, yaml_file.py, output_stage.py | 4h |
+| Large file: document.py (1211 lines) | video_gen/input_adapters/document.py | 6h |
+| Large file: yaml_file.py (1181 lines) | video_gen/input_adapters/yaml_file.py | 6h |
+
+### MEDIUM (Next Sprint - 6 hours)
+
+| Issue | Description | Est. Time |
+|-------|-------------|-----------|
+| Outdated dependencies | 28 packages need updates (anthropic, aiohttp, etc.) | 2h |
+| Duplicate adapter code | compat.py (491 lines) duplicates other adapters | 4h |
+
+### LOW (Backlog - 7 hours)
+
+| Issue | Description | Est. Time |
+|-------|-------------|-----------|
+| Print statements | 1,125 occurrences (mostly in scripts) | 6h |
+| Missing pyproject.toml | Modern Python packaging standard | 1h |
+
+---
+
+## GOAP Action Sequence (6 Priority Actions)
 
 ```
-1. ANALYZE_CONFLICT (30 min) → Understand pytest-asyncio behavior
-2. DESIGN_SOLUTION (20 min) → Choose optimal fix approach
-3. IMPLEMENT_FIX (15 min) → Remove conflicting fixture
-4. VALIDATE_ASYNC (30 min) → Test async tests specifically
-5. RUN_FULL_SUITE (60 min) → Comprehensive testing
-6. FIX_CRITICAL (variable) → Address any remaining issues (conditional)
-7. UPDATE_CI_CD (50 min) → Verify pipeline green
-8. MERGE_DEPLOY (30 min) → Production deployment
-9. DOCUMENT (45 min) → Store patterns and lessons
+1. FIX_BARE_EXCEPTS (4h) → Replace 13 bare except handlers with specific exceptions
+   Files: parser.py:152,177,195, document.py:323, yaml_file.py:262, output_stage.py:401,406
+
+2. REFACTOR_DOCUMENT_ADAPTER (6h) → Split 1211-line file into focused modules
+   Target: <500 lines per file, extract PDF/DOCX handlers, AI enhancement module
+
+3. REFACTOR_YAML_ADAPTER (6h) → Split 1181-line file into focused modules
+   Target: <500 lines per file, extract schema validation, template engine
+
+4. UPDATE_DEPENDENCIES (2h) → Update 28 outdated packages
+   Priority: anthropic (0.71→0.75), aiohttp, attrs, click
+
+5. REMOVE_COMPAT_DUPLICATION (4h) → Consolidate adapter code
+   File: compat.py (491 lines) → Remove or merge with main adapters
+
+6. VALIDATE_AND_DOCUMENT (2h) → Run tests, update patterns
+   Verify: All tests pass, coverage maintained, AgentDB updated
 ```
 
-**Total Time:** 4.5 hours (best case) to 12.5 hours (worst case)
+**Total Estimated Time:** 24 hours (minimum) to 32 hours (with contingency)
 
 ---
 
 ## Success Criteria
 
-1. ✅ Test pass rate ≥ 95%
-2. ✅ Zero RuntimeError: "event loop already running"
-3. ✅ All 2,151 tests executable
-4. ✅ CI/CD pipeline green
-5. ✅ Production deployed and verified
-6. ✅ Documentation complete
-7. ✅ Code coverage maintained at 79%+
+1. ✅ Zero bare except handlers in core modules
+2. ✅ All files under 500 lines (or justified exception documented)
+3. ✅ Dependencies updated to latest stable versions
+4. ✅ No duplicate adapter code
+5. ✅ Test pass rate maintained ≥ 95%
+6. ✅ Code coverage maintained at 79%+
+7. ✅ AgentDB patterns updated with learnings
+
+## Positive Findings (No Action Needed)
+
+- ✅ **Security**: No hardcoded secrets, no vulnerabilities found
+- ✅ **Logging**: 234 consistent logging calls across 22 files
+- ✅ **Type Hints**: Well-implemented throughout codebase
+- ✅ **Tests**: 1800+ passing (79% coverage)
+- ✅ **Event Loops**: Previously resolved with nest_asyncio.apply()
 
 ---
 

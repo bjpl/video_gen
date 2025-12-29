@@ -250,20 +250,97 @@
   },
   "recommendations": {
     "immediate": [
-      "All tests now pass - run full coverage report",
-      "Document async testing patterns in project docs",
-      "Verify CI/CD pipeline uses correct test markers"
+      "Fix 13 bare except handlers in core modules (parser.py, document.py, yaml_file.py)",
+      "Split document.py (1211 lines) and yaml_file.py (1181 lines) into smaller modules",
+      "Update anthropic SDK 0.71.0 -> 0.75.0 and other outdated dependencies"
     ],
     "short_term": [
-      "Add pre-commit hooks for test validation",
-      "Create test execution guide for contributors",
-      "Implement automated portfolio scoring in CI/CD"
+      "Remove duplicate adapter code in compat.py",
+      "Add pyproject.toml for modern Python packaging",
+      "Replace 1125 print statements with structured logging"
     ],
     "long_term": [
-      "Build pattern library for common project scenarios",
-      "Create automated learning system from session logs",
-      "Develop portfolio readiness dashboard"
+      "Refactor app/main.py god object (2515 lines) into route modules",
+      "Implement async file I/O with aiofiles",
+      "Add pylint/mypy to CI pipeline for code quality gates"
     ]
+  },
+  "technical_debt_2024_12_28": {
+    "analysis_date": "2024-12-28",
+    "overall_quality_score": 7.5,
+    "critical_issues": [
+      {
+        "id": "bare-except-handlers",
+        "severity": "HIGH",
+        "count": 13,
+        "files": [
+          "video_gen/content_parser/parser.py:152,177,195",
+          "video_gen/input_adapters/document.py:323",
+          "video_gen/input_adapters/yaml_file.py:262",
+          "video_gen/stages/output_stage.py:401,406",
+          "video_gen/renderers/comparison_scenes.py:84",
+          "video_gen/renderers/educational_scenes.py:33",
+          "video_gen/renderers/checkpoint_scenes.py:34",
+          "video_gen/input_adapters/youtube.py:409",
+          "video_gen/utils/youtube_validator.py:247"
+        ],
+        "estimated_hours": 4
+      },
+      {
+        "id": "large-file-document-adapter",
+        "severity": "HIGH",
+        "file": "video_gen/input_adapters/document.py",
+        "lines": 1211,
+        "threshold": 500,
+        "estimated_hours": 6
+      },
+      {
+        "id": "large-file-yaml-adapter",
+        "severity": "HIGH",
+        "file": "video_gen/input_adapters/yaml_file.py",
+        "lines": 1181,
+        "threshold": 500,
+        "estimated_hours": 6
+      }
+    ],
+    "medium_issues": [
+      {
+        "id": "outdated-dependencies",
+        "severity": "MEDIUM",
+        "count": 28,
+        "key_packages": ["anthropic", "aiohttp", "attrs", "click"],
+        "estimated_hours": 2
+      },
+      {
+        "id": "duplicate-adapter-code",
+        "severity": "MEDIUM",
+        "file": "video_gen/input_adapters/compat.py",
+        "lines": 491,
+        "estimated_hours": 4
+      }
+    ],
+    "low_issues": [
+      {
+        "id": "print-statements",
+        "severity": "LOW",
+        "count": 1125,
+        "estimated_hours": 6
+      },
+      {
+        "id": "missing-pyproject-toml",
+        "severity": "LOW",
+        "estimated_hours": 1
+      }
+    ],
+    "positive_findings": [
+      "No security vulnerabilities found (pip check passed)",
+      "Consistent logging: 234 calls across 22 files",
+      "Good test coverage: 79% (1800+ passing tests)",
+      "Event loop issues resolved (nest_asyncio applied)",
+      "No hardcoded secrets detected",
+      "Type hints well-implemented throughout"
+    ],
+    "total_estimated_hours": "24-32"
   },
   "related_patterns": [
     "pytest-configuration-best-practices",
