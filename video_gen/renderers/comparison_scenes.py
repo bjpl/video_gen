@@ -81,7 +81,7 @@ def create_base_frame(accent_color: Tuple[int, int, int]) -> Image.Image:
                           radius=12, fill=accent_color + (255,))
     try:
         font_subtitle = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 48)
-    except:
+    except (OSError, IOError):
         font_subtitle = ImageFont.load_default()
     draw.text((logo_x + 12, logo_y + 8), "CC", font=font_subtitle, fill=BG_WHITE + (255,))
 

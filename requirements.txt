@@ -41,7 +41,7 @@ google-api-python-client>=2.100.0
 # Claude API for:
 # - Enhanced narration generation
 # - High-quality translation (28+ languages)
-anthropic>=0.71.0
+anthropic>=0.75.0
 
 # Environment variables (CRITICAL)
 python-dotenv>=1.1.0
@@ -53,9 +53,10 @@ python-dotenv>=1.1.0
 fastapi>=0.118.0
 uvicorn[standard]>=0.37.0
 jinja2>=3.1.6
-python-multipart>=0.0.6
+python-multipart>=0.0.20
 pydantic>=2.12.2
 pydantic-settings>=2.11.0
+anyio>=4.12.0  # Async support
 
 # Rate limiting (DoS protection)
 slowapi>=0.1.9
@@ -66,9 +67,14 @@ sentry-sdk[fastapi]>=2.0.0
 # Testing
 pytest>=8.4.2
 pytest-asyncio>=1.2.0
+pytest-cov>=4.1.0  # Coverage reporting
+pytest-timeout>=2.3.0  # Test timeout protection
 httpx==0.25.2  # Pinned for Starlette TestClient compatibility
-beautifulsoup4>=4.12.0  # HTML parsing for accessibility tests
+beautifulsoup4>=4.14.0  # HTML parsing for accessibility tests
 psutil>=5.9.0  # Process monitoring for memory tests
+
+# Event loop handling for test compatibility
+nest-asyncio>=1.6.0
 
 # Cloud Storage (Optional)
 # AWS S3 and S3-compatible storage (Cloudflare R2, etc.)

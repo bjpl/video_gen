@@ -6,6 +6,28 @@ This module provides backward compatibility for code using the deprecated
 app.input_adapters API, allowing seamless migration to the canonical
 video_gen.input_adapters system.
 
+IMPORTANT: This is NOT a duplication of functionality - it's a thin compatibility
+wrapper that delegates all actual work to the canonical async adapters in:
+- video_gen.input_adapters.document (DocumentAdapter)
+- video_gen.input_adapters.yaml_file (YAMLFileAdapter/YAMLAdapter)
+- video_gen.input_adapters.youtube (YouTubeAdapter)
+- video_gen.input_adapters.wizard (InteractiveWizard)
+- video_gen.input_adapters.programmatic (ProgrammaticAdapter)
+
+Architecture:
+    ┌─────────────────────────────────────────────────────────┐
+    │  compat.py (THIS FILE)                                  │
+    │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  │
+    │  • CompatAdapter: Sync wrapper base class               │
+    │  • DocumentAdapter: Thin wrapper → document.py          │
+    │  • YouTubeAdapter: Thin wrapper → youtube.py            │
+    │  • YAMLAdapter: Thin wrapper → yaml_file.py             │
+    │  • WizardAdapter: Thin wrapper → wizard.py              │
+    │  • ProgrammaticAdapter: Thin wrapper → programmatic.py  │
+    │                                                          │
+    │  NO DUPLICATION: All logic delegated to main adapters!  │
+    └─────────────────────────────────────────────────────────┘
+
 API Translation:
     Deprecated: parse(source: str, **options) -> VideoSet (sync)
     Canonical:  async adapt(source: Any, **kwargs) -> InputAdapterResult (async)
@@ -282,12 +304,21 @@ class CompatAdapter:
         return f"CompatAdapter({self._adapter})"
 
 
-# Drop-in replacement adapters
+# ═══════════════════════════════════════════════════════════════════════════
+#  Drop-in Replacement Adapters (Thin Wrappers)
+# ═══════════════════════════════════════════════════════════════════════════
+# These classes are THIN WRAPPERS that delegate to canonical async adapters.
+# They provide ONLY:
+#   1. Backward-compatible sync .parse() API via CompatAdapter base class
+#   2. Constructor parameter forwarding to canonical adapters
+#   3. NO business logic - ALL work done by canonical adapters
+# ═══════════════════════════════════════════════════════════════════════════
+
 class DocumentAdapter(CompatAdapter):
     """Backward-compatible DocumentAdapter.
 
-    Drop-in replacement for app.input_adapters.DocumentAdapter
-    that uses canonical async implementation with compat layer.
+    THIN WRAPPER: Delegates to video_gen.input_adapters.document.DocumentAdapter
+    Provides ONLY sync .parse() API - all business logic in canonical adapter.
 
     Args:
         test_mode: If True, bypass security checks for testing purposes
@@ -301,14 +332,15 @@ class DocumentAdapter(CompatAdapter):
 
     def __init__(self, test_mode: bool = False, use_ai: bool = True):
         from .document import DocumentAdapter as AsyncDocumentAdapter
+        # Import and wrap canonical async adapter
         super().__init__(AsyncDocumentAdapter(test_mode=test_mode, use_ai=use_ai))
 
 
 class YouTubeAdapter(CompatAdapter):
     """Backward-compatible YouTubeAdapter.
 
-    Drop-in replacement for app.input_adapters.YouTubeAdapter
-    that uses canonical async implementation with compat layer.
+    THIN WRAPPER: Delegates to video_gen.input_adapters.youtube.YouTubeAdapter
+    Provides ONLY sync .parse() API - all business logic in canonical adapter.
 
     Args:
         test_mode: If True, bypass external API calls for testing purposes
@@ -320,13 +352,14 @@ class YouTubeAdapter(CompatAdapter):
 
     def __init__(self, test_mode: bool = False):
         from .youtube import YouTubeAdapter as AsyncYouTubeAdapter
+        # Import and wrap canonical async adapter
         super().__init__(AsyncYouTubeAdapter(test_mode=test_mode))
 
     def _extract_video_id(self, url: str) -> str | None:
         """Extract single video ID from YouTube URL.
 
         Convenience method for extracting a single video ID.
-        Wraps the internal _extract_video_ids method.
+        Delegates to the canonical YouTubeAdapter._extract_video_ids method.
 
         Args:
             url: YouTube URL
@@ -334,44 +367,16 @@ class YouTubeAdapter(CompatAdapter):
         Returns:
             Video ID string or None if extraction fails
         """
+        # Delegate to canonical adapter (no duplication)
         video_ids = self._adapter._extract_video_ids(url)
         return video_ids[0] if video_ids else None
-
-    def _has_commands(self, text: str) -> bool:
-        """Check if text contains command-like patterns.
-
-        Detects terminal/shell commands in transcript text for
-        identifying tutorial or technical content.
-
-        Args:
-            text: Text to check for commands
-
-        Returns:
-            True if commands detected, False otherwise
-        """
-        import re
-        # Command indicators
-        command_patterns = [
-            r'\b(npm|pip|yarn|cargo|go|git|docker|kubectl)\s+\w+',  # Package managers and tools
-            r'\b(run|execute|install|clone|build|start|deploy)\s+\w+',  # Action verbs
-            r'\$\s*\w+',  # Shell prompt commands
-            r'^[>\$#]\s*\w+',  # Line starting with prompt
-            r'\b(python|node|ruby|java|bash|sh)\s+\w+',  # Language interpreters
-            r'--?\w+',  # Command flags
-        ]
-
-        text_lower = text.lower()
-        for pattern in command_patterns:
-            if re.search(pattern, text_lower, re.IGNORECASE):
-                return True
-        return False
 
 
 class YAMLAdapter(CompatAdapter):
     """Backward-compatible YAMLAdapter.
 
-    Drop-in replacement for app.input_adapters.YAMLAdapter
-    that uses canonical async implementation with compat layer.
+    THIN WRAPPER: Delegates to video_gen.input_adapters.yaml_file.YAMLFileAdapter
+    Provides ONLY sync .parse() API - all business logic in canonical adapter.
 
     Args:
         test_mode: If True, bypass security checks for testing purposes
@@ -385,14 +390,15 @@ class YAMLAdapter(CompatAdapter):
     def __init__(self, test_mode: bool = False, use_ai: bool = True):
         from .yaml_file import YAMLFileAdapter as AsyncYAMLAdapter
         # YAML adapter doesn't support use_ai (it's for structured data)
+        # Import and wrap canonical async adapter
         super().__init__(AsyncYAMLAdapter(test_mode=test_mode))
 
 
 class WizardAdapter(CompatAdapter):
     """Backward-compatible WizardAdapter.
 
-    Drop-in replacement for app.input_adapters.WizardAdapter
-    that uses canonical async implementation with compat layer.
+    THIN WRAPPER: Delegates to video_gen.input_adapters.wizard.InteractiveWizard
+    Provides ONLY sync .parse() API - all business logic in canonical adapter.
 
     Args:
         test_mode: If True, bypass interactive prompts for testing purposes
@@ -404,14 +410,15 @@ class WizardAdapter(CompatAdapter):
 
     def __init__(self, test_mode: bool = False):
         from .wizard import InteractiveWizard as AsyncWizard
+        # Import and wrap canonical async adapter
         super().__init__(AsyncWizard(test_mode=test_mode))
 
 
 class ProgrammaticAdapter(CompatAdapter):
     """Backward-compatible ProgrammaticAdapter.
 
-    Drop-in replacement for app.input_adapters.ProgrammaticAdapter
-    that uses canonical async implementation with compat layer.
+    THIN WRAPPER: Delegates to video_gen.input_adapters.programmatic.ProgrammaticAdapter
+    Provides ONLY sync .parse() API - all business logic in canonical adapter.
 
     Example:
         >>> adapter = ProgrammaticAdapter()
@@ -420,6 +427,7 @@ class ProgrammaticAdapter(CompatAdapter):
 
     def __init__(self, test_mode: bool = False):
         from .programmatic import ProgrammaticAdapter as AsyncProgrammatic
+        # Import and wrap canonical async adapter
         super().__init__(AsyncProgrammatic(test_mode=test_mode))
 
 

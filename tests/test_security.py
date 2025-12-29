@@ -105,11 +105,12 @@ class TestSSRFProtection:
     @pytest.mark.asyncio
     async def test_blocks_localhost_urls(self):
         """Test document adapter blocks localhost URLs."""
-        # Verify SSRF protection code exists
-        from video_gen.input_adapters.document import DocumentAdapter
+        # Verify SSRF protection code exists (refactored to document_utils module)
+        from video_gen.input_adapters import document_utils
         import inspect
 
-        source = inspect.getsource(DocumentAdapter._read_document_content)
+        # Check the _read_from_url helper which contains SSRF protection
+        source = inspect.getsource(document_utils)
 
         # Verify SSRF protection is implemented
         assert "socket.gethostbyname" in source or "gethostbyname" in source
@@ -333,11 +334,11 @@ class TestFileSizeLimits:
     async def test_blocks_oversized_file_read(self):
         """Test document adapter has file size limit in place."""
         # This test verifies the limit exists in code (functional test would require 10MB file)
-        from video_gen.input_adapters.document import DocumentAdapter
+        from video_gen.input_adapters import document_utils
         import inspect
 
-        # Check that _read_document_content has size limit logic
-        source = inspect.getsource(DocumentAdapter._read_document_content)
+        # Check that document_utils module has size limit logic
+        source = inspect.getsource(document_utils)
 
         assert "MAX_FILE_SIZE" in source or "10_000_000" in source
         assert "file_size" in source or "st_size" in source
@@ -537,14 +538,14 @@ class TestDoSProtection:
     @pytest.mark.asyncio
     async def test_file_size_limit_enforced(self):
         """Test file reading has 10MB limit enforced."""
-        # Verify size limit exists in implementation
-        from video_gen.input_adapters.document import DocumentAdapter
+        # Verify size limit exists in implementation (refactored to document_utils)
+        from video_gen.input_adapters import document_utils
         import inspect
 
-        source = inspect.getsource(DocumentAdapter._read_document_content)
+        source = inspect.getsource(document_utils)
 
         # Verify file size checking is present
-        assert "st_size" in source
+        assert "st_size" in source or "file_size" in source
         assert "MAX_FILE_SIZE" in source or "10_000_000" in source
         assert "too large" in source.lower()
 

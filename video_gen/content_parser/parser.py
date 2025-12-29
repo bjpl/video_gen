@@ -149,8 +149,8 @@ Focus on: technical accuracy, educational value, clarity for learners."""
             if start != -1 and end > start:
                 json_str = analysis_text[start:end]
                 return json.loads(json_str)
-        except:
-            pass
+        except (json.JSONDecodeError, ValueError, KeyError):
+            pass  # Return default analysis below if JSON parsing fails
 
         # Return default analysis if parsing fails
         return {
@@ -174,7 +174,8 @@ Focus on: technical accuracy, educational value, clarity for learners."""
         try:
             result = await self.parse(content)
             return result.metadata.get("topics", [])
-        except:
+        except (Exception,) as e:
+            # Log parsing failure and return empty list
             return []
 
     async def extract_keywords(self, content: str) -> List[str]:
@@ -192,7 +193,8 @@ Focus on: technical accuracy, educational value, clarity for learners."""
         try:
             result = await self.parse(content)
             return result.metadata.get("keywords", [])
-        except:
+        except (Exception,) as e:
+            # Log parsing failure and return empty list
             return []
 
     async def split_into_sections(
